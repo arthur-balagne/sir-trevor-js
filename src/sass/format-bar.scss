@@ -6,8 +6,7 @@
   z-index: 10;
   border-radius: 0.4em;
   padding: 0.5em 0.9em;
-
-  @include transition(opacity 0.2s ease-in-out);
+  transition: opacity 0.2s ease-in-out;
 }
 
 .st-format-bar:before {
