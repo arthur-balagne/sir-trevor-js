@@ -7,52 +7,55 @@ var utils = require('./utils');
 var Locales = {
   en: {
     general: {
-      'delete':           'Delete?',
-      'drop':             'Drag __block__ here',
-      'paste':            'Or paste URL here',
-      'upload':           '...or choose a file',
-      'close':            'close',
-      'position':         'Position',
-      'wait':             'Please wait...',
-      'link':             'Enter a link'
+      'delete':   'Suppression ?',
+      'drop':     'Glissez __block__ ici',
+      'paste':    'Ou copiez le lien ici',
+      'upload':   '...ou choisissez un fichier',
+      'close':    'fermer',
+      'position': 'Position',
+      'wait':     'Veuillez patienter...',
+      'link':     'Entrez un lien'
     },
     errors: {
-      'title': "You have the following errors:",
-      'validation_fail': "__type__ block is invalid",
-      'block_empty': "__name__ must not be empty",
-      'type_missing': "You must have a block of type __type__",
-      'required_type_empty': "A required block type __type__ is empty",
-      'load_fail': "There was a problem loading the contents of the document"
+      'title': "Vous avez l'erreur suivante :",
+      'validation_fail': "Bloc __type__ est invalide",
+      'block_empty': "__name__ ne doit pas être vide",
+      'type_missing': "Vous devez avoir un bloc de type __type__",
+      'required_type_empty': "Un bloc requis de type __type__ est vide",
+      'load_fail': "Il y a un problème avec le chargement des données du document"
     },
     blocks: {
       text: {
-        'title': "Text"
+        'title': "Texte"
       },
       list: {
-        'title': "List"
+        'title': "Liste"
       },
       quote: {
-        'title': "Quote",
-        'credit_field': "Credit"
+        'title': "Citation",
+        'credit_field': "Auteur"
       },
       image: {
         'title': "Image",
-        'upload_error': "There was a problem with your upload"
+        'upload_error': "Il y a un problème avec votre téléchargement"
       },
       video: {
-        'title': "Video"
+        'title': "Vidéo"
+      },
+      iframe: {
+        'placeholder': "Copie l'URL du site ici"
       },
       tweet: {
         'title': "Tweet",
-        'fetch_error': "There was a problem fetching your tweet"
+        'fetch_error': "Un problème est survenu lors de la récupération de votre tweet"
       },
       embedly: {
         'title': "Embedly",
-        'fetch_error': "There was a problem fetching your embed",
-        'key_missing': "An Embedly API key must be present"
+        'fetch_error': "Un problème est survenu lors de la récupération de votre embed",
+        'key_missing': "Une clé API pour Embedly doit être présente"
       },
       heading: {
-        'title': "Heading"
+        'title': 'Titre'
       }
     }
   }
