@@ -3,8 +3,21 @@
 var $ = require('jquery');
 var Block = require('../block');
 
-function changeScroll(e) {
-    console.log('changeScroll');
+var getTemplate = function(params) {
+    var template = '';
+
+    template += '<div class="st-block__iframe">';
+    template += '<iframe';
+
+    template += params.src ? ' src="' + params.src + '"' : '';
+    template += params.scrolling ? ' scrolling="' + params.scrolling + '"' : '';
+    template += params.height ? ' height="' + params.height + 'px"' : '';
+    template += params.visible === false ? ' style="display:none"' : '';
+
+    template += '></iframe>';
+    template += '</div>';
+
+    return template;
 };
 
 module.exports = Block.extend({
@@ -48,7 +61,13 @@ module.exports = Block.extend({
     ],
 
     onBlockRender: function() {
-        this.$inner.prepend('<div class="st-block__iframe"><iframe scrolling="no" style="display:none"></iframe></div>');
+        var template = getTemplate({
+            height: 300,
+            scrolling: 'no',
+            visible: false
+        });
+
+        this.$inner.prepend(template);
         this.$iframe = this.$inner.find('iframe');
     },
 
@@ -63,8 +82,15 @@ module.exports = Block.extend({
         }
 
         if (data.scrolling) {
-            this.$iframe.attr('scrolling', data.scrolling); // WIP
-            // this.$iframe[0].scrolling = data.scrolling;
+            // The scrolling does not toggle by JS on Chrome. So we replace the iframe instead
+            var template = getTemplate({
+                src: this.$iframe.attr('src'),
+                height: this.$iframe.attr('height'),
+                scrolling: data.scrolling,
+                visible: true
+            });
+
+            this.$inner.find('.st-block__iframe').replaceWith(template);
         }
     },
 
