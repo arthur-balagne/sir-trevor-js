@@ -82,15 +82,7 @@ module.exports = Block.extend({
         }
 
         if (data.scrolling) {
-            // The scrolling does not toggle by JS on Chrome. So we replace the iframe instead
-            var template = getTemplate({
-                src: this.$iframe.attr('src'),
-                height: this.$iframe.attr('height'),
-                scrolling: data.scrolling,
-                visible: true
-            });
-
-            this.$inner.find('.st-block__iframe').replaceWith(template);
+           this.$iframe.attr('scrolling', data.scrolling);
         }
     },
 
