@@ -53,9 +53,10 @@ function mergeCellHandler(ev, scope) {
         if (first === 1){
             deleteHelper(ev, scope);
             if ($(this).next('td').index() !== -1){
+                var nextWidth = parseInt($(this).next('td').attr('colspan'));
                 $(this).next('td').remove();
                 var colspanValue = parseInt($(this).attr('colspan'));
-                $(this).attr('colspan', colspanValue + 1);
+                $(this).attr('colspan', colspanValue + nextWidth);
             }
             first = first + 1;
             table.find('td').each(function(){
@@ -86,7 +87,7 @@ function unMergeCellHandler(ev, scope){
             first = first + 1;
             table.find('td').each(function() {
                 $(this).removeClass('unmergeable');
-                $(this).attr('contenteditable','');
+                $(this).attr('contenteditable',  '');
             });
         }
     });}
@@ -212,7 +213,7 @@ module.exports = Block.extend({
             fn: function(e) {
                 e.preventDefault();
                 var block = this.getTextBlock();
-                var content= '<span class="helper">' + i18n.t('blocks:table:helper-unmerge') + '</span>';
+                var content = '<span class="helper">' + i18n.t('blocks:table:helper-unmerge') + '</span>';
                 deleteHelper(e, block, content);
                 addHelper(e, block, content);
                 unMergeCellHandler(e, block);
