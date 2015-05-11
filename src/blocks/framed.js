@@ -14,7 +14,8 @@ var params = {
     url: 'medias',
     size: '45x45'
 };
-var modalTemplate =  mediaForm.getTemplate(params);
+var modalTemplateStep1 =  mediaForm.getTemplate(params);
+var modalTemplateStep2 =  mediaForm.getTemplate(params);
 
 //Subcribe my modal to mediator, this code can be placed evrywhere.
 evt.subscribe('modal-gallery-step-1', function() {
@@ -31,32 +32,48 @@ function openModal() {
 
     modal.render({
         header: '<header>Image</header>',
-        content: modalTemplate,
+        content: modalTemplateStep1,
         footer: {
-            ok: '',
-            dismiss: 'Fermer'
+            dismiss: 'Suite'
+        }
+    });
+    modal.open();
+}
+
+function openModal() {
+    var Modal = require('etudiant-mod-modal');
+    var modal = new Modal({
+        slug: 'gallery-step-2',
+        animation: 'fade',
+        theme: 'media'
+    });
+
+    modal.render({
+        header: '<header>Image</header>',
+        content: modalTemplateStep2,
+        footer: {
+            dismiss: 'Suite'
         }
     });
     modal.open();
 }
 
 function changeWidth() {
-    console.log('inside');
     var widthSelector = $('.modal-row-content select');
     var size = {
         width: 180, //Set the size to prevent weirdness
         height: 80
     };
     widthSelector.on('change', function() {
-    console.log('inside changed');
         var selected = $(this).find(':selected').val();
         size.width = selected.split('x')[0];
         size.height = selected.split('x')[1];
-        var picture = $('.framed-picture img').data('picture');
+        var picture = $(this).find(':selected').data('picture');
         $('.framed-picture img').data('width', size.width);
         $('.framed-picture img').data('height', size.height);
-        $('.framed-picture img').attr('src', 'http://lorempixel.com/' + size.width + '/' + size.height + '/' + picture);
-        console.log('http://lorempixel.com/' + size.width + '/' + size.height + '/'+picture);
+        $('.framed-picture img').attr('src', 'http://placehold.it/' + size.width + 'x' + size.height + '/'+picture);
+        $('.framed-picture').css('display', 'inline-block');
+
     });
 
 }
@@ -65,7 +82,7 @@ function getTemplate(params) {
     var template = '';
     template += '<div class="frame" style="box-sizing:border-box; display:inline-block; width:100%; background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
     template += '<div class="st-required st-text-block framed" style="width:' + params.frameTextWidth + '; vertical-align:top; display:' + params.frameTextDisplay + ' " contenteditable="true"></div>';
-    template += '<div class="framed-picture hidden" style="display:' + params.framedPictureDisplay + '; vertical-align:top; width:' + params.framePictureWidth + '; height:auto"><img data-width="180" data-height="80" alt="placeholder" src="http://lorempixel.com/180/80/sports/56"><br><legend>Ma super légende &copy L etudiant </legend></div>';
+    template += '<div class="framed-picture hidden" style="display:' + params.framedPictureDisplay + '; vertical-align:top; width:' + params.framePictureWidth + '; height:auto"><img data-width="180" data-height="80" alt="placeholder" src="http://placehold.it/180x80/sports/6"><br><legend>Ma super légende &copy L etudiant </legend></div>';
     template += '</div>';
     return template;
 }
@@ -113,7 +130,7 @@ module.exports = Block.extend({
                     var picture = $(this).data('picture');
                     var width = $('.framed-picture img').data('width');
                     var height = $('.framed-picture img').data('height');
-                    $('.framed-picture img').attr('src', 'http://lorempixel.com/' + width + '/' + height + '/' + picture).css('display', block);
+                    $('.framed-picture img').attr('src', 'http://placehold.it/' + width + 'x' + height + '/' + picture).css('display', block);
                     $('.framed-picture img').data('picture', picture);
                 });
             }
