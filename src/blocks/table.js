@@ -284,7 +284,7 @@ module.exports = Block.extend({
             activable: true,
             fn: function(e) {
                 e.preventDefault();
-                var content= '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
+                var content = '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
                 var block = this.getTextBlock();
                 deleteHelper(e, block, content);
                 addHelper(e, block, content);
