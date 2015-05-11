@@ -39,6 +39,11 @@ function addColumnHandler(ev, scope) {
     scope.find('tr').each(function() {
         addCell(this);
     });
+    scope.find('td').each(function() {
+        if (undefined === $(this).attr('colspan')){
+            $(this).attr('colspan', 1);
+        }
+    });
 }
 
 function mergeCellHandler(ev, scope) {
@@ -55,7 +60,6 @@ function mergeCellHandler(ev, scope) {
     });
     $('tr').children('td').on('click', function(){
         if (activated === true){
-
             if ($(this).next('td').index() !== -1){
                 var nextWidth = parseInt($(this).next('td').attr('colspan'));
                 $(this).next('td').remove();
@@ -70,30 +74,32 @@ function mergeCellHandler(ev, scope) {
             }
         }
     });
+    // Handle the controls
     $('.st-block-control-ui-btn--merge-cell').on('click', function(evt) {
         evt.preventDefault();
         evt.stopPropagation();
-        // Desactivate unmerge button
-        $('.st-block-control-ui-btn--unmerge-cell').css('pointer-events', 'none');
-        //Toggle actual button state
-        activated = (activated === true) ? false : true;
-        addHelper(ev, scope, instruction);
         $('.st-block-control-ui-btn--merge-cell').toggleClass('activated');
-        if (false === activated) {
-            $('.st-block-control-ui-btn--unmerge-cell').css('pointer-events', 'all');
-            deleteHelper(ev, scope);
+        if ($('.st-block-control-ui-btn--merge-cell').hasClass('activated')){
+            activated = true;
+            // Desactivate unmerge button
+            $('.st-block-control-ui-btn--unmerge-cell').css('pointer-events', 'none');
+            addHelper(ev, scope, instruction);
             table.find('td').each(function() {
-                $(this).removeClass('mergeable');
-            });
-        }
-        else {
-            table.find('td').each(function() {
-            $(this).addClass('mergeable');
+                $(this).addClass('mergeable');
                 if (undefined === $(this).attr('colspan')){
                     $(this).attr('colspan', 1);
                 }
             });
         }
+        else {
+            activated = false;
+            $('.st-block-control-ui-btn--unmerge-cell').css('pointer-events', 'all');
+            deleteHelper(ev, scope, instruction);
+            table.find('td').each(function() {
+                $(this).removeClass('mergeable');
+            });
+        }
+
     });
 }
 function unMergeCellHandler(ev, scope){
@@ -108,6 +114,7 @@ function unMergeCellHandler(ev, scope){
             $(this).addClass('unmergeable');
         }
     });
+    //Perform actions inside the table
     $('tr').children('td').on('click', function(){
         if (activated === true){
             var colspanValue = parseInt($(this).attr('colspan'));
@@ -118,24 +125,23 @@ function unMergeCellHandler(ev, scope){
             table.find('td').each(function() {
                 $(this).removeClass('unmergeable');
                 $(this).attr('contenteditable', '');
+                colspanValue = parseInt($(this).attr('colspan'));
+                if (colspanValue > 1){
+                    $(this).addClass('unmergeable');
+                }
             });
         }
     });
+    // Handle the controls
     $('.st-block-control-ui-btn--unmerge-cell').on('click', function(evt) {
         evt.preventDefault();
         evt.stopPropagation();
-        $('.st-block-control-ui-btn--merge-cell').css('pointer-events', 'none');
-        activated = (activated === true) ? false : true;
-        addHelper(ev, scope, instruction);
         $('.st-block-control-ui-btn--unmerge-cell').toggleClass('activated');
-        if (false === activated) {
-            $('.st-block-control-ui-btn--merge-cell').css('pointer-events', 'all');
-            deleteHelper(ev, scope);
-            table.find('td').each(function() {
-                $(this).removeClass('unmergeable');
-            });
-        }
-        else {
+        if ($('.st-block-control-ui-btn--unmerge-cell').hasClass('activated')){
+            activated = true;
+            // Desactivate unmerge button
+            $('.st-block-control-ui-btn--merge-cell').css('pointer-events', 'none');
+            addHelper(ev, scope, instruction);
             table.find('td').each(function() {
                 var colspanValue = parseInt($(this).attr('colspan'));
                 if (colspanValue > 1){
@@ -146,6 +152,15 @@ function unMergeCellHandler(ev, scope){
                 }
             });
         }
+        else {
+            activated = false;
+            $('.st-block-control-ui-btn--merge-cell').css('pointer-events', 'all');
+            deleteHelper(ev, scope);
+            table.find('td').each(function() {
+                $(this).removeClass('unmergeable');
+            });
+        }
+
     });
 }
 function deleteColumnHandler(ev, scope) {
@@ -171,7 +186,14 @@ function addRowHandler(ev, scope) {
     scope.find('th').each(function() {
         addCell(row, '<td>');
     });
+
     scope.find('tbody').append(row);
+    //Really important allow us to merge
+    scope.find('td').each(function() {
+        if (undefined === $(this).attr('colspan')){
+            $(this).attr('colspan', 1);
+        }
+    });
 }
 function deleteRowHandler(ev, block) {
     ev.preventDefault();
