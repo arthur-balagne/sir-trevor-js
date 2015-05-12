@@ -39,6 +39,7 @@ module.exports = {
         this.$control_ui.removeClass('hidden');
     },
 
+
     addUiControl: function(control) {
         // The UI Control must be a simple icon or a custom HTML
         if (!control.icon && !control.html) {
@@ -46,13 +47,19 @@ module.exports = {
             return false;
         }
 
+
         var uiControl = this.getControlTemplate(control);
 
         // By default, the trigger is a click event
         var eventTrigger = control.eventTrigger ? control.eventTrigger : 'click';
-
         this.$control_ui.append(uiControl);
         this.$control_ui.on(eventTrigger, '.st-block-control-ui-btn--' + control.slug, control.fn.bind(this));
+        this.$control_ui.on(eventTrigger, '.st-block-control-ui-btn--' + control.slug, function() {
+            if (control.activable === true) {
+                $('.st-block-control-ui-btn--' + control.slug).toggleClass('activated');
+            }
+        });
+
     },
 
     getControlTemplate: function(control) {

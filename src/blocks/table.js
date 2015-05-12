@@ -22,6 +22,8 @@ var template = '' +
         '</tbody>' +
     '</table>';
 
+var instruction = '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
+
 function addCell(row, cellTag) {
     var tag_template = _.template('<<%= tag %>>');
 
@@ -41,67 +43,105 @@ function addColumnHandler(ev, scope) {
     scope.find('tr').each(function() {
         addCell(this);
     });
+    scope.find('td').each(function() {
+        if (undefined === $(this).attr('colspan')){
+            $(this).attr('colspan', 1);
+        }
+    });
 }
 
 function mergeCellHandler(ev, scope) {
     ev.preventDefault();
 
-    var first = 1;
-    var table = scope;
+    var table = scope.find('table');
+    var activated = !$('.st-block-control-ui-btn--merge').hasClass('activated');
 
-    table.find('td').each(function() {
-        $(this).addClass('mergeable');
-        if (undefined === $(this).attr('colspan')) {
+    table.find('td, th').each(function(){
+        var colspanValue = parseInt($(this).attr('colspan'));
+
+        if (isNaN(colspanValue)){
             $(this).attr('colspan', 1);
         }
     });
 
-    $('tr').children('td').on('click', function() {
-        if (first === 1) {
-            deleteHelper(ev, scope);
-            if ($(this).next('td').index() !== -1) {
-                $(this).next('td').remove();
+    if (activated === true) {
+        table.find('td , th').addClass('mergeable');
+        table.before('<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>');
+        table.on('click', 'td, th', function(e) {
+            e.preventDefault();
+            if ($(this).next('td, th').index() !== -1) {
+                var nextWidth = parseInt($(this).next('td, th').attr('colspan'));
                 var colspanValue = parseInt($(this).attr('colspan'));
-                $(this).attr('colspan', colspanValue + 1);
+
+                $(this).next('td, th').remove();
+
+                $(this).attr('colspan', colspanValue + nextWidth);
             }
-            first = first + 1;
-            table.find('td').each(function() {
-                $(this).removeClass('mergeable');
-            });
-        }
-    });
+
+            table.find('td, th').addClass('mergeable');
+        });
+    }
+    else {
+        $('.helper').remove();
+        table.off('click');
+        table.find('td, th').attr('contenteditable', '');
+        table.find('td, th').removeClass('mergeable');
+    }
+
+    $('.st-block-control-ui-btn').toggleClass('disabled');
+    $('.st-block-control-ui-btn--merge').removeClass('disabled');
 }
 
 function unMergeCellHandler(ev, scope) {
     ev.preventDefault();
 
-    var first = 1;
+    var activated = !$('.st-block-control-ui-btn--unmerge').hasClass('activated');
     var table = scope;
+    table.before('<span class="helper">' + i18n.t('blocks:table:helper-unmerge') + '</span>');
 
-    table.find('td').each(function() {
-        var colspanValue = parseInt($(this).attr('colspan'));
-        if (colspanValue > 1) {
-            $(this).addClass('unmergeable');
-        }
-    });
-
-    $('tr').children('td').on('click', function() {
-        if (first === 1) {
-            deleteHelper(ev, scope);
-
+    if (activated === true){
+        table.find('td, th').each(function(){
             var colspanValue = parseInt($(this).attr('colspan'));
+
             if (colspanValue > 1) {
+                $(this).addClass('unmergeable');
+            }
+        });
+        table.on('click', 'td, th', function() {
+            var colspanValue = parseInt($(this).attr('colspan'));
+
+            if (colspanValue > 1 && $(this).is('td')) {
                 $(this).attr('colspan', colspanValue - 1);
                 $(this).parent().append('<td colspan="1"></td>');
             }
+            if (colspanValue > 1 && $(this).is('th')) {
+                $(this).attr('colspan', colspanValue - 1);
+                $(this).parent().append('<th colspan="1"></th>');
+            }
+            table.find('td, th').each(function(){
+            colspanValue = parseInt($(this).attr('colspan'));
 
-            first = first + 1;
-            table.find('td').each(function() {
-                $(this).removeClass('unmergeable');
+            if (colspanValue > 1) {
                 $(this).attr('contenteditable', '');
+                $(this).addClass('unmergeable');
+            }
+            else {
+                $(this).removeClass('unmergeable');
+            }
+
             });
-        }
-    });
+
+        });
+    }
+    else {
+        $('.helper').remove();
+        table.off('click');
+        table.find('td, th').attr('contenteditable', '');
+        table.find('td, th').removeClass('unmergeable');
+    }
+
+    $('.st-block-control-ui-btn').toggleClass('disabled');
+    $('.st-block-control-ui-btn--unmerge').removeClass('disabled');
 }
 
 function deleteColumnHandler(ev, scope) {
@@ -120,8 +160,6 @@ function deleteColumnHandler(ev, scope) {
 }
 
 function addRowHandler(ev, scope) {
-    ev.preventDefault();
-
     var row = $('<tr>');
 
     scope.find('th').each(function() {
@@ -129,6 +167,12 @@ function addRowHandler(ev, scope) {
     });
 
     scope.find('tbody').append(row);
+    //Really important allow us to merge
+    scope.find('td').each(function() {
+        if (undefined === $(this).attr('colspan')){
+            $(this).attr('colspan', 1);
+        }
+    });
 }
 
 function deleteRowHandler(ev, block) {
@@ -150,16 +194,6 @@ function changeTheme(ev, block) {
     });
 }
 
-function addHelper(ev, block, content) {
-    var table = block.find('table');
-    table.before(content);
-}
-
-function deleteHelper(ev, block) {
-    var helper = block.find('.helper');
-    helper.remove();
-}
-
 module.exports = Block.extend({
     type: 'table',
     title: function() {
@@ -170,6 +204,7 @@ module.exports = Block.extend({
         this.getTextBlock().find('table');
     },
 
+    activable: true,
     controllable: true,
     controls_position: 'top',
     controls_visible: true,
@@ -223,34 +258,33 @@ module.exports = Block.extend({
             }
         },
         {
-            slug: 'merge-cell',
+            slug: 'merge',
             icon: 'merge',
+            activable: true,
             fn: function(e) {
                 e.preventDefault();
-
-                var content = '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
+                //var content = '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
                 var block = this.getTextBlock();
-
-                deleteHelper(e, block, content);
-                addHelper(e, block, content);
+                //deleteHelper(e, block, content);
+                //addHelper(e, block, content);
                 mergeCellHandler(e, block);
             }
         },
         {
-            slug: 'unmerge-cell',
+            slug: 'unmerge',
             icon: 'unmerge',
+            activable: true,
             fn: function(e) {
                 e.preventDefault();
 
                 var block = this.getTextBlock();
-                var content = '<span class="helper">' + i18n.t('blocks:table:helper-unmerge') + '</span>';
 
-                deleteHelper(e, block, content);
-                addHelper(e, block, content);
+                //var content = '<span class="helper">' + i18n.t('blocks:table:helper-unmerge') + '</span>';
+                //deleteHelper(e, block, content);
+                //addHelper(e, block, content);
                 unMergeCellHandler(e, block);
             }
         }
-
     ],
 
     editorHTML: function() {
@@ -321,9 +355,5 @@ module.exports = Block.extend({
         });
 
         return html[0].outerHTML;
-    },
-
-    isEmpty: function() {
-        return _.isEmpty(this.saveAndGetData().text);
     }
 });
