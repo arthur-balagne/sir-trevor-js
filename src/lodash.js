@@ -1,5 +1,6 @@
 "use strict";
 
+exports.chunk = require('lodash.chunk');
 exports.debounce = require('lodash.debounce');
 exports.isEmpty = require('lodash.isempty');
 exports.isFunction = require('lodash.isfunction');

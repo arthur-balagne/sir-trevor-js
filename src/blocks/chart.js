@@ -12,8 +12,8 @@ module.exports = Block.extend({
     filterable: true,
 
     filterConfig: {
+        url: 'http://localhost:3000/content',
         header: {
-
             options: [
                 {
                     label: 'label 1',

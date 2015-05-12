@@ -1,117 +1,90 @@
 'use strict';
 
-var $   = require('jquery');
-var _   = require('../lodash');
+var $ = require('jquery');
+var _ = require('../lodash');
 var xhr = require('etudiant-mod-xhr');
 
-var tFilterContainer = [
-    '<div id="<%= id %>" class="st-block__filter">',
-        '<%= filter_header %>',
-        '<div class="st-block__filter-result"></div>',
-        '<%= filter_footer %>',
-    '</div>'
-].join('\n');
-
-var tFilterHeader = [
-    '<header class="st-block__filter-header">',
-        '<input type="search" />',
-        '<select>',
-            '<%= options %>',
-        '</select>',
-    '</header>'
-].join('\n');
-
-var tFilterHeaderOption = '<option value="<%= value %>"><%= label %></option>';
-
-var tFilterFooter = [
-    '<footer class="st-block__filter-footer">',
-        '<%= filter_buttons %>',
-    '</footer>'
-].join('\n');
-
-var tFilterButton = [
-    '<button <%= button_attr %>>',
-        '<span><%= button_text %></span>',
-    '</button>'
-].join('\n');
-
-var buildHeader = function(options) {
-    var optionMarkup = '';
-
-    options.forEach(function(option) {
-        optionMarkup += _.template(tFilterHeaderOption)({
-            value: option.value,
-            label: option.label
-        });
-    });
-
-    var header = _.template(tFilterHeader)({
-        options: optionMarkup
-    });
-
-    return header;
-};
-
-var buildFooter = function(buttons) {
-    var buttonMarkup = '';
-
-    Object.keys(buttons).forEach(function(key) {
-        buttonMarkup += _.template(tFilterButton)({
-            button_attr: 'data-' + key,
-            button_text: buttons[key]
-        });
-    });
-
-    var footer = _.template(tFilterFooter)({
-        filter_buttons: buttonMarkup
-    });
-
-    return footer;
-};
-
-var launchSearch = function() {
-    // must enter search state
-};
-
-var renderResults = function() {
-    // results of ajax call
-};
-
-var FilterBar = function(container, config) {
+var FilterBar = function(blockReference, container, config) {
+    this.blockReference = blockReference;
     this.$container = container;
-    this.id = 'st-block__filter-' + Date.now(),
     this.config = config;
+
+    this.template = _.template([
+        '<div class="st-block__filter">',
+            '<input type="search" />',
+            '<select>',
+                '<%= options %>',
+            '</select>',
+        '</div>'
+    ].join('\n'));
 };
 
 FilterBar.prototype = {
     render: function() {
-        var rendered = _.template(tFilterContainer)({
-            id: this.id,
-            filter_header: buildHeader(this.config.header.options),
-            filter_footer: buildFooter(this.config.footer)
+        var optionTemplate = _.template('<option value="<%= value %>"><%= label %></option>');
+
+        var optionMarkup = '';
+
+        this.config.options.forEach(function(option) {
+            optionMarkup += optionTemplate({
+                value: option.value,
+                label: option.label
+            });
         });
 
-        return rendered;
-    },
-
-    inject: function() {
-
+        return this.template({
+            options: optionMarkup
+        });
     },
 
     ready: function() {
-        this.$container.on('keyup', 'div#' + this.id, _.debounce(function() {
+        this.$elem.on('keyup', 'input[type="search"]', _.debounce(function(event) {
             this.search();
-        }.bind(this), 200));
+        }.bind(this), 300));
 
-        this.$container.on('change', 'div#' + this.id, function(event) {
+        this.$elem.on('change', 'select', function(event) {
             this.search();
         }.bind(this));
     },
 
     search: function() {
-        // this.$inner.
+        var search = {};
+
+        /* * /
+        var fulltext = this.$header.find('input[type="search"]').val();
+
+        if (fulltext) {
+            search.fulltext = fulltext;
+        }
+
+        var id = this.$header.find('select').val();
+
+        if (id) {
+            search.id_thematique = fulltext;
+        }
+
+        search.limit = 10;
+
+        search._start = 10;
+        search._end = 10;
+        search.offset = 10;
+
+        /**/
+
+        var searchUrl = xhr.paramizeUrl(this.config.url, search);
+
+        xhr.get(searchUrl)
+            .then(function(results) {
+                this.blockReference.onFilter(results);
+            }.bind(this));
     }
 };
+
+Object.defineProperty(FilterBar.prototype, '$elem', {
+    get: function $elem() {
+        return this.$container.find('.st-block__filter');
+    }
+});
 
 module.exports = {
 
@@ -121,18 +94,11 @@ module.exports = {
 
         if (this.filterConfig) {
 
-            var filterBar = new FilterBar(this.$inner, this.filterConfig);
+            var filterBar = new FilterBar(this, this.$inner, this.filterConfig);
 
             this.$inner.html(filterBar.render());
 
             filterBar.ready();
         }
-
-        /*
-            fulltext
-            id_thematique
-            limit
-            offset
-         */
     }
 };
