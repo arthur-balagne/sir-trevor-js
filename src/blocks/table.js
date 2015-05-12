@@ -81,7 +81,8 @@ function mergeCellHandler(ev, scope) {
     }
     else {
         $('.helper').remove();
-        table.off('click', 'td, th');
+        table.off('click');
+        table.find('td, th').attr('contenteditable', '');
         table.find('td, th').removeClass('mergeable');
     }
 
@@ -103,14 +104,18 @@ function unMergeCellHandler(ev, scope) {
                 $(this).addClass('unmergeable');
             }
         });
-        table.on('click', 'td', function() {
+        table.on('click', 'td, th', function() {
             var colspanValue = parseInt($(this).attr('colspan'));
 
-            if (colspanValue > 1) {
+            if (colspanValue > 1 && $(this).is('td')) {
                 $(this).attr('colspan', colspanValue - 1);
                 $(this).parent().append('<td colspan="1"></td>');
             }
-            table.find('td').each(function(){
+            if (colspanValue > 1 && $(this).is('th')) {
+                $(this).attr('colspan', colspanValue - 1);
+                $(this).parent().append('<th colspan="1"></th>');
+            }
+            table.find('td, th').each(function(){
             colspanValue = parseInt($(this).attr('colspan'));
 
             if (colspanValue > 1) {
@@ -124,30 +129,11 @@ function unMergeCellHandler(ev, scope) {
             });
 
         });
-        table.on('click', 'th', function() {
-            var colspanValue = parseInt($(this).attr('colspan'));
-
-            if (colspanValue > 1) {
-                $(this).attr('colspan', colspanValue - 1);
-                $(this).parent().append('<th colspan="1"></th>');
-            }
-
-            table.find('th').each(function(){
-                colspanValue = parseInt($(this).attr('colspan'));
-
-                if (colspanValue > 1) {
-                    $(this).attr('contenteditable', '');
-                    $(this).addClass('unmergeable');
-                }
-                else {
-                    $(this).removeClass('unmergeable');
-                }
-
-            });
-        });
     }
     else {
         $('.helper').remove();
+        table.off('click');
+        table.find('td, th').attr('contenteditable', '');
         table.find('td, th').removeClass('unmergeable');
     }
 
