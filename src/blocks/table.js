@@ -22,8 +22,6 @@ var template = '' +
         '</tbody>' +
     '</table>';
 
-var instruction = '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
-
 function addCell(row, cellTag) {
     var tag_template = _.template('<<%= tag %>>');
 
@@ -40,9 +38,11 @@ function addCell(row, cellTag) {
 
 function addColumnHandler(ev, scope) {
     ev.preventDefault();
+
     scope.find('tr').each(function() {
         addCell(this);
     });
+
     scope.find('td').each(function() {
         if (undefined === $(this).attr('colspan')){
             $(this).attr('colspan', 1);
@@ -66,9 +66,10 @@ function mergeCellHandler(ev, scope) {
 
     if (activated === true) {
         table.find('td , th').addClass('mergeable');
-        table.before('<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>');
+
         table.on('click', 'td, th', function(e) {
             e.preventDefault();
+
             if ($(this).next('td, th').index() !== -1) {
                 var nextWidth = parseInt($(this).next('td, th').attr('colspan'));
                 var colspanValue = parseInt($(this).attr('colspan'));
@@ -82,14 +83,10 @@ function mergeCellHandler(ev, scope) {
         });
     }
     else {
-        $('.helper').remove();
         table.off('click');
         table.find('td, th').attr('contenteditable', '');
         table.find('td, th').removeClass('mergeable');
     }
-
-    $('.st-block-control-ui-btn').toggleClass('disabled');
-    $('.st-block-control-ui-btn--merge').removeClass('disabled');
 }
 
 function unMergeCellHandler(ev, scope) {
@@ -97,7 +94,6 @@ function unMergeCellHandler(ev, scope) {
 
     var activated = !$('.st-block-control-ui-btn--unmerge').hasClass('activated');
     var table = scope;
-    table.before('<span class="helper">' + i18n.t('blocks:table:helper-unmerge') + '</span>');
 
     if (activated === true){
         table.find('td, th').each(function(){
@@ -107,6 +103,7 @@ function unMergeCellHandler(ev, scope) {
                 $(this).addClass('unmergeable');
             }
         });
+
         table.on('click', 'td, th', function() {
             var colspanValue = parseInt($(this).attr('colspan'));
 
@@ -114,34 +111,30 @@ function unMergeCellHandler(ev, scope) {
                 $(this).attr('colspan', colspanValue - 1);
                 $(this).parent().append('<td colspan="1"></td>');
             }
+
             if (colspanValue > 1 && $(this).is('th')) {
                 $(this).attr('colspan', colspanValue - 1);
                 $(this).parent().append('<th colspan="1"></th>');
             }
-            table.find('td, th').each(function(){
-            colspanValue = parseInt($(this).attr('colspan'));
 
-            if (colspanValue > 1) {
-                $(this).attr('contenteditable', '');
-                $(this).addClass('unmergeable');
-            }
-            else {
-                $(this).removeClass('unmergeable');
-            }
+            table.find('td, th').each(function() {
+                colspanValue = parseInt($(this).attr('colspan'));
 
+                if (colspanValue > 1) {
+                    $(this).attr('contenteditable', '');
+                    $(this).addClass('unmergeable');
+                }
+                else {
+                    $(this).removeClass('unmergeable');
+                }
             });
-
         });
     }
     else {
-        $('.helper').remove();
         table.off('click');
         table.find('td, th').attr('contenteditable', '');
         table.find('td, th').removeClass('unmergeable');
     }
-
-    $('.st-block-control-ui-btn').toggleClass('disabled');
-    $('.st-block-control-ui-btn--unmerge').removeClass('disabled');
 }
 
 function deleteColumnHandler(ev, scope) {
@@ -150,9 +143,11 @@ function deleteColumnHandler(ev, scope) {
     scope.find('tr').each(function() {
         if ($(this).children().length > 1) {
             var colspanValue = parseInt($(this).children().last().attr('colspan'));
+
             if (colspanValue > 1) {
                 $(this).children().last().attr('colspan', colspanValue - 1);
-            } else {
+            }
+            else {
                 $(this).children().last().remove();
             }
         }
@@ -167,9 +162,10 @@ function addRowHandler(ev, scope) {
     });
 
     scope.find('tbody').append(row);
+
     //Really important allow us to merge
     scope.find('td').each(function() {
-        if (undefined === $(this).attr('colspan')){
+        if (undefined === $(this).attr('colspan')) {
             $(this).attr('colspan', 1);
         }
     });
@@ -201,10 +197,9 @@ module.exports = Block.extend({
     },
     icon_name: 'table',
     scope: function() {
-        this.getTextBlock().find('table');
+        this.getBlock().find('table');
     },
 
-    activable: true,
     controllable: true,
     controls_position: 'top',
     controls_visible: true,
@@ -215,7 +210,7 @@ module.exports = Block.extend({
             fn: function(e) {
                 e.preventDefault();
 
-                var block = this.getTextBlock();
+                var block = this.getBlock();
                 changeTheme(e, block);
             },
             html: '<div class="theme-selector"><select><option class="theme edt-theme-default"  value="edt-theme-default">' + i18n.t('blocks:table:default') + '</option> <option class="theme edt-theme-blue" value="edt-theme-blue">' + i18n.t('blocks:table:blue-theme') + '</option><option class="theme edt-theme-red" value="edt-theme-red">' + i18n.t('blocks:table:red-theme') + '</option></select></div>'
@@ -226,7 +221,7 @@ module.exports = Block.extend({
             fn: function(e) {
                 e.preventDefault();
 
-                var block = this.getTextBlock();
+                var block = this.getBlock();
                 addColumnHandler(e, block);
             }
         },
@@ -235,7 +230,8 @@ module.exports = Block.extend({
             icon: 'delcol',
             fn: function(e) {
                 e.preventDefault();
-                var block = this.getTextBlock();
+
+                var block = this.getBlock();
                 deleteColumnHandler(e, block);
             }
         },
@@ -244,7 +240,8 @@ module.exports = Block.extend({
             icon: 'addrow',
             fn: function(e) {
                 e.preventDefault();
-                var block = this.getTextBlock();
+
+                var block = this.getBlock();
                 addRowHandler(e, block);
             }
         },
@@ -253,52 +250,55 @@ module.exports = Block.extend({
             icon: 'delrow',
             fn: function(e) {
                 e.preventDefault();
-                var block = this.getTextBlock();
+
+                var block = this.getBlock();
                 deleteRowHandler(e, block);
             }
         },
         {
             slug: 'merge',
             icon: 'merge',
-            activable: true,
+            activable: i18n.t('blocks:table:helper-merge'),
             fn: function(e) {
                 e.preventDefault();
-                //var content = '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
-                var block = this.getTextBlock();
-                //deleteHelper(e, block, content);
-                //addHelper(e, block, content);
+
+                var block = this.getBlock();
                 mergeCellHandler(e, block);
             }
         },
         {
             slug: 'unmerge',
             icon: 'unmerge',
-            activable: true,
+            activable: i18n.t('blocks:table:helper-unmerge'),
             fn: function(e) {
                 e.preventDefault();
 
-                var block = this.getTextBlock();
-
-                //var content = '<span class="helper">' + i18n.t('blocks:table:helper-unmerge') + '</span>';
-                //deleteHelper(e, block, content);
-                //addHelper(e, block, content);
+                var block = this.getBlock();
                 unMergeCellHandler(e, block);
             }
         }
     ],
 
+    getBlock: function() {
+        if (_.isUndefined(this.table_block)) {
+            this.table_block = this.$('.st-table-block');
+        }
+
+        return this.table_block;
+    },
+
     editorHTML: function() {
-        var editor_template = '<div class="st-text-block">' + template + '</div>';
+        var editor_template = '<div class="st-table-block">' + template + '</div>';
 
         return _.template(editor_template, this);
     },
 
     onBlockRender: function() {
-        this.$table = this.getTextBlock().find('table');
+        this.$table = this.getBlock().find('table');
     },
 
     loadData: function(data) {
-        this.getTextBlock().html(data.text, this.type);
+        this.getBlock().html(data.text, this.type);
     },
 
     toMarkdown: function(html) {
