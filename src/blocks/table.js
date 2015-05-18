@@ -2,9 +2,11 @@
   Block Table
 */
 
-var _ = require('../lodash');
-var $ = require('jquery');
+var _ = require('../lodash')
+  , $ = require('jquery');
+
 var Block = require('../block');
+
 var template = '' +
     '<table>' +
         '<caption contenteditable></caption>' +
@@ -23,9 +25,9 @@ var template = '' +
     '</table>';
 
 function addCell(row, cellTag) {
-    var tag_template = _.template('<<%= tag %>>');
-
     if (cellTag === undefined) {
+        var tag_template = _.template('<<%= tag %>>');
+
         cellTag = tag_template({
             tag: $(row).children().first().prop('tagName').toLowerCase()
         });
