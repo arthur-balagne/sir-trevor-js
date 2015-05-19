@@ -9,6 +9,22 @@ var Block    = require('../block');
 var stToHTML = require('../to-html');
 var Slider   = require('../helpers/slider.js');
 
+var slideContentBuilder = function(slideContents) {
+    return slideContents.map(function(slideContent) {
+        return _.template([
+            '<div class="st-block__quiz">',
+            '<img src="<%= image %>" />',
+            '<span><%= title %></span>',
+            '<span><%= description %></span>',
+            '</div>'
+        ].join('\n'))({
+            image: slideContent.image,
+            title: slideContent.title,
+            description: slideContent.description
+        });
+    });
+};
+
 module.exports = Block.extend({
 
     filterable: true,
@@ -27,47 +43,14 @@ module.exports = Block.extend({
         }, {
             label: 'label 4',
             value: 4
-        } ]
-    },
-
-    slider: {},
-
-    onFilter: function(filterResults) {
-        var results = filterResults.map(function(result) {
-            return _.template([
-                '<div class="st-block__quiz">',
-                    '<img src="<%= image %>" />',
-                    '<span><%= title %></span>',
-                    '<span><%= description %></span>',
-                '</div>'
-            ].join('\n'))({
-                image: result.image,
-                title: result.title,
-                description: result.description
-            });
-        });
-
-        if (!(this.slider instanceof Slider)) {
-            this.slider = new Slider({
-                contents: results,
-                next: 'Next',
-                prev: 'Prev',
-                blockRef: this.$inner,
-                itemsPerSlide: 3
-            });
-
-            this.$inner.append(this.slider.render());
-
-            this.slider.EventBus.on('penultimateSlide', function() {
-                // console.log('events are being passed just fine');
-
-            }.bind(this));
+        } ],
+        slideContentBuilder: slideContentBuilder,
+        sliderConfig: {
+          next: 'Next',
+          prev: 'Prev',
+          itemsPerSlide: 3,
+          increment: 2
         }
-        else {
-            this.slider.reset(results);
-        }
-
-        this.slider.ready();
     },
 
     type: 'Quiz',

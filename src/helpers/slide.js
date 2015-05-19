@@ -1,4 +1,4 @@
-var _ = require('lodash');
+var _ = require('../lodash');
 
 var Slide = function() {
     this.template = _.template([

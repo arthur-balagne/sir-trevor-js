@@ -3,15 +3,26 @@ var _ = require('../lodash');
 
 var Slide = require('./slide.js');
 
-// PRIVATE
+var canGoTo = function(index) {
+    if (index < 0 || index > this.slides.length - 1) {
+        return false;
+    }
 
-var registerButtonsClick = function() {
-    this.$elem.on('click', '.etu-slider-controls button', function(e) {
-        e.preventDefault();
-        if (this[$(e.currentTarget).data('direction')]) {
-            this[$(e.currentTarget).data('direction')].call(this);
-        }
-    }.bind(this));
+    return true;
+};
+
+var calculateSliderDimensions = function(reset) {
+    this.$container = this.$elem.find('.etu-slider-container');
+    this.$slides = this.$elem.find('.etu-slider-slide');
+
+    this.$slides.css('width', (this.$elem.width() / this.increment) + 'px');
+
+    this.$container.css('width', (this.$slides[0].clientWidth * this.$slides.length) + 'px');
+
+    if (reset) {
+        this.currentIndex = 0;
+        this.$container.css('left', '0%');
+    }
 };
 
 var checkButtons = function() {
@@ -33,32 +44,13 @@ var checkButtons = function() {
     }
 };
 
-var isPenultimate = function() {
-    if (this.currentIndex === this.slides.length - 2) {
-        this.EventBus.trigger('penultimateSlide');
-    }
-};
+var checkProgress = function() {
+  var progress = Math.round((this.currentIndex / this.slides.length) * 100);
 
-var canGoTo = function(index) {
-    if (index < 0 || index > this.slides.length - 1) {
-        return false;
-    }
-
-    return true;
-};
-
-var calculateSliderDimensions = function(reset) {
-    this.$container = this.$elem.find('.etu-slider-container');
-    this.$slides = this.$elem.find('.etu-slider-slide');
-
-    this.$slides.css('width', (this.$elem.width() / 2) + 'px');
-
-    this.$container.css('width', (this.$slides[0].clientWidth * this.$slides.length) + 'px');
-
-    if (reset) {
-        this.currentIndex = 0;
-        this.$container.css('left', '0%');
-    }
+  if (progress > 50 && this.hasEmitted !== true) {
+    this.EventBus.trigger('slider:progress');
+    this.hasEmitted = true;
+  }
 };
 
 var prepareSlides = function(slides, indexModifier) {
@@ -68,6 +60,15 @@ var prepareSlides = function(slides, indexModifier) {
             slideContent,
             this.itemsPerSlide
         ));
+    }.bind(this));
+};
+
+var registerButtons = function() {
+    this.$elem.on('click', '.etu-slider-controls button', function(e) {
+        e.preventDefault();
+        if (this[$(e.currentTarget).data('direction')]) {
+            this[$(e.currentTarget).data('direction')].call(this);
+        }
     }.bind(this));
 };
 
@@ -87,16 +88,17 @@ var Slider = function() {
         '</div>'
     ].join('\n'));
 
-    this.build.apply(this, arguments);
+    this.constructor.apply(this, arguments);
 };
 
 Slider.prototype = {
     EventBus: require('../events.js'),
 
-    build: function(params) {
-        this.blockRef = params.blockRef;
+    constructor: function(params) {
+        this.blockReference = params.blockReference;
         this.slides = [];
         this.itemsPerSlide = params.itemsPerSlide;
+        this.increment = params.increment;
 
         this.buttonConfig = {
             next: params.next,
@@ -134,11 +136,11 @@ Slider.prototype = {
     },
 
     ready: function() {
-        this.$elem = $(this.blockRef).find('.st-block__slider');
+        this.$elem = $(this.blockReference).find('.st-block__slider');
 
         if (!this.isReady) {
 
-            registerButtonsClick.call(this);
+            registerButtons.call(this);
 
             calculateSliderDimensions.call(this, true);
             checkButtons.call(this);
@@ -188,9 +190,11 @@ Slider.prototype = {
     },
 
     goTo: function(index) {
-        this.$container.css('left', '-' + (50 * index) + '%');
+        this.$container.css('left', '-' + ((100 / this.increment).toFixed(2) * index) + '%');
 
         this.currentIndex = index;
+
+        checkProgress.call(this);
 
         checkButtons.call(this);
     },
@@ -205,8 +209,6 @@ Slider.prototype = {
 
     next: function() {
         var newIndex = this.currentIndex + 1;
-
-        isPenultimate.call(this);
 
         if (canGoTo.call(this, newIndex)) {
             this.goTo(newIndex);
