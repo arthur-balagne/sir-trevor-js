@@ -12,16 +12,16 @@ var canGoTo = function(index) {
 };
 
 var calculateSliderDimensions = function(reset) {
-    this.$container = this.$elem.find('.etu-slider-container');
-    this.$slides = this.$elem.find('.etu-slider-slide');
+    this.$slides = this.$container.find('.etu-slider-slide');
 
-    this.$slides.css('width', (this.$elem.width() / this.increment) + 'px');
+    if (this.$slides.length > 0) {
+        this.$slides.css('width', (this.$elem.width() / this.increment) + 'px');
+        this.$container.css('width', (this.$slides[0].clientWidth * this.$slides.length) + 'px');
 
-    this.$container.css('width', (this.$slides[0].clientWidth * this.$slides.length) + 'px');
-
-    if (reset) {
-        this.currentIndex = 0;
-        this.$container.css('left', '0%');
+        if (reset) {
+            this.currentIndex = 0;
+            this.$container.css('left', '0%');
+        }
     }
 };
 
@@ -48,7 +48,7 @@ var checkProgress = function() {
   var progress = Math.round((this.currentIndex / this.slides.length) * 100);
 
   if (progress > 50 && this.hasEmitted !== true) {
-    this.EventBus.trigger('slider:progress');
+    this.eventBus.trigger('progress', 'hi there');
     this.hasEmitted = true;
   }
 };
@@ -92,20 +92,25 @@ var Slider = function() {
 };
 
 Slider.prototype = {
-    EventBus: require('../events.js'),
 
     constructor: function(params) {
-        this.blockReference = params.blockReference;
+        this.blockReference = params.blockReference.$inner;
         this.slides = [];
         this.itemsPerSlide = params.itemsPerSlide;
         this.increment = params.increment;
+        this.eventBus = Object.assign({}, require('../events.js'));
 
         this.buttonConfig = {
             next: params.next,
             prev: params.prev
         };
 
-        prepareSlides.call(this, params.contents);
+        if (params.contents) {
+            prepareSlides.call(this, params.contents);
+        }
+
+        this.blockReference.append(this.render());
+        this.ready();
     },
 
     render: function() {
@@ -137,6 +142,7 @@ Slider.prototype = {
 
     ready: function() {
         this.$elem = $(this.blockReference).find('.st-block__slider');
+        this.$container = this.$elem.find('.etu-slider-container');
 
         if (!this.isReady) {
 
@@ -171,6 +177,7 @@ Slider.prototype = {
 
         calculateSliderDimensions.call(this, false);
         checkButtons.call(this);
+        this.hasEmitted = false;
     },
 
     reset: function(newSlides) {
@@ -187,6 +194,7 @@ Slider.prototype = {
 
         calculateSliderDimensions.call(this, true);
         checkButtons.call(this);
+        this.hasEmitted = false;
     },
 
     goTo: function(index) {
@@ -195,7 +203,6 @@ Slider.prototype = {
         this.currentIndex = index;
 
         checkProgress.call(this);
-
         checkButtons.call(this);
     },
 

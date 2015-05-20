@@ -27,9 +27,8 @@ var slideContentBuilder = function(slideContents) {
 
 module.exports = Block.extend({
 
-    filterable: true,
-
-    filterConfig: {
+    filterable: {
+      bar: {
         url: 'http://localhost:3000/content',
         options: [ {
             label: 'label 1',
@@ -44,13 +43,15 @@ module.exports = Block.extend({
             label: 'label 4',
             value: 4
         } ],
-        slideContentBuilder: slideContentBuilder,
-        sliderConfig: {
+        limit: 20
+      },
+      slideContentBuilder: slideContentBuilder,
+      slider: {
           next: 'Next',
           prev: 'Prev',
           itemsPerSlide: 3,
           increment: 2
-        }
+      }
     },
 
     type: 'Quiz',
@@ -59,7 +60,7 @@ module.exports = Block.extend({
         return 'Quiz';
     },
 
-    editorHTML: '<div class="st-required st-text-block" contenteditable="true"></div>',
+    editorHTML: '',
 
     icon_name: 'text',
 

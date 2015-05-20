@@ -1,13 +1,25 @@
 'use strict';
 
-var $         = require('jquery');
 var Slider    = require('../helpers/slider.js');
 var FilterBar = require('../helpers/filterbar.js');
 
 var registerSliderUpdate = function() {
-    this.slider.EventBus.on('slider:progress', function() {
-        console.log('the slider has gone 50 percent through');
-        // this.slider.update();
+    this.slider.eventBus.on('progress', function() {
+        this.filterBar.moreResults();
+    }.bind(this));
+
+    this.filterBar.eventBus.on('update', function(results) {
+        var updated = this.filterable.slideContentBuilder(results);
+
+        this.slider.update(updated);
+    }.bind(this));
+};
+
+var registerSlideReset = function() {
+    this.filterBar.eventBus.on('search', function(results) {
+        var contents = this.filterable.slideContentBuilder(results);
+
+        this.slider.reset(contents);
     }.bind(this));
 };
 
@@ -16,36 +28,15 @@ module.exports = {
     mixinName: 'Filterable',
 
     initializeFilterable: function() {
+        this.filterBar = new FilterBar(Object.assign({}, this.filterable.bar, {
+            blockReference: this
+        }));
 
-        if (this.filterConfig) {
+        this.slider = new Slider(Object.assign({}, this.filterable.slider, {
+            blockReference: this
+        }));
 
-            var filterBar = new FilterBar(this, this.$inner, this.filterConfig);
-
-            this.$inner.html(filterBar.render());
-
-            filterBar.ready();
-        }
-    },
-
-    onFilter: function(filterResults) {
-
-        if (!(this.slider instanceof Slider)) {
-            var sliderConfig = this.filterConfig.sliderConfig;
-
-            sliderConfig.blockReference = this.$inner;
-            sliderConfig.contents = this.filterConfig.slideContentBuilder(filterResults);
-
-            this.slider = new Slider(sliderConfig);
-
-            this.$inner.append(this.slider.render());
-
-            registerSliderUpdate.call(this);
-        }
-        else {
-            this.slider.reset(results);
-        }
-
-        this.slider.ready();
+        registerSlideReset.call(this);
+        registerSliderUpdate.call(this);
     }
-
 };
