@@ -9,34 +9,47 @@ var stToHTML = require('../to-html');
 
 module.exports = Block.extend({
 
-    filterable: true,
+    chooseable: true,
 
-    filterConfig: {
-        url: 'http://localhost:3000/content',
-        header: {
-            options: [
+    choices: [
+        {
+            icon: 'pie',
+            title: 'Pie Chart',
+            name: 'pie',
+            choices: [
                 {
-                    label: 'label 1',
-                    value: 1
+                    icon: 'pie-2',
+                    title: 'Pie Chart with Bloo',
+                    name: 'subpie',
+                    choices: [
+                        {
+                            icon: 'pie-2',
+                            title: 'Hello mother',
+                            name: 'subpie1'
+                        },
+                        {
+                            icon: 'pie-3',
+                            title: 'Do you want to play a game ?',
+                            name: 'subpie12'
+                        }
+                    ]
                 },
                 {
-                    label: 'label 2',
-                    value: 2
-                },
-                {
-                    label: 'label 3',
-                    value: 3
-                },
-                {
-                    label: 'label 4',
-                    value: 4
+                    icon: 'pie-3',
+                    title: 'Pie Chart with Floo',
+                    name: 'subpie2'
                 }
-            ],
+            ]
         },
-        footer: {
-            next: 'Next',
-            prev: 'Prev'
+        {
+            icon: 'bar',
+            title: 'Bar Chart',
+            name: 'bar'
         }
+    ],
+
+    onChoose: function(chosen) {
+        this.$inner.html('You chose ' + JSON.stringify(chosen));
     },
 
     type: 'Chart',
