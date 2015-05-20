@@ -23,6 +23,19 @@ var template = '' +
   '</table>';
 var instruction = '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
 
+
+function countLineColspan(scope, count) {
+    scope.find('th').each(function() {
+        if (!isNaN($(this).attr('colspan'))) {
+            count += $(this).attr('colspan');
+        }
+        else {
+            count++;
+        }
+    });
+    return count;
+}
+
 function addCell(row, cellTag) {
     var tag_template = _.template('<<%= tag %>>');
 
@@ -39,9 +52,11 @@ function addCell(row, cellTag) {
 
 function addColumnHandler(ev, scope) {
     ev.preventDefault();
+    var count = countLineColspan(scope,'th', 0);
     scope.find('tr').each(function() {
         addCell(this);
     });
+
     scope.find('td').each(function() {
         if (undefined === $(this).attr('colspan')){
             $(this).attr('colspan', 1);
@@ -156,12 +171,24 @@ function deleteColumnHandler(ev, scope) {
     });
 }
 
-function addRowHandler(ev, scope) {
-    var row = $('<tr>');
 
-    scope.find('th').each(function() {
-        addCell(row, '<td>');
+function addRowHandler(ev, scope) {
+
+    // Check all <tr> if  there is missind td, add whatever needed
+    scope.find('tr').each(function() {
+        if(count - $(this).children().length != 0  ) {
+            missing = count - $(this).children().length;
+            for(var i = 1; i < missing; i++) {
+                addCell(this, '<td>');
+            }
+        }
     });
+
+    var row = $('<tr>');
+    var count = countLineColspan(scope, 0);
+    for(var i = 0; i< count; i++){
+        addCell(row, '<td>');
+    }
 
     scope.find('tbody').append(row);
     //Really important allow us to merge
