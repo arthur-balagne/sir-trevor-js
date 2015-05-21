@@ -24,6 +24,20 @@ var template = '' +
         '</tbody>' +
     '</table>';
 
+
+function countLineColspan(scope) {
+    var count = 0;
+    scope.find('th').each(function() {
+        if (!isNaN($(this).attr('colspan'))) {
+            count = count + parseInt($(this).attr('colspan'));
+        }
+        else {
+            count++;
+        }
+    });
+    return parseInt(count);
+}
+
 function addCell(row, cellTag) {
     if (cellTag === undefined) {
         var tag_template = _.template('<<%= tag %>>');
@@ -43,9 +57,10 @@ function addColumnHandler(ev, scope) {
 
     scope.find('tr').each(function() {
         addCell(this);
+
     });
 
-    scope.find('td').each(function() {
+    scope.find('td, th').each(function() {
         if (undefined === $(this).attr('colspan')){
             $(this).attr('colspan', 1);
         }
@@ -154,20 +169,37 @@ function deleteColumnHandler(ev, scope) {
             }
         }
     });
+    scope.find('th').each(function() {
+        var colspanValue = parseInt($(this).last().attr('colspan'));
+        if (colspanValue > 1) {
+            $(this).last().attr('colspan', colspanValue - 1);
+        }
+        else {
+            $(this).children().last().remove();
+        }
+    });
 }
 
+
 function addRowHandler(ev, scope) {
-    var row = $('<tr>');
 
     scope.find('th').each(function() {
-        addCell(row, '<td>');
+        if (undefined === $(this).attr('colspan')){
+            $(this).attr('colspan', 1);
+        }
     });
+
+    var row = $('<tr>');
+    var count = countLineColspan(scope);
+    for (var i = 0; i < count; i++){
+        addCell(row, '<td>');
+    }
 
     scope.find('tbody').append(row);
 
     //Really important allow us to merge
-    scope.find('td').each(function() {
-        if (undefined === $(this).attr('colspan')) {
+    scope.find('td, th').each(function() {
+        if (undefined === $(this).attr('colspan')){
             $(this).attr('colspan', 1);
         }
     });
