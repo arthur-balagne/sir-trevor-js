@@ -3,8 +3,7 @@ var _   = require('../lodash.js');
 var xhr = require('etudiant-mod-xhr');
 
 var FilterBar = function(params) {
-    this.blockReference = params.blockReference;
-    this.$container = this.blockReference.$inner;
+    this.$container = params.container;
     this.options = params.options;
     this.url = params.url;
     this.limit = params.limit;

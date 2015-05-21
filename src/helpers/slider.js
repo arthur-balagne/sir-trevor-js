@@ -94,7 +94,7 @@ var Slider = function() {
 Slider.prototype = {
 
     constructor: function(params) {
-        this.blockReference = params.blockReference.$inner;
+        this.$container = params.container;
         this.slides = [];
         this.itemsPerSlide = params.itemsPerSlide;
         this.increment = params.increment;
@@ -109,7 +109,7 @@ Slider.prototype = {
             prepareSlides.call(this, params.contents);
         }
 
-        this.blockReference.append(this.render());
+        this.$container.append(this.render());
         this.ready();
     },
 
@@ -141,7 +141,7 @@ Slider.prototype = {
     },
 
     ready: function() {
-        this.$elem = $(this.blockReference).find('.st-block__slider');
+        this.$elem = $(this.$container).find('.st-block__slider');
         this.$container = this.$elem.find('.etu-slider-container');
 
         if (!this.isReady) {

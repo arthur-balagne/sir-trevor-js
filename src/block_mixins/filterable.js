@@ -29,11 +29,11 @@ module.exports = {
 
     initializeFilterable: function() {
         this.filterBar = new FilterBar(Object.assign({}, this.filterable.bar, {
-            blockReference: this
+            container: this.$inner
         }));
 
         this.slider = new Slider(Object.assign({}, this.filterable.slider, {
-            blockReference: this
+            container: this.$inner
         }));
 
         registerSlideReset.call(this);
