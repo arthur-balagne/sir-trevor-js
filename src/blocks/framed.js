@@ -10,6 +10,9 @@ var Block = require('../block');
 var stToHTML = require('../to-html');
 var Modal = require('etudiant-mod-modal');
 var q  = require('q');
+var zoom = require('etudiant-mod-zoom');
+
+
 
 // create our modals
 var modalStep1 = new Modal({
@@ -44,10 +47,13 @@ function openModalStep1(modalStep, template) {
         $(this).attr('src', changeOriginalPictureSize($(this).attr('src'), '240x120'));
     });
 
+
+    zoom.init({
+        scope: '#modal-gallery-step-1',
+    });
+
     modalStep.open();
 
-    var zoom = require('zoom.js');
-    zoom.listen();
 }
 
 
@@ -298,6 +304,8 @@ module.exports = Block.extend({
             framedPictureDisplay: 'hidden'
         });
 
+
+
         this.$inner.prepend(template);
         this.$framed = this.$inner.find('.frame');
 
@@ -315,7 +323,7 @@ module.exports = Block.extend({
                 channel.stopPropagation();
 
                 openModalStep1(modalStep1);
-                updateZoom();
+
                 ajaxWatcher();
                 synchronizeAndOpenStep2(param);
             });
