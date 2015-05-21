@@ -24,16 +24,17 @@ var template = '' +
 var instruction = '<span class="helper">' + i18n.t('blocks:table:helper-merge') + '</span>';
 
 
-function countLineColspan(scope, count) {
+function countLineColspan(scope) {
+    var count = 0;
     scope.find('th').each(function() {
         if (!isNaN($(this).attr('colspan'))) {
-            count += $(this).attr('colspan');
+            count = count + parseInt($(this).attr('colspan'));
         }
         else {
             count++;
         }
     });
-    return count;
+    return parseInt(count);
 }
 
 function addCell(row, cellTag) {
@@ -52,12 +53,13 @@ function addCell(row, cellTag) {
 
 function addColumnHandler(ev, scope) {
     ev.preventDefault();
-    var count = countLineColspan(scope,'th', 0);
+
     scope.find('tr').each(function() {
         addCell(this);
+
     });
 
-    scope.find('td').each(function() {
+    scope.find('td, th').each(function() {
         if (undefined === $(this).attr('colspan')){
             $(this).attr('colspan', 1);
         }
@@ -169,30 +171,35 @@ function deleteColumnHandler(ev, scope) {
             }
         }
     });
+    scope.find('th').each(function() {
+        var colspanValue = parseInt($(this).last().attr('colspan'));
+        if (colspanValue > 1) {
+            $(this).last().attr('colspan', colspanValue - 1);
+        }
+        else {
+            $(this).children().last().remove();
+        }
+    });
 }
 
 
 function addRowHandler(ev, scope) {
 
-    // Check all <tr> if  there is missind td, add whatever needed
-    scope.find('tr').each(function() {
-        if(count - $(this).children().length != 0  ) {
-            missing = count - $(this).children().length;
-            for(var i = 1; i < missing; i++) {
-                addCell(this, '<td>');
-            }
+    scope.find('th').each(function() {
+        if (undefined === $(this).attr('colspan')){
+            $(this).attr('colspan', 1);
         }
     });
 
     var row = $('<tr>');
-    var count = countLineColspan(scope, 0);
-    for(var i = 0; i< count; i++){
+    var count = countLineColspan(scope);
+    for (var i = 0; i < count; i++){
         addCell(row, '<td>');
     }
 
     scope.find('tbody').append(row);
     //Really important allow us to merge
-    scope.find('td').each(function() {
+    scope.find('td, th').each(function() {
         if (undefined === $(this).attr('colspan')){
             $(this).attr('colspan', 1);
         }
