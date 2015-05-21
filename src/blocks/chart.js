@@ -9,50 +9,40 @@ var stToHTML = require('../to-html');
 
 module.exports = Block.extend({
 
-    chooseable: true,
-
-    choices: [
-        {
-            icon: 'pie',
-            title: 'Pie Chart',
-            name: 'pie',
-            choices: [
-                {
-                    icon: 'pie-2',
-                    title: 'Pie Chart with Bloo',
-                    name: 'subpie',
-                    choices: [
+    chooseable: {
+        'name': 'chartType',
+        'options': [
+            {
+                'icon': 'pie',
+                'title': 'Pie Chart',
+                'value': 'pie',
+                'subChoice': {
+                    'name': 'pieColor',
+                    'options': [
                         {
-                            icon: 'pie-2',
-                            title: 'Hello mother',
-                            name: 'subpie1'
+                            'title': 'Blue',
+                            'value': 'blue'
                         },
                         {
-                            icon: 'pie-3',
-                            title: 'Do you want to play a game ?',
-                            name: 'subpie12'
+                            'title': 'Red',
+                            'value': 'red'
                         }
                     ]
-                },
-                {
-                    icon: 'pie-3',
-                    title: 'Pie Chart with Floo',
-                    name: 'subpie2'
                 }
-            ]
-        },
-        {
-            icon: 'bar',
-            title: 'Bar Chart',
-            name: 'bar'
-        }
-    ],
-
-    onChoose: function(chosen) {
-        this.$inner.html('You chose ' + JSON.stringify(chosen));
+            },
+            {
+                'icon': 'bar',
+                'title': 'Bar Chart',
+                'value': 'bar'
+            }
+        ]
     },
 
     type: 'Chart',
+
+    onChoose: function(choice) {
+        console.log(choice);
+    },
 
     title: function() {
         return 'Chart';
