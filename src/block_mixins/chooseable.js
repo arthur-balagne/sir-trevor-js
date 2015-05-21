@@ -3,6 +3,54 @@
 var $ = require('jquery');
 var _ = require('../lodash');
 
+/**
+
+    chooseable: {
+        'name': 'topLevelChoice',
+        'options': [
+            {
+                'icon': 'iconOne',
+                'title': 'Choice 1',
+                'value': 'choice1',
+                'subChoice': {
+                    'name': 'subLevelChoice',
+                    'options': [
+                        {
+                            'title': 'Sub Choice 1',
+                            'value': 'subchoice1'
+
+                        },
+                        {
+                            'title': 'Sub Choice 2',
+                            'value': 'subchoice2',
+                            'subChoice': {
+                                'name': 'subLevelChoice',
+                                'options': [
+                                    {
+                                        'title': 'Sub Sub Choice 1',
+                                        'value': 'subsubchoice1'
+
+                                    },
+                                    {
+                                        'title': 'Sub Sub Choice 2',
+                                        'value': 'subsubchoice2'
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                'icon': 'iconTwo',
+                'title': 'Choice 2',
+                'value': 'choice2'
+            }
+        ]
+    }
+
+ */
+
 var choice_container = [
     '<div class="st-block__choices">',
         '<%= choices %>',

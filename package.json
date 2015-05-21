@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "array.prototype.find": "^1.0.0",
+    "chart.js": "^1.0.2",
     "es6-shim": "^0.21.0",
     "etudiant-mod-xhr": "^1.1.4",
     "eventablejs": "^1.0.5",

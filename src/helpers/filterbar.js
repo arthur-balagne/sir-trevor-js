@@ -2,10 +2,12 @@ var $   = require('jquery');
 var _   = require('../lodash.js');
 var xhr = require('etudiant-mod-xhr');
 
+var apiUrl = 'http://localhost:3000/'
+
 var FilterBar = function(params) {
     this.$container = params.container;
     this.options = params.options;
-    this.url = params.url;
+    this.url = apiUrl + params.url;
     this.limit = params.limit;
 
     this.eventBus = Object.assign({}, require('../events.js'));

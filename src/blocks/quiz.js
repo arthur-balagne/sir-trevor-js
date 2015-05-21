@@ -7,7 +7,9 @@
 var _        = require('../lodash');
 var Block    = require('../block');
 var stToHTML = require('../to-html');
-var Slider   = require('../helpers/slider.js');
+
+var Slider    = require('../helpers/slider.js');
+var FilterBar = require('../helpers/filterbar.js');
 
 var slideContentBuilder = function(slideContents) {
     return slideContents.map(function(slideContent) {
@@ -25,33 +27,76 @@ var slideContentBuilder = function(slideContents) {
     });
 };
 
+var registerSliderUpdate = function() {
+    this.slider.eventBus.on('progress', function() {
+        this.filterBar.moreResults();
+    }.bind(this));
+
+    this.filterBar.eventBus.on('update', function(results) {
+        var updated = this.filterable.slideContentBuilder(results);
+
+        this.slider.update(updated);
+    }.bind(this));
+};
+
+var registerSlideReset = function() {
+    this.filterBar.eventBus.on('search', function(results) {
+        var contents = this.filterable.slideContentBuilder(results);
+
+        this.slider.reset(contents);
+    }.bind(this));
+};
+
 module.exports = Block.extend({
 
-    filterable: {
-      bar: {
-        url: 'http://localhost:3000/content',
-        options: [ {
-            label: 'label 1',
-            value: 1
-        }, {
-            label: 'label 2',
-            value: 2
-        }, {
-            label: 'label 3',
-            value: 3
-        }, {
-            label: 'label 4',
-            value: 4
-        } ],
-        limit: 20
-      },
-      slideContentBuilder: slideContentBuilder,
-      slider: {
-          next: 'Next',
-          prev: 'Prev',
-          itemsPerSlide: 3,
-          increment: 2
-      }
+    chooseable: {
+        name: 'contentType',
+        options: [
+            {
+                title: 'Sondage',
+                value: 'sondage'
+            },
+            {
+                title: 'Quiz',
+                value: 'quiz'
+            },
+            {
+                title: 'Test de personnalité',
+                value: 'test'
+            }
+        ]
+    },
+
+    onChoose: function(choices) {
+        this.filterBar = new FilterBar({
+            url: choices.contentType,
+            options: [ {
+                label: 'label 1',
+                value: 1
+            }, {
+                label: 'label 2',
+                value: 2
+            }, {
+                label: 'label 3',
+                value: 3
+            }, {
+                label: 'label 4',
+                value: 4
+            } ],
+            limit: 20,
+            container: this.$inner
+        })
+
+        this.slider = new Slider({
+            next: 'Next',
+            prev: 'Prev',
+            itemsPerSlide: 3,
+            increment: 2,
+            container: this.$inner
+        });
+
+        registerSlideReset.call(this);
+        registerSliderUpdate.call(this);
     },
 
     type: 'Quiz',
