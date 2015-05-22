@@ -49,7 +49,8 @@ function openModalStep1(modalStep, template) {
 
 
     zoom.init({
-        scope: '#modal-gallery-step-1',
+        scope: '.modal-gallery-step-1',
+        container: '.modal'
     });
 
     modalStep.open();
