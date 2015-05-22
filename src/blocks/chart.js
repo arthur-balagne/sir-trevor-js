@@ -1,51 +1,34 @@
 'use strict';
 
 /*
-  Text Block
+  Chart Block
 */
 
 var Block = require('../block');
 var stToHTML = require('../to-html');
 var Chart = require('chart.js');
 
-// Chart.defaults.global = {
-//     animation: true,
-//     animationSteps: 60,
-//     animationEasing: "easeOutQuart",
-
-//     showScale: true,
-//     scaleOverride: false,
-
-//     responsive: false,
-//     maintainAspectRatio: true,
-
-//     onAnimationProgress: function(){},
-
-//     // Function - Will fire on animation completion.
-//     onAnimationComplete: function(){}
-// };
-
 var chartData = {
     Bar: {
-    labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July' ],
-    datasets: [
-        {
-            label: 'My First dataset',
-            fillColor: 'rgba(220,220,220,0.5)',
-            strokeColor: 'rgba(220,220,220,0.8)',
-            highlightFill: 'rgba(220,220,220,0.75)',
-            highlightStroke: 'rgba(220,220,220,1)',
-            data: [ 65, 59, 80, 81, 56, 55, 40 ]
-        },
-        {
-            label: 'My Second dataset',
-            fillColor: 'rgba(151,187,205,0.5)',
-            strokeColor: 'rgba(151,187,205,0.8)',
-            highlightFill: 'rgba(151,187,205,0.75)',
-            highlightStroke: 'rgba(151,187,205,1)',
-            data: [ 28, 48, 40, 19, 86, 27, 90 ]
-        }
-    ]
+        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July' ],
+        datasets: [
+            {
+                label: 'My First dataset',
+                fillColor: 'rgba(220,220,220,0.5)',
+                strokeColor: 'rgba(220,220,220,0.8)',
+                highlightFill: 'rgba(220,220,220,0.75)',
+                highlightStroke: 'rgba(220,220,220,1)',
+                data: [ 65, 59, 80, 81, 56, 55, 40 ]
+            },
+            {
+                label: 'My Second dataset',
+                fillColor: 'rgba(151,187,205,0.5)',
+                strokeColor: 'rgba(151,187,205,0.8)',
+                highlightFill: 'rgba(151,187,205,0.75)',
+                highlightStroke: 'rgba(151,187,205,1)',
+                data: [ 28, 48, 40, 19, 86, 27, 90 ]
+            }
+        ]
     },
     Pie: [
         {
@@ -94,9 +77,9 @@ module.exports = Block.extend({
 
         var $chart = this.$inner.find('.chart');
 
-        $chart.parent().addClass('active');
-
         var ctx = $chart.get(0).getContext('2d');
+
+        $chart.parent().addClass('active');
 
         var generatedChart = new Chart(ctx)[chartType](chartData[chartType]);
     },
@@ -114,10 +97,8 @@ module.exports = Block.extend({
     },
 
     beforeBlockRender: function() {
-        console.log('beforeBlockRender');
     },
 
     onBlockRender: function() {
-        console.log('onBlockRender');
     }
 });

@@ -12,22 +12,22 @@ var canGoTo = function(index) {
 };
 
 var calculateSliderDimensions = function(reset) {
-    this.$slides = this.$container.find('.etu-slider-slide');
+    this.$slides = this.$slideContainer.find('.st-slider-slide');
 
     if (this.$slides.length > 0) {
         this.$slides.css('width', (this.$elem.width() / this.increment) + 'px');
-        this.$container.css('width', (this.$slides[0].clientWidth * this.$slides.length) + 'px');
+        this.$slideContainer.css('width', (this.$slides[0].clientWidth * this.$slides.length) + 'px');
 
         if (reset) {
             this.currentIndex = 0;
-            this.$container.css('left', '0%');
+            this.$slideContainer.css('left', '0%');
         }
     }
 };
 
 var checkButtons = function() {
-    var prevButton = this.$elem.find('.etu-slider-controls button[data-direction="prev"]');
-    var nextButton = this.$elem.find('.etu-slider-controls button[data-direction="next"]');
+    var prevButton = this.$elem.find('.st-slider-controls button[data-direction="prev"]');
+    var nextButton = this.$elem.find('.st-slider-controls button[data-direction="next"]');
 
     if (this.currentIndex === 0) {
         prevButton.attr('disabled', 'disabled');
@@ -64,7 +64,7 @@ var prepareSlides = function(slides, indexModifier) {
 };
 
 var registerButtons = function() {
-    this.$elem.on('click', '.etu-slider-controls button', function(e) {
+    this.$elem.on('click', '.st-slider-controls button', function(e) {
         e.preventDefault();
         if (this[$(e.currentTarget).data('direction')]) {
             this[$(e.currentTarget).data('direction')].call(this);
@@ -77,12 +77,12 @@ var registerButtons = function() {
 var Slider = function() {
     this.template = _.template([
         '<div class="st-block__slider">',
-            '<div class="etu-slider">',
-                '<div class="etu-slider-container">',
+            '<div class="st-slider">',
+                '<div class="st-slider-container">',
                     '<%= content %>',
                 '</div>',
             '</div>',
-            '<div class="etu-slider-controls">',
+            '<div class="st-slider-controls">',
                 '<%= buttons %>',
             '</div>',
         '</div>'
@@ -142,7 +142,7 @@ Slider.prototype = {
 
     ready: function() {
         this.$elem = $(this.$container).find('.st-block__slider');
-        this.$container = this.$elem.find('.etu-slider-container');
+        this.$slideContainer = this.$elem.find('.st-slider-container');
 
         if (!this.isReady) {
 
@@ -173,7 +173,7 @@ Slider.prototype = {
             markup += slide.render();
         });
 
-        this.$container.append(markup);
+        this.$slideContainer.append(markup);
 
         calculateSliderDimensions.call(this, false);
         checkButtons.call(this);
@@ -190,7 +190,7 @@ Slider.prototype = {
             slides += slide.render();
         });
 
-        this.$container.html(slides);
+        this.$slideContainer.html(slides);
 
         calculateSliderDimensions.call(this, true);
         checkButtons.call(this);
@@ -198,7 +198,7 @@ Slider.prototype = {
     },
 
     goTo: function(index) {
-        this.$container.css('left', '-' + ((100 / this.increment).toFixed(2) * index) + '%');
+        this.$slideContainer.css('left', '-' + ((100 / this.increment).toFixed(2) * index) + '%');
 
         this.currentIndex = index;
 
@@ -220,6 +220,10 @@ Slider.prototype = {
         if (canGoTo.call(this, newIndex)) {
             this.goTo(newIndex);
         }
+    },
+
+    destroy: function() {
+        this.$elem.remove();
     }
 };
 

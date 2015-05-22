@@ -11,13 +11,23 @@ var stToHTML = require('../to-html');
 var Slider    = require('../helpers/slider.js');
 var FilterBar = require('../helpers/filterbar.js');
 
+var registerClickSlideContents = function() {
+    if (this.hasRegisteredClick !== true) {
+        this.$inner.on('click', 'div[data-slide-item]', function(e) {
+            console.log(this);
+        });
+
+        this.hasRegisteredClick = true;
+    }
+};
+
 var slideContentBuilder = function(slideContents) {
     return slideContents.map(function(slideContent) {
         return _.template([
-            '<div class="st-block__quiz">',
-            '<img src="<%= image %>" />',
-            '<span><%= title %></span>',
-            '<span><%= description %></span>',
+            '<div data-slide-item="<%= id %>" class="st-block__quiz">',
+                '<img src="<%= image %>" />',
+                '<span><%= title %></span>',
+                '<span><%= description %></span>',
             '</div>'
         ].join('\n'))({
             image: slideContent.image,
@@ -27,23 +37,25 @@ var slideContentBuilder = function(slideContents) {
     });
 };
 
-var registerSliderUpdate = function() {
+var filterUpdate = function() {
     this.slider.eventBus.on('progress', function() {
         this.filterBar.moreResults();
     }.bind(this));
 
     this.filterBar.eventBus.on('update', function(results) {
-        var updated = this.filterable.slideContentBuilder(results);
+        var updated = slideContentBuilder(results);
 
         this.slider.update(updated);
     }.bind(this));
 };
 
-var registerSlideReset = function() {
+var filterReset = function() {
     this.filterBar.eventBus.on('search', function(results) {
-        var contents = this.filterable.slideContentBuilder(results);
+        var contents = slideContentBuilder(results);
 
         this.slider.reset(contents);
+
+        registerClickSlideContents.call(this);
     }.bind(this));
 };
 
@@ -68,24 +80,38 @@ module.exports = Block.extend({
     },
 
     onChoose: function(choices) {
+        this.selectedContentType = choices.contentType;
+
         this.filterBar = new FilterBar({
-            url: choices.contentType,
-            options: [ {
-                label: 'label 1',
-                value: 1
-            }, {
-                label: 'label 2',
-                value: 2
-            }, {
-                label: 'label 3',
-                value: 3
-            }, {
-                label: 'label 4',
-                value: 4
-            } ],
+            url: this.selectedContentType,
+            fields: [
+                {
+                    type: 'search',
+                    name: 'fulltext',
+                    label: 'Rechercher'
+                },
+                {
+                    type: 'select',
+                    name: 'id_thematique',
+                    label: 'Thematique',
+                    options: [ {
+                        label: 'Thematique 1',
+                        value: 1
+                    }, {
+                        label: 'Thematique 2',
+                        value: 2
+                    }, {
+                        label: 'Thematique 3',
+                        value: 3
+                    }, {
+                        label: 'Thematique 4',
+                        value: 4
+                    } ]
+                }
+            ],
             limit: 20,
             container: this.$inner
-        })
+        });
 
         this.slider = new Slider({
             next: 'Next',
@@ -95,8 +121,10 @@ module.exports = Block.extend({
             container: this.$inner
         });
 
-        registerSlideReset.call(this);
-        registerSliderUpdate.call(this);
+        filterReset.call(this);
+        filterUpdate.call(this);
+
+        this.filterBar.search();
     },
 
     type: 'Quiz',
@@ -114,10 +142,8 @@ module.exports = Block.extend({
     },
 
     beforeBlockRender: function() {
-        console.log('beforeBlockRender');
     },
 
     onBlockRender: function() {
-        console.log('onBlockRender');
     }
 });

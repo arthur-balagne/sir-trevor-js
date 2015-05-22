@@ -2,7 +2,7 @@ var _ = require('../lodash');
 
 var Slide = function() {
     this.template = _.template([
-        '<div class="etu-slider-slide">',
+        '<div class="st-slider-slide">',
             '<%= slide_content %>',
         '</div>'
     ].join('\n'));
