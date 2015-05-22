@@ -147,14 +147,12 @@ function updateData(row) {
 }
 
 function updateZoom() {
-    // 1 bind listener sur le change du select
-    // 2 Quand la taille change j'update data-image de modal-row-picture-{id}
     $('#modal-gallery-step-1').on('change', '.modal-row .sizes', function(){
         var zoomedSize = $(this).find(':selected').val();
         var rowId = $(this).parent().parent().attr('class').split(' ')[1];
         var originalSize = $('.modal-row-picture.' + rowId).data('image');
-        $('.modal-row-picture.' + rowId).data('zoom', changeOriginalPictureSize(originalSize, zoomedSize));
-        //console.log($('.modal-row-picture.' + rowId).data('zoom'));
+        var newSize = changeOriginalPictureSize(originalSize, zoomedSize);
+        $('.modal-row-picture.' + rowId).data('image', newSize);
     });
 }
 
@@ -324,7 +322,7 @@ module.exports = Block.extend({
                 channel.stopPropagation();
 
                 openModalStep1(modalStep1);
-
+                updateZoom();
                 ajaxWatcher();
                 synchronizeAndOpenStep2(param);
             });
