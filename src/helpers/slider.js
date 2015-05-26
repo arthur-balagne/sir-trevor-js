@@ -137,22 +137,19 @@ Slider.prototype = {
         this.slides = [];
         this.template = sliderTemplate;
 
-        this.$container = params.container;
-
         this.config = {
             itemsPerSlide: params.itemsPerSlide,
             increment: params.increment,
-            controls: params.controls,
-            autoBind: params.autoBind
+            controls: params.controls
         };
 
         if (params.contents) {
             this.slides = prepareSlides(params.contents, this.config.itemsPerSlide);
         }
 
-        if (this.config.autoBind) {
-            this.$container.append(this.render());
-            this.ready();
+        if (params.autoBind) {
+            params.autoBind.append(this.render());
+            this.ready(params.autoBind);
         }
     },
 
@@ -174,8 +171,8 @@ Slider.prototype = {
         });
     },
 
-    ready: function() {
-        this.$elem = $(this.$container).find('.st-block__slider');
+    ready: function($container) {
+        this.$elem = $container.find('.st-block__slider');
         this.$slideContainer = this.$elem.find('.st-slider-container');
 
         if (!this.isReady) {
@@ -226,6 +223,7 @@ Slider.prototype = {
     reset: function(newSlides) {
         var slidesMarkup = '';
         this.slides = [];
+        this.hasEmitted = false;
 
         this.slides =  prepareSlides(newSlides, this.config.itemsPerSlide);
 
@@ -237,7 +235,6 @@ Slider.prototype = {
 
         calculateSliderDimensions.call(this, true);
         checkButtons.call(this);
-        this.hasEmitted = false;
     },
 
     goTo: function(index) {
