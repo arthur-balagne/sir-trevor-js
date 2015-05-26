@@ -3,6 +3,54 @@
 var $ = require('jquery');
 var _ = require('../lodash');
 
+/**
+
+    chooseable: {
+        'name': 'topLevelChoice',
+        'options': [
+            {
+                'icon': 'iconOne',
+                'title': 'Choice 1',
+                'value': 'choice1',
+                'subChoice': {
+                    'name': 'subLevelChoice',
+                    'options': [
+                        {
+                            'title': 'Sub Choice 1',
+                            'value': 'subchoice1'
+
+                        },
+                        {
+                            'title': 'Sub Choice 2',
+                            'value': 'subchoice2',
+                            'subChoice': {
+                                'name': 'subLevelChoice',
+                                'options': [
+                                    {
+                                        'title': 'Sub Sub Choice 1',
+                                        'value': 'subsubchoice1'
+
+                                    },
+                                    {
+                                        'title': 'Sub Sub Choice 2',
+                                        'value': 'subsubchoice2'
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                'icon': 'iconTwo',
+                'title': 'Choice 2',
+                'value': 'choice2'
+            }
+        ]
+    }
+
+ */
+
 var choice_container = [
     '<div class="st-block__choices">',
         '<%= choices %>',
@@ -10,7 +58,7 @@ var choice_container = [
 ].join('\n');
 
 var choice_button = [
-    '<a class="st-button" data-choice="<%= name %>">',
+    '<a class="st-button" data-choice="<%= value %>">',
         '<span class="st-icon"><%= icon %></span>',
         '<span><%= title %></span>',
     '</a>'
@@ -28,24 +76,30 @@ var generateChoices = function(choices) {
     var markup = '';
 
     choices.forEach(function(choice) {
+        choice.icon = choice.icon ? choice.icon : '';
+
         markup += _.template(choice_button)(choice);
     });
 
     return markup;
 };
 
-var getChoice = function(choices, choiceId) {
-    var found;
+var getChoice = function(choice, selected) {
+    var found = {};
 
-    if (choices) {
-        choices.some(function(choice) {
-            if (choice.name === choiceId) {
-                found = choice;
+    if (choice.options) {
+        choice.options.some(function(option) {
+            if (option.value === selected) {
+                found = Object.assign(found, {
+                    name: choice.name,
+                    value: option.value,
+                    subChoice: option.subChoice
+                });
                 return true;
             }
 
-            if (choice.choices) {
-                found = getChoice(choice.choices, choiceId);
+            if (option.subChoice) {
+                found = getChoice(option.subChoice, selected);
                 if (found) { return true; }
             }
 
@@ -63,14 +117,14 @@ var getChoice = function(choices, choiceId) {
 var handleChoice = function(e) {
     e.preventDefault();
 
-    var choiceId = $(e.currentTarget).data('choice');
+    var selected = $(e.currentTarget).data('choice');
 
-    this.chosen[choiceId] = true;
+    var choice = getChoice(this.chooseable, selected);
 
-    var choice = getChoice(this.choices, choiceId);
+    this.chosen[choice.name] = selected;
 
-    if (choice && choice.choices) {
-        var choicesMarkup = generateChoices(choice.choices);
+    if (choice && choice.subChoice) {
+        var choicesMarkup = generateChoices(choice.subChoice.options);
 
         this.$inner.children('.st-block__choices').html(choicesMarkup);
     }
@@ -85,11 +139,12 @@ module.exports = {
     mixinName: 'Chooseable',
 
     initializeChooseable: function() {
-        var choicesMarkup = generateChoices(this.choices);
-
         this.chosen = {};
 
+        var choicesMarkup = generateChoices(this.chooseable.options);
+
         this.$inner.append(generateContainer(choicesMarkup));
+
         this.$inner.on('click', '.st-block__choices a.st-button', handleChoice.bind(this));
     }
 };

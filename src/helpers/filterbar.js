@@ -1,81 +1,141 @@
-var $   = require('jquery');
 var _   = require('../lodash.js');
 var xhr = require('etudiant-mod-xhr');
 
-var FilterBar = function(params) {
-    this.$container = params.container;
-    this.options = params.options;
-    this.url = params.url;
-    this.limit = params.limit;
+var renderSelect = function(field) {
+    field.label = field.label || '';
 
-    this.eventBus = Object.assign({}, require('../events.js'));
-
-    this.template = _.template([
-        '<div class="st-block__filter">',
-            '<input type="search" />',
-            '<select>',
+    var selectTemplate = _.template([
+        '<div class="st-block__filter-field">',
+            '<label for="<%= name %>">',
+                '<%= label %>',
+            '</label>',
+            '<select id="<%= name %>" name="<%= name %>">',
                 '<%= options %>',
             '</select>',
         '</div>'
     ].join('\n'));
 
-    this.$container.append(this.render());
+    var optionTemplate = _.template('<option value="<%= value %>"><%= label %></option>');
+    var optionMarkup = '';
+
+    field.options.forEach(function(option) {
+        optionMarkup += optionTemplate({
+            value: option.value,
+            label: option.label
+        });
+    });
+
+    return selectTemplate({
+        name: field.name,
+        options: optionMarkup,
+        label: field.label
+    });
+};
+
+var renderStandardField = function(field) {
+    field.label = field.label || '';
+
+    var template = _.template([
+        '<div class="st-block__filter-field">',
+            '<label for="<%= name %>">',
+                '<%= label %>',
+            '</label>',
+            '<input type="<%= type %>" name="<%= name %>" />',
+        '</div>'
+    ].join('\n'));
+
+    return template({
+        name: field.name,
+        type: field.type,
+        label: field.label
+    });
+};
+
+var renderField = function(field) {
+    var fieldMarkup;
+
+    switch (field.type) {
+        case 'select':
+            fieldMarkup = renderSelect(field);
+            break;
+        default:
+            fieldMarkup = renderStandardField(field);
+            break;
+    }
+
+    return fieldMarkup;
+};
+
+var searchBuilder = function ($elem) {
+    var search = {};
+    var $fields = $elem.find('input, select');
+
+    $fields.each(function() {
+        if (this.value) {
+            search[this.name] = this.value;
+        }
+    });
+
+    return search;
+};
+
+var filterBarTemplate = _.template([
+    '<form name="" class="st-block__filter">',
+        '<%= fields %>',
+    '</form>'
+].join('\n'));
+
+var FilterBar = function(params) {
+    this.$container = params.container;
+    this.url = params.url;
+    this.limit = params.limit;
+
+    this.eventBus = Object.assign({}, require('../events.js'));
+
+    this.template = filterBarTemplate;
+
+    this.$container.append(this.render(params.fields));
     this.ready();
 };
 
 FilterBar.prototype = {
-    render: function() {
-        var optionMarkup = '';
-        var optionTemplate = _.template('<option value="<%= value %>"><%= label %></option>');
+    render: function(fields) {
+        var fieldMarkup = '';
 
-        this.options.forEach(function(option) {
-            optionMarkup += optionTemplate({
-                value: option.value,
-                label: option.label
-            });
+        fields.forEach(function(field) {
+            fieldMarkup += renderField(field);
         });
 
         return this.template({
-            options: optionMarkup
+            fields: fieldMarkup
         });
     },
 
     ready: function() {
-        this.$elem.on('keyup', 'input[type="search"]', _.debounce(function(event) {
+        this.$elem.on('keyup', 'input', _.debounce(function() {
             this.search();
         }.bind(this), 300));
 
-        this.$elem.on('change', 'select', function(event) {
+        this.$elem.on('change', 'select', function() {
             this.search();
         }.bind(this));
     },
 
     search: function(search, eventName) {
-        search = search || {};
+        search = search || {};
         eventName = eventName || 'search';
 
-        var fulltext = this.$elem.find('input[type="search"]').val();
+        search = Object.assign(search, searchBuilder(this.$elem), {
+            limit: this.limit
+        });
 
-        if (fulltext) {
-            search.fulltext = fulltext;
-        }
+        var searchUrl = xhr.paramizeUrl(this.url, search);
 
-        var id = this.$elem.find('select').val();
-
-        if (id) {
-            search.id_thematique = id;
-        }
-
-        search.limit = this.limit;
-
-        var searchUrl = xhr.paramizeUrl(this.url);
-        // var searchUrl = xhr.paramizeUrl(this.url, search);
+        this.nextSearch = search;
 
         xhr.get(searchUrl)
             .then(function(results) {
                 this.eventBus.trigger(eventName, results);
-
-                this.nextSearch = search;
 
                 if (this.nextSearch.offset) {
                     this.nextSearch.offset += results.length;
@@ -88,6 +148,10 @@ FilterBar.prototype = {
 
     moreResults: function() {
         this.search(this.nextSearch, 'update');
+    },
+
+    destroy: function() {
+        this.$elem.remove();
     }
 };
 
