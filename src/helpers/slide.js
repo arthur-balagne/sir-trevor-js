@@ -1,18 +1,19 @@
 var _ = require('../lodash');
 
-var Slide = function() {
-    this.template = _.template([
-        '<div class="st-slider-slide">',
-            '<%= slide_content %>',
-        '</div>'
-    ].join('\n'));
+var slideTemplate = _.template([
+    '<div class="st-slider-slide">',
+        '<%= slide_content %>',
+    '</div>'
+].join('\n'));
 
-    this.init.apply(this, arguments);
+var Slide = function() {
+    this.constructor.apply(this, arguments);
 };
 
 Slide.prototype = {
 
-    init: function(id, contents, max) {
+    constructor: function(id, contents, max) {
+        this.template = slideTemplate;
         this.id = id;
         this.contents = contents;
         this.max = max;

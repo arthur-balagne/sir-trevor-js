@@ -11,6 +11,8 @@ var stToHTML = require('../to-html');
 var Slider    = require('../helpers/slider.js');
 var FilterBar = require('../helpers/filterbar.js');
 
+var apiUrl = 'http://localhost:3000/';
+
 var registerClickSlideContents = function() {
     if (this.hasRegisteredClick !== true) {
         this.$inner.on('click', 'div[data-slide-item]', function(e) {
@@ -30,6 +32,7 @@ var slideContentBuilder = function(slideContents) {
                 '<span><%= description %></span>',
             '</div>'
         ].join('\n'))({
+            id: slideContent.id,
             image: slideContent.image,
             title: slideContent.title,
             description: slideContent.description
@@ -83,7 +86,7 @@ module.exports = Block.extend({
         this.selectedContentType = choices.contentType;
 
         this.filterBar = new FilterBar({
-            url: this.selectedContentType,
+            url: apiUrl + this.selectedContentType,
             fields: [
                 {
                     type: 'search',
@@ -114,11 +117,14 @@ module.exports = Block.extend({
         });
 
         this.slider = new Slider({
-            next: 'Next',
-            prev: 'Prev',
+            controls: {
+                next: 'Next',
+                prev: 'Prev',
+            },
             itemsPerSlide: 3,
             increment: 2,
-            container: this.$inner
+            container: this.$inner,
+            autoBind: true
         });
 
         filterReset.call(this);

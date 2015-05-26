@@ -1,9 +1,7 @@
 var _   = require('../lodash.js');
 var xhr = require('etudiant-mod-xhr');
 
-var apiUrl = 'http://localhost:3000/';
-
-function renderSelect(field) {
+var renderSelect = function(field) {
     field.label = field.label || '';
 
     var selectTemplate = _.template([
@@ -32,9 +30,9 @@ function renderSelect(field) {
         options: optionMarkup,
         label: field.label
     });
-}
+};
 
-function renderStandardField(field) {
+var renderStandardField = function(field) {
     field.label = field.label || '';
 
     var template = _.template([
@@ -51,9 +49,9 @@ function renderStandardField(field) {
         type: field.type,
         label: field.label
     });
-}
+};
 
-function renderField(field) {
+var renderField = function(field) {
     var fieldMarkup;
 
     switch (field.type) {
@@ -66,9 +64,9 @@ function renderField(field) {
     }
 
     return fieldMarkup;
-}
+};
 
-function searchBuilder($elem) {
+var searchBuilder = function ($elem) {
     var search = {};
     var $fields = $elem.find('input, select');
 
@@ -79,20 +77,22 @@ function searchBuilder($elem) {
     });
 
     return search;
-}
+};
+
+var filterBarTemplate = _.template([
+    '<form name="" class="st-block__filter">',
+        '<%= fields %>',
+    '</form>'
+].join('\n'));
 
 var FilterBar = function(params) {
     this.$container = params.container;
-    this.url = apiUrl + params.url;
+    this.url = params.url;
     this.limit = params.limit;
 
     this.eventBus = Object.assign({}, require('../events.js'));
 
-    this.template = _.template([
-        '<form name="" class="st-block__filter">',
-            '<%= fields %>',
-        '</form>'
-    ].join('\n'));
+    this.template = filterBarTemplate;
 
     this.$container.append(this.render(params.fields));
     this.ready();
@@ -129,9 +129,7 @@ FilterBar.prototype = {
             limit: this.limit
         });
 
-        // @dev
-        var searchUrl = xhr.paramizeUrl(this.url);
-        // var searchUrl = xhr.paramizeUrl(this.url, search);
+        var searchUrl = xhr.paramizeUrl(this.url, search);
 
         this.nextSearch = search;
 
