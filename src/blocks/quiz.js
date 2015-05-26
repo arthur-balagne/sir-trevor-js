@@ -123,8 +123,7 @@ module.exports = Block.extend({
             },
             itemsPerSlide: 3,
             increment: 2,
-            container: this.$inner,
-            autoBind: true
+            autoBind: this.$inner
         });
 
         filterReset.call(this);
