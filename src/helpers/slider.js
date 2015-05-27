@@ -126,12 +126,12 @@ var sliderTemplate = _.template([
 // PUBLIC
 
 var Slider = function() {
-    this.constructor.apply(this, arguments);
+    this.init.apply(this, arguments);
 };
 
 Slider.prototype = {
 
-    constructor: function(params) {
+    init: function(params) {
         this.eventBus = Object.assign({}, require('../events.js'));
 
         this.slides = [];
@@ -147,9 +147,9 @@ Slider.prototype = {
             this.slides = prepareSlides(params.contents, this.config.itemsPerSlide);
         }
 
-        if (params.autoBind) {
-            params.autoBind.append(this.render());
-            this.ready(params.autoBind);
+        if (params.container) {
+            params.container.append(this.render());
+            this.bindToDOM(params.container);
         }
     },
 
@@ -171,11 +171,11 @@ Slider.prototype = {
         });
     },
 
-    ready: function($container) {
-        this.$elem = $container.find('.st-block__slider');
+    bindToDOM: function(container) {
+        this.$elem = container.find('.st-block__slider');
         this.$slideContainer = this.$elem.find('.st-slider-container');
 
-        if (!this.isReady) {
+        if (!this.isBoundToDOM) {
 
             if (this.config.controls) {
                 registerButtons.call(this);
@@ -184,7 +184,7 @@ Slider.prototype = {
             calculateSliderDimensions.call(this, true);
             checkButtons.call(this);
 
-            this.isReady = true;
+            this.isBoundToDOM = true;
         }
     },
 

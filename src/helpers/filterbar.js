@@ -66,7 +66,7 @@ var renderField = function(field) {
     return fieldMarkup;
 };
 
-var searchBuilder = function ($elem) {
+var searchBuilder = function($elem) {
     var search = {};
     var $fields = $elem.find('input, select');
 
@@ -85,20 +85,25 @@ var filterBarTemplate = _.template([
     '</form>'
 ].join('\n'));
 
-var FilterBar = function(params) {
-    this.$container = params.container;
-    this.url = params.url;
-    this.limit = params.limit;
-
-    this.eventBus = Object.assign({}, require('../events.js'));
-
-    this.template = filterBarTemplate;
-
-    this.$container.append(this.render(params.fields));
-    this.ready();
+var FilterBar = function() {
+    this.init.apply(this, arguments);
 };
 
 FilterBar.prototype = {
+    init: function(params) {
+        this.url = params.url;
+        this.limit = params.limit;
+
+        this.eventBus = Object.assign({}, require('../events.js'));
+
+        this.template = filterBarTemplate;
+
+        if (params.container) {
+            params.container.append(this.render(params.fields));
+            this.bindToDOM(params.container);
+        }
+    },
+
     render: function(fields) {
         var fieldMarkup = '';
 
@@ -111,7 +116,9 @@ FilterBar.prototype = {
         });
     },
 
-    ready: function() {
+    bindToDOM: function(container) {
+        this.$elem = container.find('.st-block__filter');
+
         this.$elem.on('keyup', 'input', _.debounce(function() {
             this.search();
         }.bind(this), 300));
@@ -135,13 +142,13 @@ FilterBar.prototype = {
 
         xhr.get(searchUrl)
             .then(function(results) {
-                this.eventBus.trigger(eventName, results);
+                this.eventBus.trigger(eventName, results.content);
 
                 if (this.nextSearch.offset) {
-                    this.nextSearch.offset += results.length;
+                    this.nextSearch.offset += results.content.length;
                 }
                 else {
-                    this.nextSearch.offset = results.length;
+                    this.nextSearch.offset = results.content.length;
                 }
             }.bind(this));
     },
@@ -154,11 +161,5 @@ FilterBar.prototype = {
         this.$elem.remove();
     }
 };
-
-Object.defineProperty(FilterBar.prototype, '$elem', {
-    get: function $elem() {
-        return this.$container.find('.st-block__filter');
-    }
-});
 
 module.exports = FilterBar;
