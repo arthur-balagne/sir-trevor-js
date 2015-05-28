@@ -1,3 +1,4 @@
+var eventablejs = require('eventablejs');
 var _   = require('../lodash.js');
 var xhr = require('etudiant-mod-xhr');
 
@@ -92,26 +93,25 @@ var FilterBar = function() {
     this.init.apply(this, arguments);
 };
 
-FilterBar.prototype = {
+var prototype = {
     init: function(params) {
         this.app = params.app;
         this.url = params.url;
         this.limit = params.limit;
-
-        this.eventBus = Object.assign({}, require('../events.js'));
+        this.fields = params.fields;
 
         this.template = filterBarTemplate;
 
         if (params.container) {
-            params.container.append(this.render(params.fields));
+            params.container.append(this.render(this.fields));
             this.bindToDOM(params.container);
         }
     },
 
-    render: function(fields) {
+    render: function() {
         var fieldMarkup = '';
 
-        fields.forEach(function(field) {
+        this.fields.forEach(function(field) {
             fieldMarkup += renderField(field);
         });
 
@@ -147,19 +147,11 @@ FilterBar.prototype = {
 
         xhr.get(searchUrl)
             .then(function(results) {
-                if (results.status === 1) {
-                    this.eventBus.trigger(eventName, results.content);
+                this.trigger(eventName, results.content);
 
-                    if (this.nextSearch.offset) {
-                        this.nextSearch.offset += results.content.length;
-                    }
-                    else {
-                        this.nextSearch.offset = results.content.length;
-                    }
-                }
-                else {
-                    this.eventBus.trigger('noresults');
-                }
+                this.nextSearch.offset = this.nextSearch.offset ? this.nextSearch.offset += results.content.length : results.content.length;
+            }.bind(this), function(err) {
+                this.trigger('noResult');
             }.bind(this));
     },
 
@@ -171,5 +163,7 @@ FilterBar.prototype = {
         this.$elem.remove();
     }
 };
+
+FilterBar.prototype = Object.assign({}, prototype, eventablejs);
 
 module.exports = FilterBar;

@@ -4,6 +4,8 @@
   Jeux, Concours et Sondages Block
 */
 
+var xhr = require('etudiant-mod-xhr');
+
 var Block    = require('../block');
 var stToHTML = require('../to-html');
 
@@ -13,12 +15,6 @@ var FilterBar = require('../helpers/filterbar.class.js');
 var apiUrl = 'http://api.letudiant.lk/jcs/';
 
 var subBlockManager = require('../sub_blocks/index.js');
-
-// @DEV
-function getMock(){
-    return require('../filtermock.json');
-}
-//@DEV END
 
 function registerClickOnContents(block) {
     if (block.hasRegisteredClick !== true) {
@@ -39,12 +35,12 @@ function registerClickOnContents(block) {
     }
 }
 
-function filterOnUpdate(block, contentType) {
-    block.slider.eventBus.on('progress', function() {
+function filterUpdate(block, contentType) {
+    block.slider.on('progress', function() {
         block.filterBar.moreResults();
     });
 
-    block.filterBar.eventBus.on('update', function(results) {
+    block.filterBar.on('update', function(results) {
         var additionalSubBlocks = subBlockManager.build('jcs', results, contentType);
         var subBlockMarkup = subBlockManager.render(additionalSubBlocks);
 
@@ -54,8 +50,8 @@ function filterOnUpdate(block, contentType) {
     });
 }
 
-function filterOnSearch(block, contentType) {
-    block.filterBar.eventBus.on('search', function(results) {
+function filterSearch(block, contentType) {
+    block.filterBar.on('search', function(results) {
         block.subBlocks = subBlockManager.build('jcs', results, contentType);
 
         var subBlockMarkup = subBlockManager.render(block.subBlocks);
@@ -63,6 +59,12 @@ function filterOnSearch(block, contentType) {
         block.slider.reset(subBlockMarkup);
 
         registerClickOnContents(block);
+    });
+
+    block.filterBar.on('noResult', function() {
+        block.subBlocks = [];
+
+        block.slider.reset();
     });
 }
 
@@ -92,9 +94,11 @@ module.exports = Block.extend({
 
         var filterBarUrl = apiUrl + this.selectedContentType + '/search';
 
-        return new Promise(function(resolve, reject) {
-            var mock = getMock();
-            resolve(mock.content.thematics);
+        return xhr.get('http://api.letudiant.lk/jcs/thematique/list')
+        .then(function(result) {
+            return result.content;
+        }, function(err) {
+            console.error(err);
         })
         .then(function(filterOptionsRaw) {
             var filterOptions = filterOptionsRaw.map(function(filterOption) {
@@ -104,7 +108,7 @@ module.exports = Block.extend({
                 };
             });
 
-            this.filterBar = new FilterBar({
+            this.filterBar = window.filterBar = new FilterBar({
                 url: filterBarUrl,
                 fields: [
                     {
@@ -135,8 +139,8 @@ module.exports = Block.extend({
                 container: this.$inner
             });
 
-            filterOnSearch(this, this.selectedContentType);
-            filterOnUpdate(this, this.selectedContentType);
+            filterSearch(this, this.selectedContentType);
+            filterUpdate(this, this.selectedContentType);
 
             this.filterBar.search();
         }.bind(this));

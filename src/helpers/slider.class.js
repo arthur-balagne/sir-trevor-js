@@ -1,4 +1,5 @@
 var $ = require('jquery');
+var eventablejs = require('eventablejs');
 var _ = require('../lodash');
 
 var Slide = require('./slide.class.js');
@@ -19,21 +20,24 @@ var calculateSliderDimensions = function(reset) {
             this.$slideContainer.css('left', '0%');
         }
     }
+    else {
+        this.$slideContainer.css('width', 'auto');
+    }
 };
 
 var checkButtons = function() {
-    if (this.currentIndex === 0) {
-        this.eventBus.trigger('buttons:prev:disable');
+    if (this.currentIndex === 0 || this.slides.length === 0) {
+        this.trigger('buttons:prev:disable');
     }
     else {
-        this.eventBus.trigger('buttons:prev:enable');
+        this.trigger('buttons:prev:enable');
     }
 
-    if (this.currentIndex === this.slides.length - 1) {
-        this.eventBus.trigger('buttons:next:disable');
+    if (this.currentIndex === this.slides.length - 1 || this.slides.length === 0) {
+        this.trigger('buttons:next:disable');
     }
     else {
-        this.eventBus.trigger('buttons:next:enable');
+        this.trigger('buttons:next:enable');
     }
 };
 
@@ -41,7 +45,7 @@ var checkProgress = function() {
     var progress = Math.round((this.currentIndex / this.slides.length) * 100);
 
     if (progress > 50 && this.hasEmitted !== true) {
-        this.eventBus.trigger('progress');
+        this.trigger('progress');
         this.hasEmitted = true;
     }
 };
@@ -71,16 +75,16 @@ var registerButtons = function() {
         }
     }.bind(this));
 
-    this.eventBus.on('buttons:prev:disable', function() {
+    this.on('buttons:prev:disable', function() {
         prevButton.attr('disabled', 'disabled');
     });
-    this.eventBus.on('buttons:prev:enable', function() {
+    this.on('buttons:prev:enable', function() {
         prevButton.removeAttr('disabled');
     });
-    this.eventBus.on('buttons:next:disable', function() {
+    this.on('buttons:next:disable', function() {
         nextButton.attr('disabled', 'disabled');
     });
-    this.eventBus.on('buttons:next:enable', function() {
+    this.on('buttons:next:enable', function() {
         nextButton.removeAttr('disabled');
     });
 };
@@ -123,17 +127,20 @@ var sliderTemplate = _.template([
     '</div>'
 ].join('\n'));
 
+var noSlidesTemplate = [
+    '<span class="st-slider-no-slides">',
+        'Il n\'y a pas de resultats',
+    '</span>'
+].join('\n');
+
 // PUBLIC
 
 var Slider = function() {
     this.init.apply(this, arguments);
 };
 
-Slider.prototype = {
-
+var prototype = {
     init: function(params) {
-        this.eventBus = Object.assign({}, require('../events.js'));
-
         this.slides = [];
         this.template = sliderTemplate;
 
@@ -221,17 +228,23 @@ Slider.prototype = {
     },
 
     reset: function(newSlides) {
-        var slidesMarkup = '';
         this.slides = [];
         this.hasEmitted = false;
 
-        this.slides =  prepareSlides(newSlides, this.config.itemsPerSlide);
+        if (newSlides) {
+            var slidesMarkup = '';
 
-        this.slides.forEach(function(slide) {
-            slidesMarkup += slide.render();
-        });
+            this.slides =  prepareSlides(newSlides, this.config.itemsPerSlide);
 
-        this.$slideContainer.html(slidesMarkup);
+            this.slides.forEach(function(slide) {
+                slidesMarkup += slide.render();
+            });
+
+            this.$slideContainer.html(slidesMarkup);
+        }
+        else {
+            this.$slideContainer.html(noSlidesTemplate);
+        }
 
         calculateSliderDimensions.call(this, true);
         checkButtons.call(this);
@@ -266,5 +279,7 @@ Slider.prototype = {
         this.$elem.remove();
     }
 };
+
+Slider.prototype = Object.assign({}, prototype, eventablejs);
 
 module.exports = Slider;
