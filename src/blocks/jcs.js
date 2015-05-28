@@ -7,8 +7,8 @@
 var Block    = require('../block');
 var stToHTML = require('../to-html');
 
-var Slider    = require('../helpers/slider.js');
-var FilterBar = require('../helpers/filterbar.js');
+var Slider    = require('../helpers/slider.class.js');
+var FilterBar = require('../helpers/filterbar.class.js');
 
 var apiUrl = 'http://api.letudiant.lk/jcs/';
 
@@ -33,6 +33,8 @@ function registerClickOnContents(block) {
             block.setAndLoadData(selectedSubBlock.contents);
 
             block.$inner.append(selectedSubBlock.renderLarge());
+
+            subBlockManager.unBindEventsOnContainer(block.$inner);
         });
     }
 }

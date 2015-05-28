@@ -4,6 +4,8 @@ var BasicSubBlock = function() {
 
 BasicSubBlock.prototype = {
     init: function(contents, type) {
+        this.id = contents.id;
+
         this.contents = Object.assign({}, contents, {
             type: type
         });

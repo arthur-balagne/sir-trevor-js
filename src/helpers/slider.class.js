@@ -1,7 +1,7 @@
 var $ = require('jquery');
 var _ = require('../lodash');
 
-var Slide = require('./slide.js');
+var Slide = require('./slide.class.js');
 
 var canGoTo = function(index) {
     return !(index < 0 || index > this.slides.length - 1);
