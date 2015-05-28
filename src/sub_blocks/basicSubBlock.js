@@ -3,14 +3,14 @@ var BasicSubBlock = function() {
 };
 
 BasicSubBlock.prototype = {
-    init: function(type, contents) {
+    init: function(contents, type) {
         this.contents = Object.assign({}, contents, {
             type: type
         });
     },
 
-    render: function() {
-        return this.template(this.contents);
+    renderSmall: function() {
+        return this.smallTemplate(this.contents);
     },
 
     renderLarge: function() {

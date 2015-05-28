@@ -1,24 +1,29 @@
 var $ = require('jquery');
 
 var subBlocks = {
-    quiz: require('./quizSubBlock.js'),
-    sondage: require('./sondageSubBlock.js'),
-    test: require('./testSubBlock.js'),
+    jcs: require('./jcsSubBlock.js'),
     video: require('./videoSubBlock.js'),
     image: require('./imageSubBlock.js')
 };
 
-function buildSingleBlock(type, contents) {
-    return new subBlocks[type](type, contents);
+function buildSingleBlock(type, contents, subType) {
+    return new subBlocks[type](contents, subType);
 }
 
 var SubBlockManager = {
 
     bindEventsToContainer: function(container, callback) {
         container.on('click', '[data-sub-block-id]', function(event) {
-            var id = $(event.target.srcElement).data('data-sub-block');
+            var $target = $(event.target);
 
-            callback(id);
+            if ($target.hasClass('st-sub-block-link')) {
+                window.open($target.attr('href'), '_blank');
+            }
+            else {
+                var id = $target.data('data-sub-block');
+
+                callback(id);
+            }
         });
     },
 
@@ -41,13 +46,13 @@ var SubBlockManager = {
 
     render: function(subBlocks) {
         return subBlocks.map(function(subBlock) {
-            return subBlock.render();
+            return subBlock.renderSmall();
         });
     },
 
-    build: function(type, contents) {
+    build: function(type, contents, subType) {
         return contents.map(function(singleContent) {
-            return buildSingleBlock(type, singleContent);
+            return buildSingleBlock(type, singleContent, subType);
         });
     }
 };

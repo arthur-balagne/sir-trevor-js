@@ -3,6 +3,7 @@ var xhr = require('etudiant-mod-xhr');
 
 var renderSelect = function(field) {
     field.label = field.label || '';
+    field.placeholder = field.placeholder || '';
 
     var selectTemplate = _.template([
         '<div class="st-block__filter-field">',
@@ -10,6 +11,7 @@ var renderSelect = function(field) {
                 '<%= label %>',
             '</label>',
             '<select id="<%= name %>" name="<%= name %>">',
+                '<option value="" selected disabled><%= placeholder %></option>',
                 '<%= options %>',
             '</select>',
         '</div>'
@@ -27,6 +29,7 @@ var renderSelect = function(field) {
 
     return selectTemplate({
         name: field.name,
+        placeholder: field.placeholder,
         options: optionMarkup,
         label: field.label
     });
@@ -91,6 +94,7 @@ var FilterBar = function() {
 
 FilterBar.prototype = {
     init: function(params) {
+        this.app = params.app;
         this.url = params.url;
         this.limit = params.limit;
 
@@ -133,7 +137,8 @@ FilterBar.prototype = {
         eventName = eventName || 'search';
 
         search = Object.assign(search, searchBuilder(this.$elem), {
-            limit: this.limit
+            limit: this.limit,
+            app: this.app
         });
 
         var searchUrl = xhr.paramizeUrl(this.url, search);
@@ -142,13 +147,18 @@ FilterBar.prototype = {
 
         xhr.get(searchUrl)
             .then(function(results) {
-                this.eventBus.trigger(eventName, results.content);
+                if (results.status === 1) {
+                    this.eventBus.trigger(eventName, results.content);
 
-                if (this.nextSearch.offset) {
-                    this.nextSearch.offset += results.content.length;
+                    if (this.nextSearch.offset) {
+                        this.nextSearch.offset += results.content.length;
+                    }
+                    else {
+                        this.nextSearch.offset = results.content.length;
+                    }
                 }
                 else {
-                    this.nextSearch.offset = results.content.length;
+                    this.eventBus.trigger('noresults');
                 }
             }.bind(this));
     },
