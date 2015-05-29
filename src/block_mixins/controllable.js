@@ -86,8 +86,19 @@ module.exports = {
             console.error('UIcontrol "' + control.slug + '": You must set a callback function.');
             return false;
         }
+        if (this.activable === true && control.sleep === true) {
+            var uiControl = this.getControlTemplate(control, 'hidden');
 
-        var uiControl = this.getControlTemplate(control);
+            this.eventBus.bind('button:control:enable', function() {
+                uiControl.removeClass('hidden');
+            });
+            this.eventBus.bind('button:control:disable', function() {
+                uiControl.addClass('hidden');
+            });
+        }
+        else {
+            uiControl = this.getControlTemplate(control);
+        }
 
         // By default, the trigger is a click event
         var eventTrigger = control.eventTrigger ? control.eventTrigger : 'click';
@@ -110,8 +121,11 @@ module.exports = {
         });
     },
 
-    getControlTemplate: function(control) {
+    getControlTemplate: function(control, customClass) {
         var tag = $('<div class="st-block-control-ui-btn"></div>');
+        if (customClass !== undefined) {
+            tag.addClass(customClass);
+        }
 
         if (control.activated) {
             tag.addClass('activated');
