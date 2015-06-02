@@ -4,6 +4,8 @@
   Jeux, Concours et Sondages Block
 */
 
+var $ = require('jquery');
+var velocity = require("velocity-animate");
 var xhr = require('etudiant-mod-xhr');
 
 var Block    = require('../block');
@@ -20,7 +22,7 @@ function registerClickOnContents(block) {
     if (block.hasRegisteredClick !== true) {
         block.hasRegisteredClick = true;
 
-        subBlockManager.bindEventsToContainer(block.$inner, function(selectedSubBlockId) {
+        subBlockManager.bindEventsOnContainer(block.$inner, function(selectedSubBlockId) {
             block.slider.destroy();
             block.filterBar.destroy();
 
@@ -70,6 +72,8 @@ function filterSearch(block, contentType) {
 
 module.exports = Block.extend({
 
+    stateable: true,
+
     chooseable: {
         name: 'contentType',
         options: [
@@ -101,6 +105,7 @@ module.exports = Block.extend({
             console.error(err);
         })
         .then(function(filterOptionsRaw) {
+
             var filterOptions = filterOptionsRaw.map(function(filterOption) {
                 return {
                     value: filterOption.id,
@@ -108,7 +113,7 @@ module.exports = Block.extend({
                 };
             });
 
-            this.filterBar = window.filterBar = new FilterBar({
+            this.filterBar = new FilterBar({
                 url: filterBarUrl,
                 fields: [
                     {

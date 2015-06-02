@@ -33,7 +33,7 @@ var checkButtons = function() {
         this.trigger('buttons:prev:enable');
     }
 
-    if (this.currentIndex === this.slides.length - 1 || this.slides.length === 0) {
+    if (this.currentIndex === this.slides.length - 1 || this.slides.length <= this.config.increment) {
         this.trigger('buttons:next:disable');
     }
     else {
@@ -156,7 +156,7 @@ var prototype = {
 
         if (params.container) {
             params.container.append(this.render());
-            this.bindToDOM(params.container);
+            this.appendToDOM(params.container);
         }
     },
 
@@ -178,7 +178,7 @@ var prototype = {
         });
     },
 
-    bindToDOM: function(container) {
+    appendToDOM: function(container) {
         this.$elem = container.find('.st-block__slider');
         this.$slideContainer = this.$elem.find('.st-slider-container');
 

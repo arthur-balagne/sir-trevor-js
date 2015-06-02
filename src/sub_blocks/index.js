@@ -23,7 +23,7 @@ function handleClick(event) {
 
 var SubBlockManager = {
 
-    bindEventsToContainer: function(container, callback) {
+    bindEventsOnContainer: function(container, callback) {
         container.on('click', '[data-sub-block-id]', { callback: callback }, handleClick);
     },
 
