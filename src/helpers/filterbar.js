@@ -9,7 +9,7 @@ var renderSelect = function(field) {
             '<label for="<%= name %>">',
                 '<%= label %>',
             '</label>',
-            '<select id="<%= name %>" name="<%= name %>">',
+            '<select id="<%= name %>" class="<%= name %>" name="<%= name %>">',
                 '<%= options %>',
             '</select>',
         '</div>'
@@ -93,8 +93,9 @@ var FilterBar = function(params) {
     this.eventBus = Object.assign({}, require('../events.js'));
 
     this.template = filterBarTemplate;
-
-    this.$container.append(this.render(params.fields));
+    if (this.$container !== undefined) {
+        this.$container.append(this.render(params.fields));
+    }
     this.ready();
 };
 

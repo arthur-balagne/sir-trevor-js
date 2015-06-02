@@ -35,6 +35,13 @@ var checkButtons = function() {
     else {
         this.eventBus.trigger('buttons:next:enable');
     }
+    var slideRows = 0 ;
+    this.slides.forEach(function(slide) {
+        slideRows += slide.contents.length;
+    });
+    if (slideRows < (this.config.itemsPerSlide * this.config.increment)) {
+        this.eventBus.trigger('buttons:all:disable');
+    }
 };
 
 var checkProgress = function() {

@@ -14,6 +14,10 @@ var zoom = require('etudiant-mod-zoom');
 var Slider   = require('../helpers/slider.js');
 var eventBus = Object.assign({}, require('../events.js'));
 
+var FilterBar = require('../helpers/filterbar.js');
+
+var apiUrl = 'http://localhost:3000/';
+
 
 // create our modals
 var modalStep1 = new Modal({
@@ -55,7 +59,6 @@ function openModalStep1(modalStep, template) {
     var tpl = template !== undefined ? template : modalTemplateStep1;
     modalStep.render({
         header: '<header>Image</header>',
-        head: modalTemplateFilters,
         content: tpl,
         footer: {
             next: 'Suite',
@@ -177,21 +180,11 @@ function updateData(row) {
 }
 
 /**
- * Helper function to update the data image with the select value.
- */
-function getZoom() {
-    var zoomedSize = $('.modal-row-content .sizes').find(':selected').val();
-    var rowId = $('.modal-row-content .sizes').parent().parent().attr('class').split(' ')[1];
-    var originalSize = $('.modal-row-picture.' + rowId).data('image');
-    var newSize = changeOriginalPictureSize(originalSize, zoomedSize);
-    $('.modal-row-picture.' + rowId).attr('data-image', newSize);
-}
-/**
  * Helper function to update the all data's image with the selected size value.
  */
 function updateZoom() {
     $.each($('body .modal-row-picture'), function(){
-        var size = $('.modal-row-content .sizes').find(':first').html();
+        var size = $('#formats option:eq(1)').html();
         var originalSize = $(this).data('image');
         var newSize = changeOriginalPictureSize(originalSize, size);
         $(this).attr('data-image', newSize);
@@ -271,6 +264,7 @@ function convertPlainTextIntoSlides(text) {
 
     return rowsTab;
 }
+
 /**
  * Update a slider
  * @param  {string} data        plain text from mediaform
@@ -286,15 +280,13 @@ function ajaxUpdate(data, slider, previewSize) {
         var original = $(this).attr('src');
         $(this).attr('src', changeOriginalPictureSize(original, '158x117'));
     });
-
     $.each($('.modal-row-content'), function() {
-        if($(this).find('.sizes')[0].length === 1) {
+        if ($(this).find('.sizes')[0].length === 1) {
             var actualPreview = $(this).find('.sizes').first().children('option').html();
-            $(this).prepend('<p class="size">Taille : ' + actualPreview + '</p>')
+            $(this).prepend('<p class="size">Taille : ' + actualPreview + '</p>');
             $(this).find('form').addClass('hidden');
         }
     });
-
     $.each($('.modal-row-picture'), function() {
         $(this).attr('data-image', changeOriginalPictureSize($(this).data('image'), previewSize));
     });
@@ -304,7 +296,7 @@ function ajaxUpdate(data, slider, previewSize) {
  *
  */
 function ajaxWatcher(slider) {
-    $('#modal-gallery-step-1').on('change', '.modal-search .sizes', function(){
+    $('#modal-gallery-step-1').on('change', '#formats', function(){
         var size = $(this).find(':selected').val();
         var sizeTxt = $(this).find(':selected').html();
         var modalTemplateSized = mediaForm.getTemplateMediasBySize(size);
@@ -315,7 +307,7 @@ function ajaxWatcher(slider) {
 
     });
 
-    $('#modal-gallery-step-1').on('change', '.modal-search .categories', function() {
+    $('#modal-gallery-step-1').on('change', '#categories', function() {
         var categories = $(this).find(':selected').val();
         var modalTemplateSized = mediaForm.getTemplateMediasByCategory(categories);
         modalTemplateSized.then(function(data){
@@ -359,6 +351,15 @@ function sliderControls(slider){
     $('body .modal-footer ').on('click', '.next', function(){
         slider.next();
     });
+}
+function loadFilterBar(fields, modal) {
+    var filterBar = new FilterBar({
+        url: apiUrl,
+        fields: fields,
+        limit: '',
+        container: modal
+    });
+    return filterBar;
 }
 
 module.exports = Block.extend({
@@ -425,15 +426,19 @@ module.exports = Block.extend({
         this.$framed = this.$inner.find('.frame');
 
         //Handlebar formated template
-        modalTemplateFilters = mediaForm.getTemplateFilters();
+        modalTemplateFilters = mediaForm.getArrayFilters();
+        //modalTemplateFilters = mediaForm.getTemplateFilters();
         modalTemplateStep1 = mediaForm.getTemplateMedias();
         // Ajax job before rendering modal
         q.all([ modalTemplateFilters, modalTemplateStep1 ]).then(function(data){
             modalTemplateFilters = data[0];
             modalTemplateStep1 = data[1];
-
+            modalTemplateFilters.unshift({
+                    type: 'search',
+                    name: 'fulltext',
+                    label: 'Rechercher'
+                });
             var rowsTab = convertPlainTextIntoSlides(modalTemplateStep1);
-
             var params = {
                 contents: rowsTab,
                 itemsPerSlide: 5,
@@ -446,7 +451,11 @@ module.exports = Block.extend({
                 slider.isReady = false;
                 openModalStep1(modalStep1, slider.render());
                 var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
-                slider.ready($modal);
+                var filterBar = loadFilterBar(modalTemplateFilters, $modal);
+
+                var $modal1 = $(modalStep1.$elem.children('.modal-inner-content')[0]);
+                slider.ready($modal1);
+
                 updateZoom();
                 ajaxWatcher(slider);
                 //Bind event on controls
