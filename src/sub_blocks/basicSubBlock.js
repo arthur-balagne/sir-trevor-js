@@ -9,6 +9,8 @@ BasicSubBlock.prototype = {
         this.contents = Object.assign({}, contents, {
             type: type
         });
+
+        this.contents.url = this.contents.url ? this.contents.url : '';
     },
 
     renderSmall: function() {

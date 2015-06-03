@@ -4,17 +4,20 @@
   Jeux, Concours et Sondages Block
 */
 
-var $ = require('jquery');
-var velocity = require("velocity-animate");
-var xhr = require('etudiant-mod-xhr');
+var $        = require('jquery');
+var xhr      = require('etudiant-mod-xhr');
+var Velocity = require('velocity-animate');
+require('velocity-animate/velocity.ui');
 
 var Block    = require('../block');
 var stToHTML = require('../to-html');
 
 var Slider    = require('../helpers/slider.class.js');
 var FilterBar = require('../helpers/filterbar.class.js');
+var Spinner   = require('../helpers/spinner.class.js');
 
 var apiUrl = 'http://api.letudiant.lk/jcs/';
+var filterOptionsUrl = apiUrl + 'thematique/list';
 
 var subBlockManager = require('../sub_blocks/index.js');
 
@@ -22,17 +25,22 @@ function registerClickOnContents(block) {
     if (block.hasRegisteredClick !== true) {
         block.hasRegisteredClick = true;
 
-        subBlockManager.bindEventsOnContainer(block.$inner, function(selectedSubBlockId) {
-            block.slider.destroy();
-            block.filterBar.destroy();
+        subBlockManager.bindEventsOnContainer(block.$inner, function(selectedSubBlockId, clickedElem) {
+            // debugger;
 
-            var selectedSubBlock = subBlockManager.getSubBlockById(selectedSubBlockId, block.subBlocks);
+            Velocity(clickedElem, 'callout.bounce', { duration: 400 })
+                .then(function() {
+                    block.slider.destroy();
+                    block.filterBar.destroy();
 
-            block.setAndLoadData(selectedSubBlock.contents);
+                    var selectedSubBlock = subBlockManager.getSubBlockById(selectedSubBlockId, block.subBlocks);
 
-            block.$inner.append(selectedSubBlock.renderLarge());
+                    block.setAndLoadData(selectedSubBlock.contents);
 
-            subBlockManager.unBindEventsOnContainer(block.$inner);
+                    block.$inner.append(selectedSubBlock.renderLarge());
+
+                    subBlockManager.unBindEventsOnContainer(block.$inner);
+                });
         });
     }
 }
@@ -54,19 +62,25 @@ function filterUpdate(block, contentType) {
 
 function filterSearch(block, contentType) {
     block.filterBar.on('search', function(results) {
-        block.subBlocks = subBlockManager.build('jcs', results, contentType);
+        block.$spinner.fadeOut()
+            .then(function() {
+                block.subBlocks = subBlockManager.build('jcs', results, contentType);
 
-        var subBlockMarkup = subBlockManager.render(block.subBlocks);
+                var subBlockMarkup = subBlockManager.render(block.subBlocks);
 
-        block.slider.reset(subBlockMarkup);
+                block.slider.reset(subBlockMarkup);
 
-        registerClickOnContents(block);
+                registerClickOnContents(block);
+            });
     });
 
     block.filterBar.on('noResult', function() {
         block.subBlocks = [];
 
-        block.slider.reset();
+        block.$spinner.fadeOut()
+            .then(function() {
+                block.slider.reset();
+            });
     });
 }
 
@@ -93,12 +107,15 @@ module.exports = Block.extend({
     },
 
     onChoose: function(choices) {
+        this.$spinner = new Spinner();
         this.subBlocks = [];
         this.selectedContentType = choices.contentType;
 
         var filterBarUrl = apiUrl + this.selectedContentType + '/search';
 
-        return xhr.get('http://api.letudiant.lk/jcs/thematique/list')
+        this.$spinner.appendTo(this.$inner);
+
+        return xhr.get(filterOptionsUrl)
         .then(function(result) {
             return result.content;
         }, function(err) {

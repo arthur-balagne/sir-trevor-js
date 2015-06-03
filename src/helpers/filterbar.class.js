@@ -103,7 +103,7 @@ var prototype = {
         this.template = filterBarTemplate;
 
         if (params.container) {
-            params.container.append(this.render(this.fields));
+            params.container.prepend(this.render(this.fields));
             this.bindToDOM(params.container);
         }
     },
@@ -141,9 +141,9 @@ var prototype = {
             app: this.app
         });
 
-        var searchUrl = xhr.paramizeUrl(this.url, search);
-
         this.nextSearch = search;
+
+        var searchUrl = xhr.paramizeUrl(this.url, search);
 
         xhr.get(searchUrl)
             .then(function(results) {

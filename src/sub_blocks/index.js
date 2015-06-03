@@ -17,7 +17,7 @@ function handleClick(event) {
     else {
         var id = $(event.currentTarget).data('sub-block-id').toString();
 
-        event.data.callback(id);
+        event.data.callback(id, event.currentTarget);
     }
 }
 
@@ -35,7 +35,7 @@ var SubBlockManager = {
         var retrievedSubBlock;
 
         subBlocks.some(function(subBlock) {
-            if (subBlock.id === id) {
+            if (subBlock.id.toString() === id.toString()) {
                 retrievedSubBlock = subBlock;
                 return true;
             }

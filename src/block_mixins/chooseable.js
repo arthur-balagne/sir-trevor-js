@@ -2,54 +2,8 @@
 
 var $ = require('jquery');
 var _ = require('../lodash');
-
-/**
-
-    chooseable: {
-        'name': 'topLevelChoice',
-        'options': [
-            {
-                'icon': 'iconOne',
-                'title': 'Choice 1',
-                'value': 'choice1',
-                'subChoice': {
-                    'name': 'subLevelChoice',
-                    'options': [
-                        {
-                            'title': 'Sub Choice 1',
-                            'value': 'subchoice1'
-
-                        },
-                        {
-                            'title': 'Sub Choice 2',
-                            'value': 'subchoice2',
-                            'subChoice': {
-                                'name': 'subLevelChoice',
-                                'options': [
-                                    {
-                                        'title': 'Sub Sub Choice 1',
-                                        'value': 'subsubchoice1'
-
-                                    },
-                                    {
-                                        'title': 'Sub Sub Choice 2',
-                                        'value': 'subsubchoice2'
-                                    }
-                                ]
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                'icon': 'iconTwo',
-                'title': 'Choice 2',
-                'value': 'choice2'
-            }
-        ]
-    }
-
- */
+var Velocity = require('velocity-animate');
+require('velocity-animate/velocity.ui');
 
 var choice_container = [
     '<div class="st-block__choices">',
@@ -64,15 +18,15 @@ var choice_button = [
     '</a>'
 ].join('\n');
 
-var generateContainer = function(choices) {
+function generateContainer(choices) {
     if (!choices) {
         choices = '';
     }
 
     return _.template(choice_container)({ choices: choices });
-};
+}
 
-var generateChoices = function(choices) {
+function generateChoices(choices) {
     var markup = '';
 
     choices.forEach(function(choice) {
@@ -82,9 +36,9 @@ var generateChoices = function(choices) {
     });
 
     return markup;
-};
+}
 
-var getChoice = function(choice, selected) {
+function getChoice(choice, selected) {
     var found = {};
 
     if (choice.options) {
@@ -112,27 +66,56 @@ var getChoice = function(choice, selected) {
     }
 
     return false;
+}
+
+var ChoiceBox = function(blockRef, choices) {
+    this.blockRef = blockRef;
+    this.$elem = $(generateContainer(generateChoices(choices)));
+
+    this.buttons = Array.prototype.slice.call(this.$elem[0].querySelectorAll('a.st-button'));
+
+    this.ready();
 };
 
-var handleChoice = function(e) {
-    e.preventDefault();
+ChoiceBox.prototype = {
+    getUnselected: function(selectedId) {
+        return this.buttons.filter(function(button) {
+            return button.dataset.choice !== selectedId;
+        });
+    },
 
-    var selected = $(e.currentTarget).data('choice');
+    ready: function() {
+        this.$elem.on('click', 'a.st-button', function handleChoice(e) {
+            e.preventDefault();
 
-    var choice = getChoice(this.chooseable, selected);
+            var selectedId = $(e.currentTarget).data('choice');
+            var unselected = this.getUnselected(selectedId);
 
-    this.chosen[choice.name] = selected;
+            Velocity(e.currentTarget, 'transition.bounceUpOut')
+            Velocity(unselected, 'transition.fadeOut')
+                .then(function() {
+                    var choice = getChoice(this.blockRef.chooseable, selectedId);
 
-    if (choice && choice.subChoice) {
-        var choicesMarkup = generateChoices(choice.subChoice.options);
+                    this.blockRef.chosen[choice.name] = selectedId;
 
-        this.$inner.children('.st-block__choices').html(choicesMarkup);
-    }
-    else {
-        this.$inner.children('.st-block__choices').remove();
-        this.onChoose(this.chosen);
+                    if (choice && choice.subChoice) {
+                        var choicesMarkup = generateChoices(choice.subChoice.options);
+
+                        this.blockRef.$inner.children('.st-block__choices').html(choicesMarkup);
+                    }
+                    else {
+                        this.blockRef.$inner.children('.st-block__choices').remove();
+                        this.blockRef.onChoose(this.blockRef.chosen);
+                    }
+                }.bind(this));
+        }.bind(this));
+    },
+
+    appendTo: function($elem) {
+        this.$elem.appendTo($elem);
     }
 };
+
 
 module.exports = {
 
@@ -141,10 +124,8 @@ module.exports = {
     initializeChooseable: function() {
         this.chosen = {};
 
-        var choicesMarkup = generateChoices(this.chooseable.options);
+        var choiceBox = new ChoiceBox(this, this.chooseable.options);
 
-        this.$inner.append(generateContainer(choicesMarkup));
-
-        this.$inner.on('click', '.st-block__choices a.st-button', handleChoice.bind(this));
+        choiceBox.appendTo(this.$inner);
     }
 };
