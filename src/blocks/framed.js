@@ -5,19 +5,18 @@
 */
 var evt = require('etudiant-mod-mediator');
 var $ = require('jquery');
-var mediaForm = require('etudiant-mod-mediaform');
 var Block = require('../block');
 var stToHTML = require('../to-html');
 var Modal = require('etudiant-mod-modal');
 var q  = require('q');
 var zoom = require('etudiant-mod-zoom');
-var Slider   = require('../helpers/slider.js');
-var eventBus = Object.assign({}, require('../events.js'));
+var Slider   = require('../helpers/slider.class.js');
+var eventBus = require('../event-bus.js');
+var subBlockManager = require('../sub_blocks/index.js');
+var FilterBar = require('../helpers/filterbar.class.js');
+var xhr = require('etudiant-mod-xhr');
 
-var FilterBar = require('../helpers/filterbar.js');
-
-var apiUrl = 'http://localhost:3000/';
-
+var apiUrl = 'http://api.letudiant.lk/edt/media';
 
 // create our modals
 var modalStep1 = new Modal({
@@ -34,6 +33,7 @@ var modalStep2 = new Modal({
 var modalTemplateFilters;
 var modalTemplateStep1;
 var modalTemplateStep2;
+var filteredImagesTab = [];
 
 /**
  * Change the keyword 'original' with another string
@@ -45,7 +45,7 @@ function changeOriginalPictureSize(src, size) {
     if (src === undefined) {
         return false;
     }
-    if (src.indexOf('original') > 0){
+    if (src.indexOf('original') > 0) {
         src = src.replace('original', size);
         return src;
     }
@@ -67,22 +67,21 @@ function openModalStep1(modalStep, template) {
     });
 
     $.each($('.modal-row-picture img'), function() {
-        $(this).attr('src', changeOriginalPictureSize($(this).attr('src'), '158x117'));
+        $(this).attr('src', changeOriginalPictureSize($(this).attr('src'), '90x90'));
     });
-
 
     zoom.init({
         scope: '.modal-gallery-step-1',
         container: '.modal'
     });
     modalStep.open();
-
 }
 
 /**
  * Hydrate a modal with well formated HTML
  */
 function openModalStep2(modal) {
+
     modal.render({
         header: '<header>Image</header>',
         content: modalTemplateStep2,
@@ -103,8 +102,11 @@ function openModalStep2(modal) {
 
 
 function startStep2(block) {
-        modalStep1.close();
-        evt.publish('modal-gallery-step-2', block);
+    modalStep1.close();
+    eventBus.trigger('button:control-0:disable');
+    eventBus.trigger('button:control-1:enable');
+    eventBus.trigger('button:control-2:enable');
+    evt.publish('modal-gallery-step-2', block);
 }
 /**
  * Grab all data's, update the sirTrevor block,  then to open next modal
@@ -116,6 +118,7 @@ function synchronizeAndOpenStep2(block) {
         var row = $(this).attr('class').split(' ')[1];
         var picture = updateData(row);
         var blockId = block.blockID;
+        modalTemplateStep2 = filteredImagesTab[row].renderLarge();
         $('#' + blockId + ' .framed-picture').html('<img alt="placeholder" src=""><br><legend>&copy L etudiant </legend></div>');
         $('.framed-picture img').attr('src', picture.url);
         $('.framed-picture img').css('display', 'inline-block');
@@ -128,11 +131,13 @@ function synchronizeAndOpenStep2(block) {
 /**
  * Grab all data's, update the sirTrevor block,  then to close actual modal
  * @param  {object} block the sir trevor block object to update
+ *
  */
 function synchronizeAndCloseStep2(block) {
-    // Remove click handler on step 1
     var blockId = block.blockID;
-    eventBus.trigger('button:control:enable');
+    eventBus.trigger('button:control-0:enable');
+    eventBus.trigger('button:control-1:disable');
+    eventBus.trigger('button:control-2:disable');
     $('.modal-gallery-step-1').off('click', '.validate');
 
     $('.picture-link').on('keyup', function() {
@@ -183,10 +188,13 @@ function updateData(row) {
  * Helper function to update the all data's image with the selected size value.
  */
 function updateZoom() {
+    $.each($('.modal-row-picture img'), function() {
+        $(this).attr('src', changeOriginalPictureSize($(this).attr('src'), '90x90'));
+    });
     $.each($('body .modal-row-picture'), function(){
-        var size = $('#formats option:eq(1)').html();
+        //var size = $('#format option:eq(1)').html();
         var originalSize = $(this).data('image');
-        var newSize = changeOriginalPictureSize(originalSize, size);
+        var newSize = changeOriginalPictureSize(originalSize, '90x90');
         $(this).attr('data-image', newSize);
     });
     $('#modal-gallery-step-1').on('change', '.modal-row-content .sizes', function(e){
@@ -214,7 +222,9 @@ function removePicture(ev, block) {
     ev.preventDefault();
     var framePicture = block.find('.framed-picture img');
     block.find('.framed-picture legend').remove();
-    eventBus.trigger('button:control:disable');
+    eventBus.trigger('button:control-0:enable');
+    eventBus.trigger('button:control-1:disable');
+    eventBus.trigger('button:control-2:disable');
     framePicture.remove();
 }
 
@@ -250,20 +260,6 @@ function validateInternalUrl(url) {
     }
     return internal;
 }
-/**
- * Helper function to convert text from mediaform module in array
- * @param  {string} text
- * @return {array}
- */
-function convertPlainTextIntoSlides(text) {
-    var rows = $(text).find('.modal-row');
-    var rowsTab = [];
-    $.each(rows, function(){
-        rowsTab.push('<div class="slide-row">' + $(this).html() + '</div>');
-    });
-
-    return rowsTab;
-}
 
 /**
  * Update a slider
@@ -278,7 +274,7 @@ function ajaxUpdate(data, slider, previewSize) {
 
     $.each($('.modal-row-picture img'), function() {
         var original = $(this).attr('src');
-        $(this).attr('src', changeOriginalPictureSize(original, '158x117'));
+        $(this).attr('src', changeOriginalPictureSize(original, '90x90'));
     });
     $.each($('.modal-row-content'), function() {
         if ($(this).find('.sizes')[0].length === 1) {
@@ -291,38 +287,7 @@ function ajaxUpdate(data, slider, previewSize) {
         $(this).attr('data-image', changeOriginalPictureSize($(this).data('image'), previewSize));
     });
 }
-/**
- *  Wait for ui updates then launch refresh
- *
- */
-function ajaxWatcher(slider) {
-    $('#modal-gallery-step-1').on('change', '#formats', function(){
-        var size = $(this).find(':selected').val();
-        var sizeTxt = $(this).find(':selected').html();
-        var modalTemplateSized = mediaForm.getTemplateMediasBySize(size);
-        modalTemplateSized.then(function(data) {
-            ajaxUpdate(data, slider, sizeTxt);
 
-        });
-
-    });
-
-    $('#modal-gallery-step-1').on('change', '#categories', function() {
-        var categories = $(this).find(':selected').val();
-        var modalTemplateSized = mediaForm.getTemplateMediasByCategory(categories);
-        modalTemplateSized.then(function(data){
-            ajaxUpdate(data, slider);
-        });
-    });
-
-    $('#modal-gallery-step-1').on('keyup', '.modal-search .search', function(){
-        var text = $(this).val();
-        var modalTemplateSized = mediaForm.getTemplateMediasByKeyword(text);
-        modalTemplateSized.then(function(data){
-            ajaxUpdate(data, slider);
-        });
-    });
-}
 
 function sliderControls(slider){
 
@@ -352,11 +317,52 @@ function sliderControls(slider){
         slider.next();
     });
 }
+
+function filterBarFormatter(jsonFilters) {
+
+    var tabCategories = [];
+    Object.keys(jsonFilters.content.categories).forEach(function(k){
+        var categorie = jsonFilters.content.categories[k];
+        tabCategories.push({ value: categorie.id , label: categorie.label }) ;
+    });
+
+    var tabFormats = [];
+    Object.keys(jsonFilters.content.formats).forEach(function(k){
+        var formats = jsonFilters.content.formats[k];
+        tabFormats.push({ value: formats.id , label: formats.label }) ;
+    });
+
+    var fields = [
+        {
+            type: 'search',
+            name: 'q',
+            label: 'Rechercher'
+        },
+        {
+            type: 'select',
+            name: 'category',
+            label: 'Catégories',
+            placeholder: 'Sélectionnez une catégorie',
+            options: tabCategories
+        },
+        {
+            type: 'select',
+            name: 'format',
+            label: 'Formats',
+            placeholder: 'Sélectionnez un format',
+            options: tabFormats
+        }
+    ];
+    return fields;
+}
+
 function loadFilterBar(fields, modal) {
     var filterBar = new FilterBar({
         url: apiUrl,
         fields: fields,
-        limit: '',
+        application: 'etu_etu',
+        app: 'etu_etu',
+        limit: '20',
         container: modal
     });
     return filterBar;
@@ -375,6 +381,7 @@ module.exports = Block.extend({
         {
             slug: 'show-picture',
             'icon': 'image',
+            sleep: false,
             eventTrigger: 'click',
             fn: function(e) {
                 e.preventDefault();
@@ -411,6 +418,7 @@ module.exports = Block.extend({
 
     ],
     onBlockRender: function() {
+
         var template = getTemplate({
             frameColor: '#536A4C',
             frameBorder: '#6C8365',
@@ -424,40 +432,55 @@ module.exports = Block.extend({
 
         this.$inner.prepend(template);
         this.$framed = this.$inner.find('.frame');
-
-        //Handlebar formated template
-        modalTemplateFilters = mediaForm.getArrayFilters();
-        //modalTemplateFilters = mediaForm.getTemplateFilters();
-        modalTemplateStep1 = mediaForm.getTemplateMedias();
         // Ajax job before rendering modal
-        q.all([ modalTemplateFilters, modalTemplateStep1 ]).then(function(data){
+        q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
+                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU') ])
+        .then(function(data){
             modalTemplateFilters = data[0];
             modalTemplateStep1 = data[1];
-            modalTemplateFilters.unshift({
-                    type: 'search',
-                    name: 'fulltext',
-                    label: 'Rechercher'
-                });
-            var rowsTab = convertPlainTextIntoSlides(modalTemplateStep1);
+            var mediasArray = subBlockManager.jsonInit(modalTemplateStep1, modalTemplateFilters);
+            var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
+            var slides = [];
+            Object.keys(modalTemplateStep1.content).forEach(function(k){
+                filteredImagesTab['row-' + modalTemplateStep1.content[k].id] = filteredImages[k];
+                slides.push(filteredImages[k].renderSmall(modalTemplateStep1.content[k]));
+            });
             var params = {
-                contents: rowsTab,
+                contents: slides,
                 itemsPerSlide: 5,
-                increment: 2
+                increment: 2,
             };
+
             var slider = new Slider(params);
+            slider.eventBus = eventBus;
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
-                slider.isReady = false;
                 openModalStep1(modalStep1, slider.render());
                 var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
-                var filterBar = loadFilterBar(modalTemplateFilters, $modal);
+                slider.appendToDOM($modal);
 
-                var $modal1 = $(modalStep1.$elem.children('.modal-inner-content')[0]);
-                slider.ready($modal1);
+
+                var fields = filterBarFormatter(modalTemplateFilters);
+                var filterBar = loadFilterBar(fields, $modal);
+
+
+                filterBar.on('search', function(data){
+                    var wrapper = {
+                        content: data
+                    };
+                    var mediasArray = subBlockManager.jsonInit(wrapper, modalTemplateFilters);
+                    filteredImages = subBlockManager.build('filteredImage', data, null);
+                    slides = [];
+                    Object.keys(data).forEach(function(k){
+                        filteredImagesTab['row-' + data[k].id] = filteredImages[k];
+                        slides.push(filteredImages[k].renderSmall(data[k]));
+                    });
+                    slider.reset(slides);
+                    updateZoom();
+                });
 
                 updateZoom();
-                ajaxWatcher(slider);
                 //Bind event on controls
                 $('body .modal-footer .before').hide();
                 sliderControls(slider);
@@ -471,8 +494,7 @@ module.exports = Block.extend({
             });
         });
 
-        modalTemplateStep2 = mediaForm.getTemplateMedia();
-        return template;
+        //modalTemplateStep2 = mediaForm.getTemplateMedia();
     },
     loadData: function(data){
         this.getTextBlock().html(stToHTML(data.text, this.type));

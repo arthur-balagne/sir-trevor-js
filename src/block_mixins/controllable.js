@@ -25,8 +25,8 @@ module.exports = {
         }
 
         // Loop on controls to add them to the toolbar
-        this.controls.forEach(function(control) {
-            this.addUiControl(control, this.$control_ui);
+        this.controls.forEach(function(control, index) {
+            this.addUiControl(control, this.$control_ui, index);
         }, this);
 
         this.$inner.append(this.$control_ui);
@@ -75,8 +75,9 @@ module.exports = {
         this.$activable_ui = null;
     },
 
-    addUiControl: function(control, $target) {
+    addUiControl: function(control, $target, index) {
         // The UI Control can be a simple icon or a custom HTML
+        debugger;
         if (!control.icon && !control.html) {
             console.error('UIcontrol "' + control.slug + '": You must choose an icon or html for your control.');
             return false;
@@ -89,10 +90,10 @@ module.exports = {
         if (this.activable === true && control.sleep === true) {
             var uiControl = this.getControlTemplate(control, 'hidden');
 
-            this.eventBus.bind('button:control:enable', function() {
+            this.eventBus.bind('button:control-' + index + ':enable', function() {
                 uiControl.removeClass('hidden');
             });
-            this.eventBus.bind('button:control:disable', function() {
+            this.eventBus.bind('button:control-' + index + ':disable', function() {
                 uiControl.addClass('hidden');
             });
         }

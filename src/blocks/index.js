@@ -4,7 +4,7 @@ module.exports = {
   Text: require('./text'),
   Chart: require('./chart'),
   Quote: require('./quote'),
-  Quiz: require('./quiz'),
+  Jcs: require('./jcs'),
   Image: require('./image'),
   Heading: require('./heading'),
   List: require('./list'),
