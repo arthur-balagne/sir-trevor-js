@@ -1,8 +1,7 @@
 var $ = require('jquery');
 var eventablejs = require('eventablejs');
 var _ = require('../lodash');
-var Velocity = require('velocity-animate');
-require('velocity-animate/velocity.ui');
+var animate = require('velocity-commonjs/velocity.ui');
 
 var Slide = require('./slide.class.js');
 
@@ -233,7 +232,7 @@ var prototype = {
         this.slides = [];
         this.hasEmitted = false;
 
-        Velocity(this.$elem[0], { opacity: 0 }, { duration: 200 })
+        animate(this.$elem[0], { opacity: 0 }, { duration: 200 })
             .then(function() {
                 if (newSlides) {
                     var slidesMarkup = '';
@@ -256,12 +255,12 @@ var prototype = {
                 return Promise.resolve();
             }.bind(this))
             .then(function() {
-                return Velocity(this.$elem[0], { opacity: 1 }, { duration: 200 });
+                return animate(this.$elem[0], { opacity: 1 }, { duration: 200 });
             }.bind(this));
     },
 
     goTo: function(index) {
-        Velocity(this.$slideContainer[0], { left: '-' + ((100 / this.config.increment).toFixed(2) * index) + '%' }, { queue: false, duration: 400, easing: 'ease-in-out' });
+        animate(this.$slideContainer[0], { left: '-' + ((100 / this.config.increment).toFixed(2) * index) + '%' }, { queue: false, duration: 400, easing: 'ease-in-out' });
 
         this.currentIndex = index;
 

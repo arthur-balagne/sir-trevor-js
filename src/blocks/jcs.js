@@ -6,8 +6,7 @@
 
 var $        = require('jquery');
 var xhr      = require('etudiant-mod-xhr');
-var Velocity = require('velocity-animate');
-require('velocity-animate/velocity.ui');
+var animate  = require('velocity-commonjs/velocity.ui');
 
 var Block    = require('../block');
 var stToHTML = require('../to-html');
@@ -26,9 +25,8 @@ function registerClickOnContents(block) {
         block.hasRegisteredClick = true;
 
         subBlockManager.bindEventsOnContainer(block.$inner, function(selectedSubBlockId, clickedElem) {
-            // debugger;
 
-            Velocity(clickedElem, 'callout.bounce', { duration: 400 })
+            animate(clickedElem, 'callout.bounce', { duration: 400 })
                 .then(function() {
                     block.slider.destroy();
                     block.filterBar.destroy();
@@ -116,56 +114,56 @@ module.exports = Block.extend({
         this.$spinner.appendTo(this.$inner);
 
         return xhr.get(filterOptionsUrl)
-        .then(function(result) {
-            return result.content;
-        }, function(err) {
-            console.error(err);
-        })
-        .then(function(filterOptionsRaw) {
+            .then(function(result) {
+                return result.content;
+            }, function(err) {
+                console.error(err);
+            })
+            .then(function(filterOptionsRaw) {
 
-            var filterOptions = filterOptionsRaw.map(function(filterOption) {
-                return {
-                    value: filterOption.id,
-                    label: filterOption.label
-                };
-            });
+                var filterOptions = filterOptionsRaw.map(function(filterOption) {
+                    return {
+                        value: filterOption.id,
+                        label: filterOption.label
+                    };
+                });
 
-            this.filterBar = new FilterBar({
-                url: filterBarUrl,
-                fields: [
-                    {
-                        type: 'search',
-                        name: 'query',
-                        label: 'Rechercher'
+                this.filterBar = new FilterBar({
+                    url: filterBarUrl,
+                    fields: [
+                        {
+                            type: 'search',
+                            name: 'query',
+                            label: 'Rechercher'
+                        },
+                        {
+                            type: 'select',
+                            name: 'thematic',
+                            label: 'Thematique',
+                            placeholder: 'Sélectionnez une thématique',
+                            options: filterOptions
+                        }
+                    ],
+                    limit: 20,
+                    app: 'ETU_ETU',
+                    container: this.$inner
+                });
+
+                this.slider = new Slider({
+                    controls: {
+                        next: 'Next',
+                        prev: 'Prev'
                     },
-                    {
-                        type: 'select',
-                        name: 'thematic',
-                        label: 'Thematique',
-                        placeholder: 'Sélectionnez une thématique',
-                        options: filterOptions
-                    }
-                ],
-                limit: 20,
-                app: 'ETU_ETU',
-                container: this.$inner
-            });
+                    itemsPerSlide: 2,
+                    increment: 2,
+                    container: this.$inner
+                });
 
-            this.slider = new Slider({
-                controls: {
-                    next: 'Next',
-                    prev: 'Prev'
-                },
-                itemsPerSlide: 2,
-                increment: 2,
-                container: this.$inner
-            });
+                filterSearch(this, this.selectedContentType);
+                filterUpdate(this, this.selectedContentType);
 
-            filterSearch(this, this.selectedContentType);
-            filterUpdate(this, this.selectedContentType);
-
-            this.filterBar.search();
-        }.bind(this));
+                this.filterBar.search();
+            }.bind(this));
     },
 
     type: 'Jcs',
@@ -179,7 +177,7 @@ module.exports = Block.extend({
     icon_name: 'text',
 
     loadData: function(data) {
-        // this.getTextBlock().html(stToHTML(data.text, this.type));
+
     },
 
     beforeBlockRender: function() {

@@ -1,6 +1,5 @@
-var _ = require('../lodash.js');
 var $ = require('jquery');
-var Velocity = require('velocity-animate');
+var animate = require('velocity-commonjs/velocity.ui');
 
 var Spinner = function() {
     this.$elem = $('<div class="st-block-spinner"></div>');
@@ -12,11 +11,11 @@ Spinner.prototype = {
     },
 
     fadeIn: function() {
-        return Velocity(this.$elem[0], 'fadeIn', { duration: 200 });
+        return animate(this.$elem[0], 'fadeIn', { duration: 200 });
     },
 
     fadeOut: function() {
-        return Velocity(this.$elem[0], 'fadeOut', { duration: 200 });
+        return animate(this.$elem[0], 'fadeOut', { duration: 200 });
     }
 };
 

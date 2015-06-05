@@ -2,8 +2,7 @@
 
 var $ = require('jquery');
 var _ = require('../lodash');
-var Velocity = require('velocity-animate');
-require('velocity-animate/velocity.ui');
+var animate = require('velocity-commonjs/velocity.ui');
 
 var choice_container = [
     '<div class="st-block__choices">',
@@ -91,8 +90,8 @@ ChoiceBox.prototype = {
             var selectedId = $(e.currentTarget).data('choice');
             var unselected = this.getUnselected(selectedId);
 
-            Velocity(e.currentTarget, 'transition.bounceUpOut')
-            Velocity(unselected, 'transition.fadeOut')
+            animate(e.currentTarget, 'transition.bounceUpOut');
+            animate(unselected, 'transition.fadeOut')
                 .then(function() {
                     var choice = getChoice(this.blockRef.chooseable, selectedId);
 
