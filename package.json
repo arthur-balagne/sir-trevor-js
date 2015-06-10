@@ -18,6 +18,7 @@
     "eventablejs": "^1.0.5",
     "lodash.chunk": "^3.0.0",
     "lodash.debounce": "^2.4.1",
+    "lodash.foreach": "^3.0.3",
     "lodash.isempty": "^2.4.1",
     "lodash.isfunction": "^2.4.1",
     "lodash.isobject": "^2.4.1",

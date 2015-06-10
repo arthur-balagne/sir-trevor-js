@@ -11,7 +11,7 @@ var choice_container = [
 ].join('\n');
 
 var choice_button = [
-    '<a class="st-button" data-choice="<%= value %>">',
+    '<a class="st-btn" data-choice="<%= value %>">',
         '<span class="st-icon"><%= icon %></span>',
         '<span><%= title %></span>',
     '</a>'
@@ -67,11 +67,18 @@ function getChoice(choice, selected) {
     return false;
 }
 
-var ChoiceBox = function(blockRef, choices) {
-    this.blockRef = blockRef;
-    this.$elem = $(generateContainer(generateChoices(choices)));
+function getButtons(choiceBox) {
+    return Array.prototype.slice.call(choiceBox.$elem[0].querySelectorAll('a.st-btn'));
+}
 
-    this.buttons = Array.prototype.slice.call(this.$elem[0].querySelectorAll('a.st-button'));
+var ChoiceBox = function(chosen, choices, callback) {
+    this.choices = choices;
+    this.chosen = chosen;
+    this.callback = callback;
+
+    this.$elem = $(generateContainer(generateChoices(choices.options)));
+
+    this.buttons = getButtons(this);
 
     this.ready();
 };
@@ -83,8 +90,12 @@ ChoiceBox.prototype = {
         });
     },
 
+    appendTo: function($elem) {
+        this.$elem.appendTo($elem);
+    },
+
     ready: function() {
-        this.$elem.on('click', 'a.st-button', function handleChoice(e) {
+        this.$elem.on('click', 'a.st-btn', function handleChoice(e) {
             e.preventDefault();
 
             var selectedId = $(e.currentTarget).data('choice');
@@ -93,25 +104,27 @@ ChoiceBox.prototype = {
             animate(e.currentTarget, 'transition.bounceUpOut');
             animate(unselected, 'transition.fadeOut')
                 .then(function() {
-                    var choice = getChoice(this.blockRef.chooseable, selectedId);
+                    var choice = getChoice(this.choices, selectedId);
 
-                    this.blockRef.chosen[choice.name] = selectedId;
+                    this.chosen[choice.name] = selectedId;
 
                     if (choice && choice.subChoice) {
                         var choicesMarkup = generateChoices(choice.subChoice.options);
 
-                        this.blockRef.$inner.children('.st-block__choices').html(choicesMarkup);
+                        this.$elem.html(choicesMarkup);
+                        this.buttons = getButtons(this);
                     }
                     else {
-                        this.blockRef.$inner.children('.st-block__choices').remove();
-                        this.blockRef.onChoose(this.blockRef.chosen);
+                        this.$elem.remove();
+                        this.callback(this.chosen);
+                        this.destroy();
                     }
                 }.bind(this));
         }.bind(this));
     },
 
-    appendTo: function($elem) {
-        this.$elem.appendTo($elem);
+    destroy: function() {
+        this.$elem = null;
     }
 };
 
@@ -120,11 +133,13 @@ module.exports = {
 
     mixinName: 'Chooseable',
 
-    initializeChooseable: function() {
-        this.chosen = {};
+    initializeChooseable: function() {},
 
-        var choiceBox = new ChoiceBox(this, this.chooseable.options);
+    createChoices: function(choices, callback) {
+        var chosen = {};
 
-        choiceBox.appendTo(this.$inner);
+        this.choiceBox = new ChoiceBox(chosen, choices, callback);
+
+        this.choiceBox.appendTo(this.$inner);
     }
 };

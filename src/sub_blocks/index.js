@@ -1,13 +1,25 @@
 var $ = require('jquery');
 
 var subBlockTypes = {
-    jcs: require('./jcsSubBlock.js'),
+    jcs: {
+        sondage: require('./jcs/sondageJcsSubBlock.js'),
+        quiz: require('./jcs/quizJcsSubBlock.js'),
+        profil: require('./jcs/testJcsSubBlock.js'),
+    },
     video: require('./videoSubBlock.js'),
     image: require('./imageSubBlock.js')
 };
 
 function buildSingleBlock(type, contents, subType) {
-    return new subBlockTypes[type](contents, subType);
+    if (typeof subBlockTypes[type] === 'function') {
+        return new subBlockTypes[type](contents);
+    }
+    else if (typeof subBlockTypes[type][subType] === 'function') {
+        return new subBlockTypes[type][subType](contents);
+    }
+    else {
+      throw new Error('No matching type or subtype found for ' + type + ' and/or ' + subType);
+    }
 }
 
 function handleClick(event) {
@@ -53,6 +65,8 @@ var SubBlockManager = {
             return subBlock.renderSmall();
         });
     },
+
+    buildSingle: buildSingleBlock,
 
     build: function(type, contents, subType) {
         return contents.map(function(singleContent) {

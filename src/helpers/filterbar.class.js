@@ -1,57 +1,50 @@
+var _           = require('../lodash.js');
+var xhr         = require('etudiant-mod-xhr');
 var eventablejs = require('eventablejs');
-var _   = require('../lodash.js');
-var xhr = require('etudiant-mod-xhr');
 
 var renderSelect = function(field) {
     field.label = field.label || '';
     field.placeholder = field.placeholder || '';
 
-    var selectTemplate = _.template([
+    var selectTemplate = [
         '<div class="st-block__filter-field">',
-            '<label for="<%= name %>">',
-                '<%= label %>',
-            '</label>',
+            '<% if (label) { %>',
+                '<label for="<%= name %>">',
+                    '<%= label %>',
+                '</label>',
+            '<% } %>',
             '<select id="<%= name %>" name="<%= name %>">',
                 '<option value="" selected disabled><%= placeholder %></option>',
-                '<%= options %>',
+                '<% _.forEach(options, function(option) { %>',
+                    '<option value="<%= option.value %>"><%= option.label %></option>',
+                '<% }); %>',
             '</select>',
         '</div>'
-    ].join('\n'));
+    ].join('\n');
 
-    var optionTemplate = _.template('<option value="<%= value %>"><%= label %></option>');
-    var optionMarkup = '';
-
-    field.options.forEach(function(option) {
-        optionMarkup += optionTemplate({
-            value: option.value,
-            label: option.label
-        });
-    });
-
-    return selectTemplate({
-        name: field.name,
-        placeholder: field.placeholder,
-        options: optionMarkup,
-        label: field.label
-    });
+    return _.template(selectTemplate, field, { imports: { '_': _ }});
 };
 
 var renderStandardField = function(field) {
     field.label = field.label || '';
+    field.placeholder = field.placeholder || '';
 
-    var template = _.template([
+    var fieldTemplate = [
         '<div class="st-block__filter-field">',
-            '<label for="<%= name %>">',
-                '<%= label %>',
-            '</label>',
-            '<input type="<%= type %>" name="<%= name %>" />',
+            '<% if (label) { %>',
+                '<label for="<%= name %>">',
+                    '<%= label %>',
+                '</label>',
+            '<% } %>',
+            '<input type="<%= type %>" name="<%= name %>" placeholder="<%= placeholder %>"/>',
         '</div>'
-    ].join('\n'));
+    ].join('\n');
 
-    return template({
+    return _.template(fieldTemplate, {
         name: field.name,
         type: field.type,
-        label: field.label
+        label: field.label,
+        placeholder: field.placeholder
     });
 };
 
@@ -83,11 +76,13 @@ var searchBuilder = function($elem) {
     return search;
 };
 
-var filterBarTemplate = _.template([
-    '<form name="" class="st-block__filter">',
-        '<%= fields %>',
-    '</form>'
-].join('\n'));
+var filterBarTemplate = [
+    '<div class="st-block__filter-wrapper">',
+        '<form name="" class="st-block__filter">',
+            '<%= fields %>',
+        '</form>',
+    '</div>'
+].join('\n');
 
 var FilterBar = function() {
     this.init.apply(this, arguments);
@@ -99,8 +94,6 @@ var prototype = {
         this.url = params.url;
         this.limit = params.limit;
         this.fields = params.fields;
-
-        this.template = filterBarTemplate;
 
         if (params.container) {
             params.container.prepend(this.render(this.fields));
@@ -115,9 +108,7 @@ var prototype = {
             fieldMarkup += renderField(field);
         });
 
-        return this.template({
-            fields: fieldMarkup
-        });
+        return _.template(filterBarTemplate, { fields: fieldMarkup });
     },
 
     bindToDOM: function(container) {
@@ -137,8 +128,7 @@ var prototype = {
         eventName = eventName || 'search';
 
         search = Object.assign(search, searchBuilder(this.$elem), {
-            limit: this.limit,
-            app: this.app
+            limit: this.limit
         });
 
         this.nextSearch = search;
@@ -146,10 +136,14 @@ var prototype = {
         var searchUrl = xhr.paramizeUrl(this.url, search);
 
         xhr.get(searchUrl)
-            .then(function(results) {
-                this.trigger(eventName, results.content);
-
-                this.nextSearch.offset = this.nextSearch.offset ? this.nextSearch.offset += results.content.length : results.content.length;
+            .then(function(searchResult) {
+                if (searchResult.content) {
+                    this.trigger(eventName, searchResult.content);
+                    this.nextSearch.offset = this.nextSearch.offset ? this.nextSearch.offset += searchResult.content.length : searchResult.content.length;
+                }
+                else {
+                    this.trigger('noResult');
+                }
             }.bind(this), function(err) {
                 this.trigger('noResult');
             }.bind(this));
@@ -160,7 +154,7 @@ var prototype = {
     },
 
     destroy: function() {
-        this.$elem.remove();
+        this.$elem.parent().remove();
     }
 };
 

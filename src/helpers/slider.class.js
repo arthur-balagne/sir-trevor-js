@@ -90,43 +90,24 @@ var registerButtons = function() {
     });
 };
 
-var renderControls = function(controls) {
-    var controlTemplate = _.template([
-        '<div class="st-slider-controls">',
-            '<%= buttons %>',
-        '</div>'
-    ].join('\n'));
-
-    var buttonTemplate = _.template([
-        '<button <%= button_attr %>>',
-            '<span><%= button_text %></span>',
-        '</button>'
-    ].join('\n'));
-
-    var buttonMarkup = '';
-
-    Object.keys(controls).forEach(function(key) {
-        buttonMarkup += buttonTemplate({
-            button_attr: 'data-direction="' + key + '"',
-            button_text: controls[key]
-        });
-    });
-
-    return controlTemplate({
-        buttons: buttonMarkup
-    });
-};
-
-var sliderTemplate = _.template([
+var sliderTemplate = [
     '<div class="st-block__slider">',
         '<div class="st-slider">',
             '<div class="st-slider-container">',
                 '<%= content %>',
             '</div>',
         '</div>',
-        '<%= controls %>',
+        '<% if (controls) { %>',
+            '<div class="st-slider-controls">',
+                '<% _.forEach(controls, function(control, key) { %>',
+                    '<button class="st-btn" data-direction="<%= key %>">',
+                        '<span><%= control %></span>',
+                    '</button>',
+                '<% }); %>',
+            '</div>',
+        '<% } %>',
     '</div>'
-].join('\n'));
+].join('\n');
 
 var noSlidesTemplate = [
     '<span class="st-slider-no-slides">',
@@ -163,20 +144,15 @@ var prototype = {
 
     render: function() {
         var slidesMarkup = '';
-        var controlsMarkup = '';
-
-        if (this.config.controls) {
-            controlsMarkup = renderControls(this.config.controls);
-        }
 
         this.slides.forEach(function(slide) {
             slidesMarkup += slide.render();
         });
 
-        return this.template({
+        return _.template(sliderTemplate, {
             content: slidesMarkup,
-            controls: controlsMarkup
-        });
+            controls: this.config.controls
+        }, { imports: { '_': _ }});
     },
 
     appendToDOM: function(container) {

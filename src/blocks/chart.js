@@ -52,37 +52,36 @@ var chartData = {
     ]
 };
 
+var chooseableConfig = {
+    'name': 'chartType',
+    'options': [{
+        'icon': 'pie',
+        'title': 'Camembert',
+        'value': 'Pie'
+    }, {
+        'icon': 'bar',
+        'title': 'Barre',
+        'value': 'Bar'
+    }]
+};
+
+function onChoose(choices) {
+    var block = this;
+
+    var chartType = choices.chartType;
+    var $chart = block.$inner.find('.chart');
+    var ctx = $chart.get(0).getContext('2d');
+
+    $chart.parent().addClass('active');
+
+    var generatedChart = new Chart(ctx)[chartType](chartData[chartType]);
+}
+
 module.exports = Block.extend({
 
-    chooseable: {
-        'name': 'chartType',
-        'options': [
-            {
-                'icon': 'pie',
-                'title': 'Camembert',
-                'value': 'Pie'
-            },
-            {
-                'icon': 'bar',
-                'title': 'Barre',
-                'value': 'Bar'
-            }
-        ]
-    },
+    chooseable: true,
 
     type: 'Chart',
-
-    onChoose: function(choices) {
-        var chartType = choices.chartType;
-
-        var $chart = this.$inner.find('.chart');
-
-        var ctx = $chart.get(0).getContext('2d');
-
-        $chart.parent().addClass('active');
-
-        var generatedChart = new Chart(ctx)[chartType](chartData[chartType]);
-    },
 
     title: function() {
         return 'Chart';
@@ -90,7 +89,7 @@ module.exports = Block.extend({
 
     editorHTML: '<div class="st__chart"><canvas class="chart" width="400px" height="400px"></canvas></div>',
 
-    icon_name: 'text',
+    icon_name: 'chartpie',
 
     loadData: function(data) {
         this.getTextBlock().html(stToHTML(data.text, this.type));
@@ -100,5 +99,6 @@ module.exports = Block.extend({
     },
 
     onBlockRender: function() {
+        this.createChoices(chooseableConfig, onChoose.bind(this));
     }
 });
