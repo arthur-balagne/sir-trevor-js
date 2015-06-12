@@ -77,7 +77,6 @@ module.exports = {
 
     addUiControl: function(control, $target, index) {
         // The UI Control can be a simple icon or a custom HTML
-        debugger;
         if (!control.icon && !control.html) {
             console.error('UIcontrol "' + control.slug + '": You must choose an icon or html for your control.');
             return false;
@@ -87,19 +86,21 @@ module.exports = {
             console.error('UIcontrol "' + control.slug + '": You must set a callback function.');
             return false;
         }
-        if (this.activable === true && control.sleep === true) {
+        if (this.activable === true) {
             var uiControl = this.getControlTemplate(control, 'hidden');
-
             this.eventBus.bind('button:control-' + index + ':enable', function() {
                 uiControl.removeClass('hidden');
             });
             this.eventBus.bind('button:control-' + index + ':disable', function() {
                 uiControl.addClass('hidden');
             });
+
         }
         else {
             uiControl = this.getControlTemplate(control);
         }
+
+
 
         // By default, the trigger is a click event
         var eventTrigger = control.eventTrigger ? control.eventTrigger : 'click';
