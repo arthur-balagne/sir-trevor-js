@@ -102,8 +102,14 @@ var prototype = {
         this.template = filterBarTemplate;
 
         if (params.container) {
-            params.container.append(this.render(this.fields));
-            this.bindToDOM(params.container);
+            if (params.before === true) {
+                params.container.before(this.render(this.fields));
+                this.bindToDOM(params.container.parent());
+            }
+            else {
+                params.container.append(this.render(this.fields));
+                this.bindToDOM(params.container);
+            }
         }
     },
 

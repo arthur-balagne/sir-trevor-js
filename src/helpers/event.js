@@ -39,6 +39,7 @@ $.fn.noDropArea = function(){
 };
 
 $.fn.caretToEnd = function(){
+    debugger;
   var range,selection;
 
   range = document.createRange();

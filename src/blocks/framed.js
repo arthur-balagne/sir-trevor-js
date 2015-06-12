@@ -3,8 +3,10 @@
 /*
   Framed
 */
+
 var evt = require('etudiant-mod-mediator');
 var $ = require('jquery');
+var Formatters = require('../formatters');
 var Block = require('../block');
 var stToHTML = require('../to-html');
 var Modal = require('etudiant-mod-modal');
@@ -15,6 +17,7 @@ var eventBus = require('../event-bus.js');
 var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
+
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
 
@@ -50,13 +53,15 @@ function changeOriginalPictureSize(src, size) {
         return src;
     }
 }
+
 /**
  * Hydrate a modal with well formated HTML
  * @param  {obj} modalStep The modal object
  * @param  {string} template  well formated template
  */
 function openModalStep1(modalStep, template) {
-    var tpl = template !== undefined ? template : modalTemplateStep1;
+    var tpl = template.render() !== undefined ? template.render() : modalTemplateStep1;
+
     modalStep.render({
         header: '<header>Image</header>',
         content: tpl,
@@ -64,10 +69,6 @@ function openModalStep1(modalStep, template) {
             next: 'Suite',
             before: 'Précédent'
         }
-    });
-
-    $.each($('.modal-row-picture img'), function() {
-        $(this).attr('src', changeOriginalPictureSize($(this).attr('src'), '90x90'));
     });
 
     zoom.init({
@@ -81,7 +82,6 @@ function openModalStep1(modalStep, template) {
  * Hydrate a modal with well formated HTML
  */
 function openModalStep2(modal) {
-
     modal.render({
         header: '<header>Image</header>',
         content: modalTemplateStep2,
@@ -90,24 +90,51 @@ function openModalStep2(modal) {
             dismiss: 'Annuler'
         }
     });
-    var sizes = $('.framed-picture img').attr('sizes');
-    $('.preview').attr('src', $('.framed-picture img').attr('src'));
-    $('.picture-legend').val($('.framed-picture legend').text());
-    if ($('.frame-link').attr('href') !== undefined) {
-        $('.picture-link').attr('value', $('.frame-link').attr('href'));
-    }
-    $('.size').text(sizes);
     modal.open();
 }
 
+function selectUpdater() {
+    $.each($('.slide-row .sizes'), function(key){
+        if ($(this).children().length === 1) {
+            $(this).addClass('hidden');
+            $(this).parent().append('<p class="size">' + $(this).children().val() + '</p>');
+        }
+        else {
+            $(this).removeClass('hidden');
+        }
+    });
+}
 
 function startStep2(block) {
     modalStep1.close();
-    eventBus.trigger('button:control-0:disable');
-    eventBus.trigger('button:control-1:enable');
-    eventBus.trigger('button:control-2:enable');
+    eventBus.trigger('button:control-0:enable');
     evt.publish('modal-gallery-step-2', block);
 }
+
+function setEndOfContenteditable(contentEditableElement, html){
+    var range;
+    var selection;
+    if(document.createRange) {
+        range = document.createRange();
+        debugger;
+        range.selectNodeContents(contentEditableElement.$('.st-text-block')[0]); //Pick the green area
+        if(html !== undefined) {
+            debugger;
+            var caretPos = range.endOffset;
+            range.insertNode($(html)[0]); //Insert node in range
+        }
+        range.collapse(false);
+        contentEditableElement.$editor.selected = true
+        selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+    }
+    else {
+        console.log('All you"base are belong to us !!!');
+    }
+}
+
 /**
  * Grab all data's, update the sirTrevor block,  then to open next modal
  * @param  {object} block the sir trevor block object to update
@@ -115,19 +142,30 @@ function startStep2(block) {
 function synchronizeAndOpenStep2(block) {
     $('.modal-gallery-step-1').on('click', '.validate', function(e){
         e.preventDefault();
+        e.stopPropagation();
         var row = $(this).attr('class').split(' ')[1];
         var picture = updateData(row);
-        var blockId = block.blockID;
+        var filteredImage = filteredImagesTab[row];
+        filteredImage.media.size = picture.sizes;
+        filteredImage.resize(picture.sizes);
+        filteredImage.media.custom = filteredImage.resize(picture.sizes);
         modalTemplateStep2 = filteredImagesTab[row].renderLarge();
-        $('#' + blockId + ' .framed-picture').html('<img alt="placeholder" src=""><br><legend>&copy L etudiant </legend></div>');
-        $('.framed-picture img').attr('src', picture.url);
-        $('.framed-picture img').css('display', 'inline-block');
-        $('.framed-picture').removeClass('hidden');
+
+        var blockId = block.blockID;
+        var imageBlock2 = filteredImage.renderBlock();
+
+        //$('#' + blockId).find('.st-text-block').html( $('#' + blockId).find('.st-text-block').html() + imageBlock2 );
+        setEndOfContenteditable(block, imageBlock2);
+
+        filteredImage.bindRemoveEvent(block, filteredImage.media.id);
+        filteredImage.bindTogglEvent(block, filteredImage.media.id);
+        filteredImage.bindUpdateEvent(block, filteredImage.media.id);
         startStep2(block);
-        $('.preview').attr('src', $('.framed-picture img').attr('src'));
+        $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
         $('.size').text(picture.sizes);
     });
 }
+
 /**
  * Grab all data's, update the sirTrevor block,  then to close actual modal
  * @param  {object} block the sir trevor block object to update
@@ -135,10 +173,26 @@ function synchronizeAndOpenStep2(block) {
  */
 function synchronizeAndCloseStep2(block) {
     var blockId = block.blockID;
-    eventBus.trigger('button:control-0:enable');
-    eventBus.trigger('button:control-1:disable');
-    eventBus.trigger('button:control-2:disable');
     $('.modal-gallery-step-1').off('click', '.validate');
+    var rowId = $('body .modal-gallery-step-2 .position').data('row');
+    var position = $('.position').find(':selected').val();
+
+    $('[data-modal-dismiss]').on('click', function(){
+        var id = $('.modal-row-picture').data('id');
+        if(undefined === block.imagesData){
+            block.imagesData =  [];
+        }
+        block.imagesData.push(filteredImagesTab['row-' + id].media);
+    })
+
+    $('.framed-picture.framed-picture-' + rowId).addClass(position);
+
+    $('.position').on('change', function(){
+        var id = $(this).data('row');
+        position = $(this).find(':selected').val();
+        $('.framed-picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
+
+    })
 
     $('.picture-link').on('keyup', function() {
         var internal = validateInternalUrl($('.picture-link').val());
@@ -148,6 +202,12 @@ function synchronizeAndCloseStep2(block) {
         else {
             $('.external-link').text('');
         }
+    });
+
+    $('body .modal-gallery-step-2').on('change', '.position', function() {
+        var imageId = $(this).data('row');
+        var position = $('.position').find(':selected').val();
+    $('.framed-picture.framed-picture-' + rowId).addClass(position);
     });
 
     $('body .modal-gallery-step-2').on('click', '.ok', function() {
@@ -164,8 +224,7 @@ function synchronizeAndCloseStep2(block) {
             }
             $('#' + blockId + ' .framed-picture').wrap('<a class="frame-link" target="_blank" href="' + $('.picture-link').val() + '">');
         }
-        var position = $('.position').find(':selected').val();
-        updatePicturePosition(position);
+
     });
 }
 /**
@@ -180,65 +239,36 @@ function updateData(row) {
     picture.width = picture.sizes.split('x')[0];
     picture.height = picture.sizes.split('x')[1];
     picture.name = picture.url;
-    picture.url = changeOriginalPictureSize(picture.url, picture.sizes);
     return picture;
 }
 
 /**
  * Helper function to update the all data's image with the selected size value.
  */
-function updateZoom() {
-    $.each($('.modal-row-picture img'), function() {
-        $(this).attr('src', changeOriginalPictureSize($(this).attr('src'), '90x90'));
-    });
-    $.each($('body .modal-row-picture'), function(){
-        //var size = $('#format option:eq(1)').html();
-        var originalSize = $(this).data('image');
-        var newSize = changeOriginalPictureSize(originalSize, '90x90');
-        $(this).attr('data-image', newSize);
-    });
-    $('#modal-gallery-step-1').on('change', '.modal-row-content .sizes', function(e){
+function updateZoom(filteredImages) {
+    $('#modal-gallery-step-1').on('change', '.modal-row-content .sizes', function(e) {
         e.stopPropagation();
         e.preventDefault();
         var zoomedSize = $(this).find(':selected').val();
         var rowId = $(this).parent().parent().attr('class').split(' ')[1];
-        var originalSize = $('.modal-row-picture.' + rowId).data('image');
+        if (filteredImages !== undefined) {
+            var originalSize = filteredImages[rowId].media.image;
+        }
+        else {
+            return false;
+        }
         var newSize = changeOriginalPictureSize(originalSize, zoomedSize);
+
         $('.modal-row-picture.' + rowId).attr('data-image', newSize);
     });
 }
 
 function getTemplate(params) {
-    var template = '';
-    template += '<div class="frame" style="box-sizing:border-box; display:inline-block; width:100%; background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
-        template += '<div class="framed-picture hidden" style="vertical-align:top; width:' + params.framePictureWidth + '; height:auto"></div>';
-            template += '<div class="st-required st-text-block framed"  style="width:' + params.frameTextWidth + '; vertical-align:top; display:' + params.frameTextDisplay + ' " contenteditable="true">';
-        template += '</div>';
+    var template = '<div class="frame"  style="box-sizing:border-box; display:inline-block; width:100%; background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
     template += '</div>';
     return template;
 }
 
-function removePicture(ev, block) {
-    ev.preventDefault();
-    var framePicture = block.find('.framed-picture img');
-    block.find('.framed-picture legend').remove();
-    eventBus.trigger('button:control-0:enable');
-    eventBus.trigger('button:control-1:disable');
-    eventBus.trigger('button:control-2:disable');
-    framePicture.remove();
-}
-
-function updatePicturePosition(side) {
-    var framedPicture = $('.framed-picture');
-
-    if (framedPicture.hasClass('hidden')) {
-        return false;
-    }
-    else if (framedPicture.is('.f-left, .f-right')) {
-        framedPicture.removeClass('f-left f-right');
-    }
-    framedPicture.addClass(side);
-}
 
 /**
  * Helper function to validate internal or external url
@@ -261,51 +291,25 @@ function validateInternalUrl(url) {
     return internal;
 }
 
-/**
- * Update a slider
- * @param  {string} data        plain text from mediaform
- * @param  {object} slider      the slider to update
- * @param  {string} previewSize Previews sizes
- */
-function ajaxUpdate(data, slider, previewSize) {
-    var rowsTab = convertPlainTextIntoSlides(data);
-    slider.reset(rowsTab);
-    zoom.domUpdate('.modal');
-
-    $.each($('.modal-row-picture img'), function() {
-        var original = $(this).attr('src');
-        $(this).attr('src', changeOriginalPictureSize(original, '90x90'));
-    });
-    $.each($('.modal-row-content'), function() {
-        if ($(this).find('.sizes')[0].length === 1) {
-            var actualPreview = $(this).find('.sizes').first().children('option').html();
-            $(this).prepend('<p class="size">Taille : ' + actualPreview + '</p>');
-            $(this).find('form').addClass('hidden');
-        }
-    });
-    $.each($('.modal-row-picture'), function() {
-        $(this).attr('data-image', changeOriginalPictureSize($(this).data('image'), previewSize));
-    });
-}
 
 
 function sliderControls(slider){
 
-    slider.eventBus.on('buttons:prev:disable', function() {
+    slider.on('buttons:prev:disable', function() {
         $('body .modal-footer .before').hide();
     });
-    slider.eventBus.on('buttons:prev:enable', function() {
+    slider.on('buttons:prev:enable', function() {
         $('body .modal-footer').show();
         $('body .modal-footer .before').show();
     });
-    slider.eventBus.on('buttons:next:disable', function() {
+    slider.on('buttons:next:disable', function() {
         $('body .modal-footer .next').hide();
     });
-    slider.eventBus.on('buttons:next:enable', function() {
+    slider.on('buttons:next:enable', function() {
         $('body .modal-footer').show();
         $('body .modal-footer .next').show();
     });
-    slider.eventBus.on('buttons:all:disable', function() {
+    slider.on('buttons:all:disable', function() {
         $('body .modal-footer').hide();
     });
 
@@ -319,14 +323,21 @@ function sliderControls(slider){
 }
 
 function filterBarFormatter(jsonFilters) {
-
     var tabCategories = [];
+    tabCategories.push({
+        label: "Toutes les catégories",
+        value: 0
+    })
     Object.keys(jsonFilters.content.categories).forEach(function(k){
         var categorie = jsonFilters.content.categories[k];
         tabCategories.push({ value: categorie.id , label: categorie.label }) ;
     });
 
     var tabFormats = [];
+    tabFormats.push({
+        label: "Tous les formats",
+        value: 0
+    })
     Object.keys(jsonFilters.content.formats).forEach(function(k){
         var formats = jsonFilters.content.formats[k];
         tabFormats.push({ value: formats.id , label: formats.label }) ;
@@ -363,7 +374,8 @@ function loadFilterBar(fields, modal) {
         application: 'etu_etu',
         app: 'etu_etu',
         limit: '20',
-        container: modal
+        container: modal,
+        before: true
     });
     return filterBar;
 }
@@ -373,7 +385,10 @@ module.exports = Block.extend({
     title: function() { return i18n.t('blocks:framed:title'); },
     icon_name: 'quote',
     controllable: true,
+    formattable:true,
     activable: true,
+    _previousSelection: '',
+    editorHTML: '<div class="st-text-block" contenteditable="true"></div>',
     eventBus: eventBus,
     controls_position: 'bottom',
     controls_visible: true,
@@ -381,7 +396,7 @@ module.exports = Block.extend({
         {
             slug: 'show-picture',
             'icon': 'image',
-            sleep: false,
+            sleep: true,
             eventTrigger: 'click',
             fn: function(e) {
                 e.preventDefault();
@@ -405,7 +420,7 @@ module.exports = Block.extend({
         },
         {
             slug: 'toggle-picture',
-            'icon': 'image+',
+            'icon': 'image-',
             sleep: true,
             eventTrigger: 'click',
             fn: function(e) {
@@ -418,7 +433,6 @@ module.exports = Block.extend({
 
     ],
     onBlockRender: function() {
-
         var template = getTemplate({
             frameColor: '#536A4C',
             frameBorder: '#6C8365',
@@ -430,14 +444,20 @@ module.exports = Block.extend({
             framedPictureDisplay: 'hidden'
         });
 
-        this.$inner.prepend(template);
-        this.$framed = this.$inner.find('.frame');
+        this.$framed = $(template);
+        this.filteredImagesTab = '';
+
+        var textBlock = this.$inner.find('.st-text-block');
+
+        textBlock.wrap(this.$framed);
+
         // Ajax job before rendering modal
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
                 xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU') ])
         .then(function(data){
             modalTemplateFilters = data[0];
             modalTemplateStep1 = data[1];
+            eventBus.trigger('button:control-0:enable');
             var mediasArray = subBlockManager.jsonInit(modalTemplateStep1, modalTemplateFilters);
             var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
             var slides = [];
@@ -448,59 +468,98 @@ module.exports = Block.extend({
             var params = {
                 contents: slides,
                 itemsPerSlide: 5,
-                increment: 2,
+                increment: 2
             };
-
             var slider = new Slider(params);
             slider.eventBus = eventBus;
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
-                openModalStep1(modalStep1, slider.render());
+                openModalStep1(modalStep1, slider);
                 var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
-                slider.appendToDOM($modal);
-
-
                 var fields = filterBarFormatter(modalTemplateFilters);
                 var filterBar = loadFilterBar(fields, $modal);
-
+                slider.alwaysAppendToDOM($modal);
 
                 filterBar.on('search', function(data){
+                    var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
                     var wrapper = {
                         content: data
                     };
                     var mediasArray = subBlockManager.jsonInit(wrapper, modalTemplateFilters);
                     filteredImages = subBlockManager.build('filteredImage', data, null);
                     slides = [];
+                    var size = filtersObj[filterBar.nextSearch.format];
                     Object.keys(data).forEach(function(k){
                         filteredImagesTab['row-' + data[k].id] = filteredImages[k];
-                        slides.push(filteredImages[k].renderSmall(data[k]));
+                        slides.push(filteredImages[k].renderSmall(data[k], size));
                     });
                     slider.reset(slides);
-                    updateZoom();
+                    sliderControls(slider);
+                    selectUpdater();
+                    updateZoom(filteredImagesTab);
                 });
 
-                updateZoom();
-                //Bind event on controls
+                selectUpdater();
+                updateZoom(filteredImagesTab);
+
                 $('body .modal-footer .before').hide();
                 sliderControls(slider);
 
                 synchronizeAndOpenStep2(param);
             });
-
             evt.subscribe('modal-gallery-step-2', function(param) {
                 openModalStep2(modalStep2);
                 synchronizeAndCloseStep2(param);
             });
         });
-
-        //modalTemplateStep2 = mediaForm.getTemplateMedia();
     },
+
+    setData: function(blockData) {
+        debugger;
+        if(data === undefined) {
+            var data = {};
+        }
+        var content = this.getTextBlock();
+        if (content.length > 0) {
+            var framedContent = content.find('.framed-picture');
+            if(framedContent.data('object') === undefined) {
+                var html = content.html();
+                return data.text = html;
+            }
+            var frameData = framedContent.data('object');
+            framedContent.replaceWith('#' + framedContent.data('object').id + ' ');
+            var id = framedContent.data('object').id;
+            data.text = content.html();
+            data.images = {};
+            data.images[id] = blockData.images[id] = framedContent.data('object');
+        }
+
+        Object.assign(this.blockStorage.data, blockData || {});
+    },
+
     loadData: function(data){
-        this.getTextBlock().html(stToHTML(data.text, this.type));
-        this.$('.st-picture-right').val(data.picture);
-    },
+        this.imagesData = data.images;
+        var ids = data.text.match(/#\w+/g);
+        var jsonObject = [];
+        Object.keys(ids).forEach(function(value){
+            var val = ids[value].split('#')[1];
+            Object.keys(data.images).forEach(function(k){
+                if(data.images[k].id == val) {
+                    jsonObject.push(data.images[k]);
+                    var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
+                    filteredBlock.media = jsonObject[0];
 
+                    var tpl = filteredBlock.renderBlock();
+                    tpl = tpl + ' ';
+                }
+                data.text = data.text.replace(ids[value], tpl);
+            });
+            console.log(data.text);
+
+        });
+        this.getTextBlock().html(stToHTML(data.text, this.type));
+    },
     toMarkdown: function(markdown) {
         return markdown.replace(/^(.+)$/mg, '> $1');
     }
