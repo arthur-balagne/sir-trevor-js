@@ -17,6 +17,7 @@ var eventBus = require('../event-bus.js');
 var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
+var _ = require('../lodash');
 
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
@@ -110,30 +111,76 @@ function startStep2(block) {
     eventBus.trigger('button:control-0:enable');
     evt.publish('modal-gallery-step-2', block);
 }
+function startRange(el) {
+    var sel = window.getSelection();
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    return sel;
+}
+
 
 function setEndOfContenteditable(contentEditableElement, html){
-    var range;
-    var selection;
-    if(document.createRange) {
-        range = document.createRange();
-        debugger;
-        range.selectNodeContents(contentEditableElement.$('.st-text-block')[0]); //Pick the green area
-        if(html !== undefined) {
-            debugger;
-            var caretPos = range.endOffset;
-            range.insertNode($(html)[0]); //Insert node in range
-        }
-        range.collapse(false);
-        contentEditableElement.$editor.selected = true
-        selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
+    debugger;
 
+    var start = startRange(contentEditableElement.$('.st-text-block')[0]);
+    var node = start.focusNode;
+
+    var range = start.getRangeAt(0);
+    range.deleteContents();
+
+    //var range = start.getRangeAt(0);
+    //var offset = start.focusOffset;
+    //range.insertNode(document.createTextNode(html));
+
+
+
+    var el = document.createElement("div");
+    el.innerHTML = html;
+    var frag = document.createDocumentFragment(), node, lastNode;
+    while ( (node = el.firstChild) ) {
+        lastNode = frag.appendChild(node);
     }
-    else {
-        console.log('All you"base are belong to us !!!');
+    range.insertNode(frag);
+
+
+    range.collapse(false);
+
+    var end = endRange(contentEditableElement.$('.st-text-block')[0]);
+
+    var sliced = '';
+
+
+
+    if(node !== undefined && node !== null) {
+        sliced = node.slice(offset);
+        if (offset) {
+            node = node.slice(0, offset);
+        }
     }
+    console.log(node);
+
+    debugger;
+    // var range;
+    // var selection;
+    // if(document.createRange) {
+    //     range = document.createRange();
+    //     range.selectNodeContents(contentEditableElement.$('.st-text-block')[0]); //Pick the editable div
+
+    //     $('.st-text-block').html();
+    //     if(html !== undefined) {
+    //         range.insertNode($(html)[0]); //Insert node in range
+    //     }
+    //     range.collapse(false);
+    //     selection = window.getSelection();
+    //     selection.removeAllRanges();
+    //     selection.addRange(range);
+
+    // }
 }
+
 
 /**
  * Grab all data's, update the sirTrevor block,  then to open next modal
@@ -150,10 +197,8 @@ function synchronizeAndOpenStep2(block) {
         filteredImage.resize(picture.sizes);
         filteredImage.media.custom = filteredImage.resize(picture.sizes);
         modalTemplateStep2 = filteredImagesTab[row].renderLarge();
-
         var blockId = block.blockID;
         var imageBlock2 = filteredImage.renderBlock();
-
         //$('#' + blockId).find('.st-text-block').html( $('#' + blockId).find('.st-text-block').html() + imageBlock2 );
         setEndOfContenteditable(block, imageBlock2);
 
@@ -384,6 +429,7 @@ module.exports = Block.extend({
     type: 'framed',
     title: function() { return i18n.t('blocks:framed:title'); },
     icon_name: 'quote',
+    state: focus,
     controllable: true,
     formattable:true,
     activable: true,
@@ -451,6 +497,7 @@ module.exports = Block.extend({
 
         textBlock.wrap(this.$framed);
 
+
         // Ajax job before rendering modal
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
                 xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU') ])
@@ -514,54 +561,82 @@ module.exports = Block.extend({
             });
         });
     },
+    _serializeData: function(){
+        var data = {};
+        var textBlock = this.getTextBlock().html();
+        if (textBlock !== undefined && textBlock.length > 0 ) {
+            data.text = this.toMarkdown(textBlock);
+        }
+        else {
+            data.text = '';
+        }
+        return data;
+    },
+    loadData: function(data){
+        debugger;
+        this.getTextBlock().html(this.toHTML(data.text));
+    },
+    setAndLoadData: function(blockData) {
+        this.setData(blockData);
+        this.beforeLoadingData();
+    },
+    getTextBlock: function() {
+        this.text_block = this.$('.st-text-block');
+        return this.text_block;
+    },
+    onFocus: function() {
+        this.getTextBlock().bind('focus', this._onFocus);
+        this.range = window.getSelection().getRangeAt(0);
+    },
+
+    onBlur: function() {
+        this.getTextBlock().bind('blur', this._onBlur);
+    },
 
     setData: function(blockData) {
-        debugger;
-        if(data === undefined) {
-            var data = {};
-        }
+
         var content = this.getTextBlock();
-        if (content.length > 0) {
+        if (content.html().length > 0) {
             var framedContent = content.find('.framed-picture');
             if(framedContent.data('object') === undefined) {
                 var html = content.html();
-                return data.text = html;
+                return blockData.text = html;
             }
             var frameData = framedContent.data('object');
             framedContent.replaceWith('#' + framedContent.data('object').id + ' ');
             var id = framedContent.data('object').id;
-            data.text = content.html();
-            data.images = {};
-            data.images[id] = blockData.images[id] = framedContent.data('object');
+            blockData.text = content.html();
+            blockData.images = {};
+            blockData.images[id] = framedContent.data('object');
         }
 
         Object.assign(this.blockStorage.data, blockData || {});
     },
 
-    loadData: function(data){
-        this.imagesData = data.images;
-        var ids = data.text.match(/#\w+/g);
-        var jsonObject = [];
-        Object.keys(ids).forEach(function(value){
-            var val = ids[value].split('#')[1];
-            Object.keys(data.images).forEach(function(k){
-                if(data.images[k].id == val) {
-                    jsonObject.push(data.images[k]);
-                    var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
-                    filteredBlock.media = jsonObject[0];
+    // loadData: function(data){
+    //     this.imagesData = data.images;
+    //     var ids = data.text.match(/#\w+/g);
+    //     var jsonObject = [];
+    //     Object.keys(ids).forEach(function(value){
+    //         var val = ids[value].split('#')[1];
+    //         Object.keys(data.images).forEach(function(k){
+    //             if(data.images[k].id == val) {
+    //                 jsonObject.push(data.images[k]);
+    //                 var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
+    //                 filteredBlock.media = jsonObject[0];
 
-                    var tpl = filteredBlock.renderBlock();
-                    tpl = tpl + ' ';
-                }
-                data.text = data.text.replace(ids[value], tpl);
-            });
-            console.log(data.text);
+    //                 var tpl = filteredBlock.renderBlock();
+    //                 tpl = tpl + ' ';
+    //             }
+    //             data.text = data.text.replace(ids[value], tpl);
+    //         });
+    //         console.log(data.text);
 
-        });
-        this.getTextBlock().html(stToHTML(data.text, this.type));
-    },
+    //     });
+    //     this.getTextBlock().html(stToHTML(data.text, this.type));
+    // },
     toMarkdown: function(markdown) {
-        return markdown.replace(/^(.+)$/mg, '> $1');
-    }
+        return markdown.replace(/^(.+)$/mg,'> $1');
+      }
 
 });
