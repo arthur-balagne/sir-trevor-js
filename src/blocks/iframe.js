@@ -1,4 +1,5 @@
 var $ = require('jquery');
+var _ = require('../lodash.js');
 var Block = require('../block');
 
 var getTemplate = function(params) {
@@ -66,8 +67,10 @@ module.exports = Block.extend({
         }
     ],
 
+    editorHTML: '<div class="st-iframe-block"></div>',
+
     onBlockRender: function() {
-        this.$iframeWrapper.appendTo(this.$inner);
+        this.$editor.append(this.$iframeWrapper);
     },
 
     beforeBlockRender: function() {
