@@ -4,13 +4,27 @@ var _ = require('./lodash');
 var utils = require('./utils');
 var $ = require('jquery');
 
+var config = require('./config.js');
+
 var BlockReorder = require('./block-reorder');
+
+function getGlobalConfig(instanceID) {
+    var instance = config.instances.filter(function(instance) {
+        if (instance.ID === instanceID) {
+            return true;
+        }
+    })[0];
+
+    return instance.options;
+}
 
 var SimpleBlock = function(data, instance_id, mediator) {
   this.createStore(data);
   this.blockID = _.uniqueId('st-block-');
   this.instanceID = instance_id;
   this.mediator = mediator;
+
+  this.globalConfig = getGlobalConfig(this.instanceID);
 
   this._ensureElement();
   this._bindFunctions();
