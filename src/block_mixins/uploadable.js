@@ -1,5 +1,6 @@
-"use strict";
+'use strict';
 
+var $ = require('jquery');
 var _ = require('../lodash');
 var config = require('../config');
 var utils = require('../utils');
@@ -8,16 +9,22 @@ var fileUploader = require('../extensions/file-uploader');
 
 module.exports = {
 
-  mixinName: "Uploadable",
+  mixinName: 'Uploadable',
 
   uploadsCount: 0,
 
   initializeUploadable: function() {
-    utils.log("Adding uploadable to block " + this.blockID);
+    utils.log('Adding uploadable to block ' + this.blockID);
     this.withMixin(require('./ajaxable'));
 
     this.upload_options = Object.assign({}, config.defaults.Block.upload_options, this.upload_options);
-    this.$inputs.append(_.template(this.upload_options.html, this));
+
+    this.$uploader = $(_.template(this.upload_options.html, this));
+    this.$inputs.append(this.$uploader);
+
+    this.$uploader.find('button').bind('click', function(ev) {
+        ev.preventDefault();
+    });
   },
 
   uploader: function(file, success, failure){

@@ -94,6 +94,7 @@ var prototype = {
         this.url = params.url;
         this.limit = params.limit;
         this.fields = params.fields;
+        this.application = params.application;
 
         if (params.container) {
             params.container.prepend(this.render(this.fields));
@@ -127,9 +128,15 @@ var prototype = {
         search = search || {};
         eventName = eventName || 'search';
 
+        this.trigger(eventName + ':start');
+
         search = Object.assign(search, searchBuilder(this.$elem), {
             limit: this.limit
         });
+
+        if (this.application) {
+            search.application = this.application;
+        }
 
         this.nextSearch = search;
 
@@ -138,14 +145,14 @@ var prototype = {
         xhr.get(searchUrl)
             .then(function(searchResult) {
                 if (searchResult.content) {
-                    this.trigger(eventName, searchResult.content);
+                    this.trigger(eventName + ':result', searchResult.content);
                     this.nextSearch.offset = this.nextSearch.offset ? this.nextSearch.offset += searchResult.content.length : searchResult.content.length;
                 }
                 else {
-                    this.trigger('noResult');
+                    this.trigger(eventName + ':no-result');
                 }
             }.bind(this), function(err) {
-                this.trigger('noResult');
+                this.trigger(eventName + ':error', err);
             }.bind(this));
     },
 

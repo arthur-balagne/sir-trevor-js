@@ -4,157 +4,108 @@
   Jeux, Concours et Sondages Block
 */
 
-var xhr     = require('etudiant-mod-xhr');
-var animate = require('velocity-commonjs/velocity.ui');
+var xhr = require('etudiant-mod-xhr');
 
-var Block     = require('../block');
-var Slider    = require('../helpers/slider.class.js');
-var FilterBar = require('../helpers/filterbar.class.js');
-var Spinner   = require('../helpers/spinner.class.js');
+var _     = require('../lodash.js');
+var Block = require('../block');
 
+var SubBlockSearch  = require('../helpers/sub-block-search.class.js');
 var subBlockManager = require('../sub_blocks/index.js');
-
-var apiUrl = 'http://api.letudiant.lk/jcs/';
-var filterOptionsUrl = apiUrl + 'thematique/list/';
 
 var chooseableConfig = {
     name: 'contentType',
     options: [
         {
-            title: 'Sondage',
-            value: 'sondage'
+            title: i18n.t('sub_blocks:jcs:poll'),
+            value: 'poll'
         }, {
-            title: 'Quiz',
+            title: i18n.t('sub_blocks:jcs:quiz'),
             value: 'quiz'
         }, {
-            title: 'Test de personnalité',
-            value: 'profil'
+            title: i18n.t('sub_blocks:jcs:personality'),
+            value: 'personality'
         }
     ]
 };
 
-function registerClickOnContents(block) {
-    if (block.hasRegisteredClick !== true) {
-        block.hasRegisteredClick = true;
-
-        subBlockManager.bindEventsOnContainer(block.$inner, function(selectedSubBlockId, clickedElem) {
-
-            animate(clickedElem, 'callout.bounce', { duration: 400 })
-                .then(function() {
-                    block.slider.destroy();
-                    block.filterBar.destroy();
-
-                    var selectedSubBlock = subBlockManager.getSubBlockById(selectedSubBlockId, block.subBlocks);
-
-                    block.setAndLoadData(selectedSubBlock.contents);
-
-                    block.$inner.append(selectedSubBlock.renderLarge());
-
-                    subBlockManager.unBindEventsOnContainer(block.$inner);
-                });
-        });
-    }
-}
-
-function filterUpdate(block, contentType) {
-    block.slider.on('progress', function() {
-        block.filterBar.moreResults();
-    });
-
-    block.filterBar.on('update', function(results) {
-        var additionalSubBlocks = subBlockManager.build(block.type, results, contentType);
-        var subBlockMarkup = subBlockManager.render(additionalSubBlocks);
-
-        block.subBlocks = block.subBlocks.concat(additionalSubBlocks);
-
-        block.slider.update(subBlockMarkup);
-    });
-}
-
-function filterSearch(block, contentType) {
-    block.filterBar.on('search', function(results) {
-        block.$spinner.fadeOut()
-            .then(function() {
-                block.subBlocks = subBlockManager.build('jcs', results, contentType);
-
-                var subBlockMarkup = subBlockManager.render(block.subBlocks);
-
-                block.slider.reset(subBlockMarkup);
-
-                registerClickOnContents(block);
-            });
-    });
-
-    block.filterBar.on('noResult', function() {
-        block.subBlocks = [];
-
-        block.$spinner.fadeOut()
-            .then(function() {
-                block.slider.reset();
-            });
-    });
-}
-
 function onChoose(choices) {
     var block = this;
 
-    block.$spinner = new Spinner();
-    block.subBlocks = [];
-    block.selectedContentType = choices.contentType;
+    block.subBlockType = choices.contentType;
 
-    var filterBarUrl = apiUrl + block.selectedContentType + '/search';
+    var thematicOptionsUrl = block.globalConfig.apiUrl + block.type + '/thematic/list/' + block.subBlockType;
 
-    block.$spinner.appendTo(block.$inner);
-
-    return xhr.get(filterOptionsUrl + choices.contentType)
+    var thematicOptionsPromise = xhr.get(thematicOptionsUrl)
         .then(function(result) {
-            return result.content;
-        })
-        .then(function(filterOptionsRaw) {
-
-            var filterOptions = filterOptionsRaw.map(function(filterOption) {
+            return result.content.map(function(filterOption) {
                 return {
                     value: filterOption.id,
                     label: filterOption.label
                 };
             });
-
-            block.filterBar = new FilterBar({
-                url: filterBarUrl,
-                fields: [
-                    {
-                        type: 'search',
-                        name: 'query',
-                        placeholder: 'Rechercher',
-                    }, {
-                        type: 'select',
-                        name: 'thematic',
-                        placeholder: 'Thematique',
-                        options: filterOptions
-                    }
-                ],
-                limit: 20,
-                container: block.$inner
-            });
-
-            block.slider = new Slider({
-                controls: {
-                    next: 'Next',
-                    prev: 'Prev'
-                },
-                itemsPerSlide: 2,
-                increment: 2,
-                container: block.$inner
-            });
-
-            filterSearch(block, block.selectedContentType);
-            filterUpdate(block, block.selectedContentType);
-
-            block.filterBar.search();
         })
         .catch(function(err) {
             console.error(err);
+        })
+        .then(function(formatedFilterOptions) {
+            return {
+                name: 'thematic',
+                options: formatedFilterOptions
+            };
         });
+
+    var filterConfig = {
+        url: block.globalConfig.apiUrl + block.type + '/' + block.subBlockType + '/search',
+        fields: [
+            {
+                type: 'search',
+                name: 'query',
+                placeholder: 'Rechercher'
+            }, {
+                type: 'select',
+                name: 'thematic',
+                placeholder: 'Thematique',
+                options: thematicOptionsPromise
+            }
+        ],
+        limit: 20,
+        container: block.$inner,
+        application: block.globalConfig.application
+    };
+
+    var sliderConfig = {
+        controls: {
+            next: 'Next',
+            prev: 'Prev'
+        },
+        itemsPerSlide: 2,
+        increment: 2,
+        container: block.$inner
+    };
+
+    this.subBlockSearch = new SubBlockSearch({
+        apiUrl: block.globalConfig.apiUrl,
+        block: block,
+        filterConfig: filterConfig,
+        sliderConfig: sliderConfig
+    });
+
+    this.subBlockSearch.on('ready', function() {
+        console.log('subBlockSearch triggered ready');
+    });
+
+    this.subBlockSearch.on('selected', function(selectedSubBlock) {
+        this.setData({
+            id: selectedSubBlock.id,
+            application: selectedSubBlock.contents.application,
+            type: selectedSubBlock.type
+        });
+
+        this.slider.destroy();
+        this.filterBar.destroy();
+
+        this.getBlock().html(selectedSubBlock.renderLarge());
+    }.bind(this));
 }
 
 module.exports = Block.extend({
@@ -164,27 +115,36 @@ module.exports = Block.extend({
     type: 'jcs',
 
     title: function() {
-        return i18n.t('blocks:sondage:title');
+        return i18n.t('blocks:jcs:title');
     },
 
-    editorHTML: '',
+    editorHTML: '<div class="st-jcs-block"></div>',
 
     icon_name: 'poll',
 
     loadData: function(data) {
-        if (data) {
-            this.subBlockData = data;
+        if (!_.isEmpty(data)) {
+            this.loading();
+
+            var retrieveUrl = this.globalConfig.apiUrl + this.type + '/' + data.type + '/' + data.id + '/' + data.application;
+
+            xhr.get(retrieveUrl)
+                .then(function(subBlockData) {
+                    var subBlock = subBlockManager.buildSingle(this.type, subBlockData.content, data.type);
+
+                    this.$editor.html(subBlock.renderLarge());
+
+                    this.ready();
+                }.bind(this))
+                .catch(function(err) {
+                    throw new Error('No block returned for id:' + this.subBlockData.id + ' on app:' + this.subBlockData.application + ' ' + err);
+                }.bind(this));
         }
     },
 
     onBlockRender: function() {
-        if (!this.subBlockData) {
+        if (_.isEmpty(this.blockStorage.data)) {
             this.createChoices(chooseableConfig, onChoose.bind(this));
-        }
-        else {
-            var subBlock = subBlockManager.buildSingle(this.type, this.subBlockData, this.subBlockData.type);
-
-            this.$inner.append(subBlock.renderLarge());
         }
     }
 });
