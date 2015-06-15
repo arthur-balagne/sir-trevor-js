@@ -2,19 +2,18 @@ var $ = require('jquery');
 
 var subBlockTypes = {
     jcs: {
-        sondage: require('./jcs/sondageJcsSubBlock.js'),
-        quiz: require('./jcs/quizJcsSubBlock.js'),
-        profil: require('./jcs/testJcsSubBlock.js'),
+        personality: require('./jcs/personality.class.js'),
+        poll: require('./jcs/poll.class.js'),
+        quiz: require('./jcs/quiz.class.js')
     },
-    video: require('./videoSubBlock.js'),
-    image: require('./imageSubBlock.js')
+    media: {
+        video: require('./media/video.class.js'),
+        image: require('./media/image.class.js')
+    }
 };
 
 function buildSingleBlock(type, contents, subType) {
-    if (typeof subBlockTypes[type] === 'function') {
-        return new subBlockTypes[type](contents);
-    }
-    else if (typeof subBlockTypes[type][subType] === 'function') {
+    if (typeof subBlockTypes[type][subType] === 'function') {
         return new subBlockTypes[type][subType](contents);
     }
     else {

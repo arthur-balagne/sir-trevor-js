@@ -1,6 +1,6 @@
 var _ = require('../../lodash.js');
 
-var BasicJcsSubBlock = require('./basicJcsSubBlock.js');
+var BasicJcsSubBlock = require('./basic-jcs.class.js');
 
 var largeTemplate = [
     '<div data-sub-block-id="<%= id %>" class="st-sub-block st-sub-block-large st-sub-block__<%= type %>">',
@@ -13,22 +13,22 @@ var largeTemplate = [
     '</div>'
 ].join('\n');
 
-var testJcsSubBlock = function() {
-    this.type = 'profil';
+var PersonalityJcsSubBlock = function() {
+    this.type = 'personality';
 
     BasicJcsSubBlock.apply(this, arguments);
 
     this.largeTemplate = largeTemplate;
 };
 
-testJcsSubBlock.prototype = Object.create(BasicJcsSubBlock.prototype);
+PersonalityJcsSubBlock.prototype = Object.create(BasicJcsSubBlock.prototype);
 
-testJcsSubBlock.prototype.constructor = BasicJcsSubBlock;
+PersonalityJcsSubBlock.prototype.constructor = BasicJcsSubBlock;
 
 var prototype = {
 
 };
 
-Object.assign(testJcsSubBlock.prototype, prototype);
+Object.assign(PersonalityJcsSubBlock.prototype, prototype);
 
-module.exports = testJcsSubBlock;
+module.exports = PersonalityJcsSubBlock;

@@ -1,3 +1,4 @@
+var $ = require('jquery');
 var _ = require('../lodash.js');
 
 var BasicSubBlock = function() {
@@ -13,6 +14,10 @@ BasicSubBlock.prototype = {
         });
 
         this.contents.url = this.contents.url ? this.contents.url : '';
+    },
+
+    getElem: function() {
+        this.$elem = $(['data-sub-block-id="' + this.id + '"']);
     },
 
     renderSmall: function() {

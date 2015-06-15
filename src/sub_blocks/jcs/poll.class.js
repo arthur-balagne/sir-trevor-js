@@ -1,6 +1,6 @@
 var _ = require('../../lodash.js');
 
-var BasicJcsSubBlock = require('./basicJcsSubBlock.js');
+var BasicJcsSubBlock = require('./basic-jcs.class.js');
 
 var smallTemplate = [
     '<div data-sub-block-id="<%= id %>" class="st-sub-block st-sub-block-small st-sub-block__<%= type %>">',
@@ -13,9 +13,9 @@ var smallTemplate = [
 var largeTemplate = [
     '<div data-sub-block-id="<%= id %>" class="st-sub-block st-sub-block-large st-sub-block__<%= type %>">',
         '<% if (choices && choices.length > 0) { %>',
-        '<div class="st-sub-block-sondage">',
+        '<div class="st-sub-block-poll">',
                 '<% _.forEach(choices, function(choice) { %>',
-                    '<div class="st-sub-block-sondage-choice">',
+                    '<div class="st-sub-block-poll-choice">',
                         '<span><%= choice.label %></span>',
                         '<meter min="0" max="100" value="<%= choice.percentage %>">',
                             '<div class="meter">',
@@ -32,8 +32,8 @@ var largeTemplate = [
     '</div>'
 ].join('\n');
 
-var sondageJcsSubBlock = function() {
-    this.type = 'sondage';
+var PollJcsSubBlock = function() {
+    this.type = 'poll';
 
     BasicJcsSubBlock.apply(this, arguments);
 
@@ -41,9 +41,9 @@ var sondageJcsSubBlock = function() {
     this.largeTemplate = largeTemplate;
 };
 
-sondageJcsSubBlock.prototype = Object.create(BasicJcsSubBlock.prototype);
+PollJcsSubBlock.prototype = Object.create(BasicJcsSubBlock.prototype);
 
-sondageJcsSubBlock.prototype.constructor = BasicJcsSubBlock;
+PollJcsSubBlock.prototype.constructor = BasicJcsSubBlock;
 
 var prototype = {
     renderLarge: function() {
@@ -51,6 +51,6 @@ var prototype = {
     }
 };
 
-Object.assign(sondageJcsSubBlock.prototype, prototype);
+Object.assign(PollJcsSubBlock.prototype, prototype);
 
-module.exports = sondageJcsSubBlock;
+module.exports = PollJcsSubBlock;

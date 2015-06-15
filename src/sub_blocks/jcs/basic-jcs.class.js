@@ -1,11 +1,11 @@
 var _ = require('../../lodash.js');
 
-var BasicSubBlock = require('../basicSubBlock.js');
+var BasicSubBlock = require('../basic.class.js');
 
 var smallTemplate = [
     '<div data-sub-block-id="<%= id %>" class="st-sub-block st-sub-block-small st-sub-block__<%= type %>">',
         '<figure class="st-sub-block-image">',
-            '<img src="<%= image %>" />',
+            '<img src="<%= thumbnail %>" />',
         '</figure>',
         '<h3><%= title %></h3>',
         '<a class="st-sub-block-link st-icon" href="<%= url %>" target="_blank">link</a>',
@@ -14,8 +14,9 @@ var smallTemplate = [
 ].join('\n');
 
 var JcsSubBlock = function() {
-    this.smallTemplate = smallTemplate;
     BasicSubBlock.apply(this, arguments);
+
+    this.smallTemplate = smallTemplate;
 };
 
 JcsSubBlock.prototype = Object.create(BasicSubBlock.prototype);
