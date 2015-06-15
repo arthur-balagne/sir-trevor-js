@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var _ = require('../lodash');
 var $ = require('jquery');
@@ -17,7 +17,7 @@ var tweet_template = _.template([
 
 module.exports = Block.extend({
 
-  type: "tweet",
+  type: 'tweet',
   droppable: true,
   pastable: true,
   fetchable: true,
@@ -29,7 +29,7 @@ module.exports = Block.extend({
   title: function(){ return i18n.t('blocks:tweet:title'); },
 
   fetchUrl: function(tweetID) {
-    return "/tweets/?tweet_id=" + tweetID;
+    return '/tweets/?tweet_id=' + tweetID;
   },
 
   icon_name: 'twitter',
@@ -51,7 +51,7 @@ module.exports = Block.extend({
 
   handleTwitterDropPaste: function(url){
     if (!this.validTweetUrl(url)) {
-      utils.log("Invalid Tweet URL");
+      utils.log('Invalid Tweet URL');
       return;
     }
 
@@ -63,7 +63,7 @@ module.exports = Block.extend({
 
       var ajaxOptions = {
         url: this.fetchUrl(tweetID),
-        dataType: "json"
+        dataType: 'json'
       };
 
       this.fetch(ajaxOptions, this.onTweetSuccess, this.onTweetFail);
@@ -72,8 +72,8 @@ module.exports = Block.extend({
 
   validTweetUrl: function(url) {
     return (utils.isURI(url) &&
-            url.indexOf("twitter") !== -1 &&
-            url.indexOf("status") !== -1);
+            url.indexOf('twitter') !== -1 &&
+            url.indexOf('status') !== -1);
   },
 
   onTweetSuccess: function(data) {
@@ -89,7 +89,7 @@ module.exports = Block.extend({
       text: data.text,
       created_at: data.created_at,
       entities: data.entities,
-      status_url: "https://twitter.com/" + data.user.screen_name + "/status/" + data.id_str
+      status_url: 'https://twitter.com/' + data.user.screen_name + '/status/' + data.id_str
     };
 
     this.setAndLoadData(obj);
@@ -97,7 +97,7 @@ module.exports = Block.extend({
   },
 
   onTweetFail: function() {
-    this.addMessage(i18n.t("blocks:tweet:fetch_error"));
+    this.addMessage(i18n.t('blocks:tweet:fetch_error'));
     this.ready();
   },
 

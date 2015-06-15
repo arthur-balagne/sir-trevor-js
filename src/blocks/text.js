@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /*
   Text Block
@@ -9,7 +9,7 @@ var stToHTML = require('../to-html');
 
 module.exports = Block.extend({
 
-  type: "text",
+  type: 'text',
 
   title: function() { return i18n.t('blocks:text:title'); },
 

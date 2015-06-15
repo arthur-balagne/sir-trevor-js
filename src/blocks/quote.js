@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /*
   Block Quote
@@ -18,7 +18,7 @@ var template = _.template([
 
 module.exports = Block.extend({
 
-  type: "quote",
+  type: 'quote',
 
   title: function() { return i18n.t('blocks:quote:title'); },
 
@@ -34,7 +34,7 @@ module.exports = Block.extend({
   },
 
   toMarkdown: function(markdown) {
-    return markdown.replace(/^(.+)$/mg,"> $1");
+    return markdown.replace(/^(.+)$/mg,'$1');
   }
 
 });
