@@ -35,6 +35,9 @@ var Locales = {
         'title': "Citation",
         'credit_field': "Auteur"
       },
+      medias: {
+        title: 'Medias'
+      },
       image: {
         'title': "Image",
         'upload_error': "Il y a un problème avec votre téléchargement"
@@ -45,7 +48,7 @@ var Locales = {
       iframe: {
         'placeholder': "Copie l'URL du site ici"
       },
-      sondage: {
+      jcs: {
         'title': 'Sondage'
       },
       tweet: {
@@ -68,6 +71,18 @@ var Locales = {
         'helper-merge' : 'Cliquez sur une cellule grise pour la fusionner avec la cellule de droite',
         'helper-unmerge' : 'Cliquez sur une cellule grise pour annuler la fusion'
       }
+    },
+    slider: {
+        no_results: 'No results'
+    },
+    sub_blocks: {
+        jcs: {
+            personality: 'Test de personnalité',
+            poll: 'Sondage',
+            quiz: 'Quiz'
+        },
+        image: 'Image',
+        video: 'Video'
     }
   }
 };
