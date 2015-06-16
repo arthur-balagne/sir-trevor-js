@@ -8,6 +8,7 @@ var xhr = require('etudiant-mod-xhr');
 
 var _     = require('../lodash.js');
 var Block = require('../block');
+var utils = require('../utils');
 
 var SubBlockSearch  = require('../helpers/sub-block-search.class.js');
 var subBlockManager = require('../sub_blocks/index.js');
@@ -28,12 +29,29 @@ var chooseableConfig = {
     ]
 };
 
+function getPath(contentType) {
+    switch (contentType) {
+        case 'poll':
+            return 'polls';
+            break;
+        case 'quiz':
+            return 'quizzes';
+            break;
+        case 'personality':
+            return 'personalities';
+            break;
+        default:
+            throw new Error('Unknown sub block type');
+            break;
+    }
+}
+
 function onChoose(choices) {
     var block = this;
 
     block.subBlockType = choices.contentType;
 
-    var thematicOptionsUrl = block.globalConfig.apiUrl + block.type + '/thematic/list/' + block.subBlockType;
+    var thematicOptionsUrl = block.globalConfig.apiUrl + block.type + '/thematics/list/' + getPath(choices.contentType);
 
     var thematicOptionsPromise = xhr.get(thematicOptionsUrl)
         .then(function(result) {
@@ -55,7 +73,7 @@ function onChoose(choices) {
         });
 
     var filterConfig = {
-        url: block.globalConfig.apiUrl + block.type + '/' + block.subBlockType + '/search',
+        url: block.globalConfig.apiUrl + block.type + '/' + getPath(choices.contentType) + '/search',
         fields: [
             {
                 type: 'search',
@@ -90,10 +108,6 @@ function onChoose(choices) {
         sliderConfig: sliderConfig
     });
 
-    this.subBlockSearch.on('ready', function() {
-        console.log('subBlockSearch triggered ready');
-    });
-
     this.subBlockSearch.on('selected', function(selectedSubBlock) {
         this.setData({
             id: selectedSubBlock.id,
@@ -104,7 +118,7 @@ function onChoose(choices) {
         this.slider.destroy();
         this.filterBar.destroy();
 
-        this.getBlock().html(selectedSubBlock.renderLarge());
+        this.$editor.html(selectedSubBlock.renderLarge());
     }.bind(this));
 }
 
@@ -126,7 +140,7 @@ module.exports = Block.extend({
         if (!_.isEmpty(data)) {
             this.loading();
 
-            var retrieveUrl = this.globalConfig.apiUrl + this.type + '/' + data.type + '/' + data.id + '/' + data.application;
+            var retrieveUrl = this.globalConfig.apiUrl + this.type + '/' + getPath(data.type) + '/' + data.id + '/' + data.application;
 
             xhr.get(retrieveUrl)
                 .then(function(subBlockData) {
