@@ -125,6 +125,7 @@ function setEndOfContenteditable(contentEditableElement, html){
     selection.collapse(false);
     selection.setStart(contentEditableElement.$('.st-text-block')[0], 0);
 
+debugger;
 
     var el = document.createElement("div");
     el.innerHTML = html;
@@ -134,6 +135,7 @@ function setEndOfContenteditable(contentEditableElement, html){
     while ( (node = el.firstChild) ) {
         lastNode = frag.appendChild(node);
     }
+    var txtLength = range.toString().length;
     range.collapse(true);
     range.insertNode(frag);
     var sel = window.getSelection();
@@ -141,6 +143,7 @@ function setEndOfContenteditable(contentEditableElement, html){
         range = range.cloneRange();
         range.setStartAfter(lastNode);
         sel.removeAllRanges();
+        range.collapse(false);
     }
 }
 
@@ -163,13 +166,9 @@ function synchronizeAndOpenStep2(block) {
         modalTemplateStep2 = filteredImagesTab[row].renderLarge();
         var blockId = block.blockID;
         var imageBlock = filteredImage.renderBlock();
-        //$('#' + blockId).find('.st-text-block').html( $('#' + blockId).find('.st-text-block').html() + imageBlock2 );
         setEndOfContenteditable(block, imageBlock);
 
-        filteredImage.bindRemoveEvent(block, filteredImage.media.id);
-        filteredImage.bindTogglEvent(block, filteredImage.media.id);
-        filteredImage.bindUpdateEvent(block, filteredImage.media.id);
-        startStep2(block);
+        $('.modal-gallery-step-1 .modal-close')[0].click();
         $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
         $('.size').text(picture.sizes);
     });
@@ -182,7 +181,7 @@ function synchronizeAndOpenStep2(block) {
  */
 function synchronizeAndCloseStep2(block) {
     var blockId = block.blockID;
-    debugger;
+    var related = $('.framed-picture-279520' + blockId);
     $('.modal-gallery-step-1').off('click', '.validate');
     var rowId = $('body .modal-gallery-step-2 .position').data('row');
     var position = $('.position').find(':selected').val();
@@ -236,7 +235,6 @@ function synchronizeAndCloseStep2(block) {
             }
             $('#' + blockId + ' .framed-picture').wrap('<a class="frame-link" target="_blank" href="' + $('.picture-link').val() + '">');
         }
-
     });
 }
 /**
@@ -512,7 +510,6 @@ module.exports = Block.extend({
                     selectUpdater();
                     updateZoom(filteredImagesTab);
                 });
-
                 selectUpdater();
                 updateZoom(filteredImagesTab);
 
@@ -553,26 +550,33 @@ module.exports = Block.extend({
     setData: function(blockData) {
 
         var content = this.getTextBlock();
-        if (content.html().length > 0) {
+        var frameText =  content.html();
+        if (frameText.length > 0) {
             var framedContent = content.find('.framed-picture');
             if(framedContent.data('object') === undefined) {
                 var html = content.html();
                 return blockData.text = html;
             }
-            var frameData = framedContent.data('object');
-            debugger;
-            console.log(framedContent); // framed-picture-67683
-            framedContent.replaceWith('#' + framedContent.data('object').id + ' ');
-            var id = framedContent.data('object').id;
-            blockData.text = content.html();
-            blockData.images = {};
-            blockData.images[id] = framedContent.data('object');
-        }
 
+            blockData.images = {};
+            $('.framed-picture').each(function(){
+                var id = $(this).attr('id').split(' ')[0];
+                blockData.images[id] = $(this).data('object');
+                $('.framed-picture-' + id).replaceWith('#'+id);
+
+                if ($(this).hasClass('f-left')) {
+                    blockData.images[id].align = 'f-left';
+                }
+                else {
+                    blockData.images[id].align = 'f-right';
+                }
+            });
+        }
         Object.assign(this.blockStorage.data, blockData || {});
     },
 
     loadData: function(data){
+        debugger;
         this.imagesData = data.images;
         var ids = data.text.match(/#\w+/g);
         var jsonObject = [];
@@ -585,21 +589,22 @@ module.exports = Block.extend({
 
             var promise = function(url) {
                     xhr.get(url).then(function(result) {
-                    console.log(tpl);
                     result.content.size =  data.images[val].size;
                     result.content.legend =  data.images[val].legend;
                     var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
+
+                    result.content.legend = data.images[val].legend;
+                    result.content.size = data.images[val].size;
+                    result.content.align = data.images[val].align;
+
                     filteredBlock.media = result.content;
                     tpl = filteredBlock.renderBlock();
                     data.text = data.text.replace('#' + val, tpl);
                     that.getTextBlock().html(data.text);
                 });
 
-                console.log(data);
-
             }
             promise(url);
-            console.log(data.text);
         });
         this.getTextBlock().html(stToHTML(data.text));
 

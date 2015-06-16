@@ -118,12 +118,7 @@ var prototype = {
     renderBlock: function() {
         var tpl = null;
         var size = this.media.size.split('x')[0];
-        var modifications = {
-            image: this.media.image,
-            legend: this.media.legend,
-            size: this.media.size,
-            align: this.media.align
-        };
+
         tpl = blockTemplate({
             id: this.media.id,
             image: this.resize(this.media.size),
@@ -131,7 +126,7 @@ var prototype = {
             copyright: this.media.copyright,
             pictureWidth: size,
             align: this.media.align,
-            object: JSON.stringify(modifications).replace('\'', '\\')
+            object: JSON.stringify(this.media).replace('\'', '\\')
         });
         return tpl;
     },
