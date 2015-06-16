@@ -1,6 +1,7 @@
 var BasicMediaSubBlock = require('./basic-media.class.js');
 
 var VideoSubBlock = function() {
+    this.type = 'video';
     BasicMediaSubBlock.apply(this, arguments);
 };
 

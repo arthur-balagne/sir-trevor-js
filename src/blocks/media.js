@@ -4,13 +4,15 @@
   Media block - images et vidéos
 */
 
+var $   = require('jquery');
 var xhr = require('etudiant-mod-xhr');
 
-var $ = require('jquery');
-var _ = require('../lodash.js');
+var _     = require('../lodash.js');
 var Block = require('../block');
+var utils = require('../utils');
 
 var SubBlockSearch = require('../helpers/sub-block-search.class.js');
+var subBlockManager = require('../sub_blocks/index.js');
 
 var chooseableConfig = {
     name: 'contentType',
@@ -88,20 +90,23 @@ function onChoose(choices) {
     });
 
     this.subBlockSearch.on('ready', function() {
-        console.log('subBlockSearch triggered ready');
         this.$inner.prepend(this.$inputs);
     }.bind(this));
 
     this.subBlockSearch.on('selected', function(selectedSubBlock) {
-        this.setData(selectedSubBlock.contents);
+        this.setData({
+            id: selectedSubBlock.contents.id,
+            type: block.subBlockType
+        });
 
         this.slider.destroy();
         this.filterBar.destroy();
 
         this.$editor.html(selectedSubBlock.renderLarge());
+        this.$inputs.hide();
+        this.$editor.show();
     }.bind(this));
 }
-
 
 module.exports = Block.extend({
     type: 'media',
@@ -122,11 +127,13 @@ module.exports = Block.extend({
         if (!_.isEmpty(data)) {
             this.loading();
 
-            var retrieveUrl = this.globalConfig.apiUrl + this.type + '/' + data.type + '/' + data.id + '/' + data.application;
+            var retrieveUrl = this.globalConfig.apiUrl + 'edt/' + this.type + '/' + data.id;
 
             xhr.get(retrieveUrl)
-                .then(function(subBlockData) {
-                    var subBlock = subBlockManager.buildSingle(this.type, subBlockData.content, data.type);
+                .then(function(rawSubBlockData) {
+                    var subBlockData = Object.assign({}, rawSubBlockData.content, data);
+
+                    var subBlock = subBlockManager.buildSingle(this.type, subBlockData, data.type);
 
                     this.$editor.html(subBlock.renderLarge());
 
@@ -135,11 +142,6 @@ module.exports = Block.extend({
                 .catch(function(err) {
                     throw new Error('No block returned for id:' + this.subBlockData.id + ' on app:' + this.subBlockData.application + ' ' + err);
                 }.bind(this));
-
-
-            // this.$editor.html($('<img>', {
-            //     src: data.file.url
-            // }));
         }
     },
 
@@ -147,9 +149,9 @@ module.exports = Block.extend({
         if (_.isEmpty(this.blockStorage.data)) {
             this.$inputs.detach();
 
-            this.$inputs.find('input').on('change', (function(ev) {
-                this.onDrop(ev.currentTarget);
-            }).bind(this));
+            this.$inputs.find('input').on('change', function(e) {
+                this.onDrop(e.currentTarget);
+            }.bind(this));
 
             this.createChoices(chooseableConfig, onChoose.bind(this));
         }
@@ -159,10 +161,9 @@ module.exports = Block.extend({
         var file = transferData.files[0];
         var urlAPI = (typeof window.URL !== 'undefined') ? window.URL : (typeof window.webkitURL !== 'undefined') ? window.webkitURL : null;
 
-        // Handle one upload at a time
         if (/image/.test(file.type)) {
             this.loading();
-            // Show this image on here
+
             this.$inputs.hide();
             this.$editor.html($('<img>', {
                 src: urlAPI.createObjectURL(file)

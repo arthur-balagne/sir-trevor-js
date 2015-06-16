@@ -12,8 +12,6 @@ BasicSubBlock.prototype = {
         this.contents = Object.assign(contents, {
             type: this.type
         });
-
-        this.contents.url = this.contents.url ? this.contents.url : '';
     },
 
     getElem: function() {

@@ -1,12 +1,11 @@
-var $ = require('jquery');
-var _ = require('../lodash.js');
-
 var animate     = require('velocity-commonjs/velocity.ui');
 var eventablejs = require('eventablejs');
 var xhr         = require('etudiant-mod-xhr');
 
 var FilterBar = require('./filterbar.class.js');
 var Slider    = require('./slider.class.js');
+
+var utils = require('../utils.js');
 
 var subBlockManager = require('../sub_blocks/index.js');
 
@@ -20,7 +19,7 @@ function registerClickOnContents(block) {
                 .then(function() {
                     var selectedSubBlock = subBlockManager.getSubBlockById(selectedSubBlockId, block.subBlocks);
 
-                    block.subBlockSearch.trigger('selected',selectedSubBlock);
+                    block.subBlockSearch.trigger('selected', selectedSubBlock);
 
                     subBlockManager.unBindEventsOnContainer(block.$inner);
                 });
@@ -130,13 +129,13 @@ var prototype = {
                 block.filterBar.once('search:result', function() {
                     block.ready();
                     this.trigger('ready');
+                    utils.log('subBlockSearch triggered ready');
                 }.bind(this));
 
             }.bind(this))
             .catch(function(err) {
                 console.error(err);
             });
-
     }
 };
 
