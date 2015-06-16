@@ -9,4 +9,5 @@ module.exports = {
   Tweet: require('./tweet'),
   Video: require('./video'),
   Iframe: require('./iframe')
+  Subhead: require('./subhead')
 };
