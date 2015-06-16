@@ -14,7 +14,7 @@ module.exports = require('./src/');
 },{"./src/":95}],2:[function(require,module,exports){
 // Array.prototype.find - MIT License (c) 2013 Paul Miller <http://paulmillr.com>
 // For all details and docs: https://github.com/paulmillr/array.prototype.find
-// Fixes and tests supplied by Duncan Hall <http://duncanhall.net> 
+// Fixes and tests supplied by Duncan Hall <http://duncanhall.net>
 (function(globals){
   if (Array.prototype.find) return;
 
@@ -2217,7 +2217,7 @@ module.exports = function isArguments(value) {
         left: o.left,
         top: o.top
       })
-        
+
       if (target) {
         target.insertBefore(el, target.firstChild||null)
       }
@@ -4080,7 +4080,7 @@ module.exports = Block.extend({
 
     var source = this.providers[data.source];
 
-    var protocol = window.location.protocol === "file:" ? 
+    var protocol = window.location.protocol === "file:" ?
       "http:" : window.location.protocol;
 
     var aspectRatioClass = source.square ?
@@ -4112,7 +4112,7 @@ module.exports = Block.extend({
   handleDropPaste: function(url){
     if (!utils.isURI(url)) { return; }
 
-    for(var key in this.providers) { 
+    for(var key in this.providers) {
       if (!this.providers.hasOwnProperty(key)) { continue; }
       this.setAndLoadData(
         this.matchVideoProvider(this.providers[key], key, url)
@@ -4197,7 +4197,7 @@ Object.assign(Editor.prototype, require('./function-bind'), require('./events'),
 
   bound: ['onFormSubmit', 'hideAllTheThings', 'changeBlockPosition',
     'removeBlockDragOver', 'renderBlock', 'resetBlockControls',
-    'blockLimitReached'], 
+    'blockLimitReached'],
 
   events: {
     'block:reorder:dragend': 'removeBlockDragOver',
@@ -5279,7 +5279,7 @@ $.fn.caretToEnd = function(){
 "use strict";
 
 /*
-  Backbone Inheritence 
+  Backbone Inheritence
   --
   From: https://github.com/documentcloud/backbone/blob/master/backbone.js
   Backbone.js 0.9.2

@@ -1,5 +1,3 @@
-'use strict';
-
 var $ = require('jquery');
 var Block = require('../block');
 
@@ -40,7 +38,9 @@ module.exports = Block.extend({
             fn: function(e) {
                 e.preventDefault();
 
-                this.setAndLoadData({
+                this.$iframe.css('height', e.target.value);
+
+                this.setData({
                     height: e.target.value
                 });
             },
@@ -52,7 +52,13 @@ module.exports = Block.extend({
             fn: function(e) {
                 e.preventDefault();
 
-                this.setAndLoadData({
+                this.$iframe.attr('scrolling', e.target.value);
+
+                // We need to set the src again to trigger the iframe refresh (to see the scrolling change) (required on Chrome 40 at least)
+                var src = this.$iframe.attr('src');
+                this.$iframe.attr('src', src);
+
+                this.setData({
                     scrolling: e.target.value
                 });
             },
@@ -61,29 +67,23 @@ module.exports = Block.extend({
     ],
 
     onBlockRender: function() {
+        this.$iframeWrapper.appendTo(this.$inner);
+    },
+
+    beforeBlockRender: function() {
         var template = getTemplate({
             height: 300,
             scrolling: 'no',
             visible: false
         });
 
-        this.$inner.prepend(template);
-        this.$iframe = this.$inner.find('iframe');
+        this.$iframeWrapper = $(template);
+        this.$iframe = this.$iframeWrapper.find('iframe');
     },
 
     loadData: function(data) {
-        if (data.src) {
-            this.$iframe.attr('src', data.src);
-            this.$iframe.show();
-        }
-
-        if (data.height) {
-            this.$iframe.attr('height', data.height);
-        }
-
-        if (data.scrolling) {
-           this.$iframe.attr('scrolling', data.scrolling);
-        }
+        this.$iframe.attr('src', data.src);
+        this.$iframe.show();
     },
 
     onContentPasted: function(event) {
