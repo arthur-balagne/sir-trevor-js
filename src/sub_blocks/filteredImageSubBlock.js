@@ -57,7 +57,7 @@ var largeTemplate = _.template([
 .join('\n'));
 
 var blockTemplate = _.template([
-    '<div class="framed-picture framed-picture-<%= id %>" contenteditable="false" data-object=\'<%= object %>\' style="display:inline-block; position:relative; width:initial; position:relative" id="<%= id %> picture-<%= id %>">',
+    '<div class="framed-picture framed-picture-<%= id %>  <%= align %>" contenteditable="false" data-object=\'<%= object %>\' style="display:inline-block; position:relative; width:initial; position:relative" id="<%= id %> picture-<%= id %>">',
         '<div class="st-block__control-ui-elements top" style="position:absolute; top:0; left:0;">',
             '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--delete-picture st-icon st-block-control-ui-btn--delete-picture<%= id %>" data-id="<%= id %>"  data-icon="bin">',
             '</div>',
@@ -104,6 +104,7 @@ var prototype = {
     },
     renderLarge: function() {
         var tpl = null;
+
         this.media.size = this.media.size;
         tpl = largeTemplate({
             id: this.media.id,
@@ -117,13 +118,20 @@ var prototype = {
     renderBlock: function() {
         var tpl = null;
         var size = this.media.size.split('x')[0];
+        var modifications = {
+            image: this.media.image,
+            legend: this.media.legend,
+            size: this.media.size,
+            align: this.media.align
+        };
         tpl = blockTemplate({
             id: this.media.id,
-            image: this.media.custom,
+            image: this.resize(this.media.size),
             legend: this.media.legend,
             copyright: this.media.copyright,
             pictureWidth: size,
-            object: JSON.stringify(this.media).replace('\'', '\\')
+            align: this.media.align,
+            object: JSON.stringify(modifications).replace('\'', '\\')
         });
         return tpl;
     },

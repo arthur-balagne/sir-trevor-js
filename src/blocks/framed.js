@@ -111,74 +111,37 @@ function startStep2(block) {
     eventBus.trigger('button:control-0:enable');
     evt.publish('modal-gallery-step-2', block);
 }
-function startRange(el) {
-    var sel = window.getSelection();
-    var range = document.createRange();
-    range.selectNodeContents(el);
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    return sel;
-}
+
 
 
 function setEndOfContenteditable(contentEditableElement, html){
-    debugger;
+    var sel = window.getSelection();
+    var range = document.createRange();
+    range.selectNodeContents(contentEditableElement.$('.st-text-block')[0]);
 
-    var start = startRange(contentEditableElement.$('.st-text-block')[0]);
-    var node = start.focusNode;
-
-    var range = start.getRangeAt(0);
-    range.deleteContents();
-
-    //var range = start.getRangeAt(0);
-    //var offset = start.focusOffset;
-    //range.insertNode(document.createTextNode(html));
-
+    sel.removeAllRanges();
+    sel.addRange(range);
+    var selection = sel.getRangeAt(0);
+    selection.collapse(false);
+    selection.setStart(contentEditableElement.$('.st-text-block')[0], 0);
 
 
     var el = document.createElement("div");
     el.innerHTML = html;
-    var frag = document.createDocumentFragment(), node, lastNode;
+    var frag = document.createDocumentFragment();
+    var node;
+    var lastNode;
     while ( (node = el.firstChild) ) {
         lastNode = frag.appendChild(node);
     }
+    range.collapse(true);
     range.insertNode(frag);
-
-
-    range.collapse(false);
-
-    var end = endRange(contentEditableElement.$('.st-text-block')[0]);
-
-    var sliced = '';
-
-
-
-    if(node !== undefined && node !== null) {
-        sliced = node.slice(offset);
-        if (offset) {
-            node = node.slice(0, offset);
-        }
+    var sel = window.getSelection();
+    if (lastNode) {
+        range = range.cloneRange();
+        range.setStartAfter(lastNode);
+        sel.removeAllRanges();
     }
-    console.log(node);
-
-    debugger;
-    // var range;
-    // var selection;
-    // if(document.createRange) {
-    //     range = document.createRange();
-    //     range.selectNodeContents(contentEditableElement.$('.st-text-block')[0]); //Pick the editable div
-
-    //     $('.st-text-block').html();
-    //     if(html !== undefined) {
-    //         range.insertNode($(html)[0]); //Insert node in range
-    //     }
-    //     range.collapse(false);
-    //     selection = window.getSelection();
-    //     selection.removeAllRanges();
-    //     selection.addRange(range);
-
-    // }
 }
 
 
@@ -196,11 +159,12 @@ function synchronizeAndOpenStep2(block) {
         filteredImage.media.size = picture.sizes;
         filteredImage.resize(picture.sizes);
         filteredImage.media.custom = filteredImage.resize(picture.sizes);
+        filteredImage.media.align = 'f-right';
         modalTemplateStep2 = filteredImagesTab[row].renderLarge();
         var blockId = block.blockID;
-        var imageBlock2 = filteredImage.renderBlock();
+        var imageBlock = filteredImage.renderBlock();
         //$('#' + blockId).find('.st-text-block').html( $('#' + blockId).find('.st-text-block').html() + imageBlock2 );
-        setEndOfContenteditable(block, imageBlock2);
+        setEndOfContenteditable(block, imageBlock);
 
         filteredImage.bindRemoveEvent(block, filteredImage.media.id);
         filteredImage.bindTogglEvent(block, filteredImage.media.id);
@@ -218,6 +182,7 @@ function synchronizeAndOpenStep2(block) {
  */
 function synchronizeAndCloseStep2(block) {
     var blockId = block.blockID;
+    debugger;
     $('.modal-gallery-step-1').off('click', '.validate');
     var rowId = $('body .modal-gallery-step-2 .position').data('row');
     var position = $('.position').find(':selected').val();
@@ -227,7 +192,9 @@ function synchronizeAndCloseStep2(block) {
         if(undefined === block.imagesData){
             block.imagesData =  [];
         }
-        block.imagesData.push(filteredImagesTab['row-' + id].media);
+        //block.imagesData = Object.assign(block.imagesData, filteredImagesTab['row-' + id].media);
+        block.imagesData = filteredImagesTab['row-' + id].media;
+        block.imagesData.align = $('.position').find(':selected').val();
     })
 
     $('.framed-picture.framed-picture-' + rowId).addClass(position);
@@ -429,7 +396,6 @@ module.exports = Block.extend({
     type: 'framed',
     title: function() { return i18n.t('blocks:framed:title'); },
     icon_name: 'quote',
-    state: focus,
     controllable: true,
     formattable:true,
     activable: true,
@@ -573,7 +539,6 @@ module.exports = Block.extend({
         return data;
     },
     loadData: function(data){
-        debugger;
         this.getTextBlock().html(this.toHTML(data.text));
     },
     setAndLoadData: function(blockData) {
@@ -583,14 +548,6 @@ module.exports = Block.extend({
     getTextBlock: function() {
         this.text_block = this.$('.st-text-block');
         return this.text_block;
-    },
-    onFocus: function() {
-        this.getTextBlock().bind('focus', this._onFocus);
-        this.range = window.getSelection().getRangeAt(0);
-    },
-
-    onBlur: function() {
-        this.getTextBlock().bind('blur', this._onBlur);
     },
 
     setData: function(blockData) {
@@ -603,6 +560,8 @@ module.exports = Block.extend({
                 return blockData.text = html;
             }
             var frameData = framedContent.data('object');
+            debugger;
+            console.log(framedContent); // framed-picture-67683
             framedContent.replaceWith('#' + framedContent.data('object').id + ' ');
             var id = framedContent.data('object').id;
             blockData.text = content.html();
@@ -613,28 +572,38 @@ module.exports = Block.extend({
         Object.assign(this.blockStorage.data, blockData || {});
     },
 
-    // loadData: function(data){
-    //     this.imagesData = data.images;
-    //     var ids = data.text.match(/#\w+/g);
-    //     var jsonObject = [];
-    //     Object.keys(ids).forEach(function(value){
-    //         var val = ids[value].split('#')[1];
-    //         Object.keys(data.images).forEach(function(k){
-    //             if(data.images[k].id == val) {
-    //                 jsonObject.push(data.images[k]);
-    //                 var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
-    //                 filteredBlock.media = jsonObject[0];
+    loadData: function(data){
+        this.imagesData = data.images;
+        var ids = data.text.match(/#\w+/g);
+        var jsonObject = [];
+        var that = this;
 
-    //                 var tpl = filteredBlock.renderBlock();
-    //                 tpl = tpl + ' ';
-    //             }
-    //             data.text = data.text.replace(ids[value], tpl);
-    //         });
-    //         console.log(data.text);
+        Object.keys(ids).forEach(function(value) {
+            var val = ids[value].split('#')[1];
+            var url = 'http://api.letudiant.lk/edt/media/'+ val;
+            var tpl = '';
 
-    //     });
-    //     this.getTextBlock().html(stToHTML(data.text, this.type));
-    // },
+            var promise = function(url) {
+                    xhr.get(url).then(function(result) {
+                    console.log(tpl);
+                    result.content.size =  data.images[val].size;
+                    result.content.legend =  data.images[val].legend;
+                    var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
+                    filteredBlock.media = result.content;
+                    tpl = filteredBlock.renderBlock();
+                    data.text = data.text.replace('#' + val, tpl);
+                    that.getTextBlock().html(data.text);
+                });
+
+                console.log(data);
+
+            }
+            promise(url);
+            console.log(data.text);
+        });
+        this.getTextBlock().html(stToHTML(data.text));
+
+    },
     toMarkdown: function(markdown) {
         return markdown.replace(/^(.+)$/mg,'> $1');
       }
