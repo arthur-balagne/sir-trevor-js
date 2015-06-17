@@ -11,6 +11,6 @@ module.exports = {
   Tweet: require('./tweet'),
   Video: require('./video'),
   Table: require('./table'),
-  Iframe: require('./iframe')
+  Iframe: require('./iframe'),
   Subhead: require('./subhead')
 };
