@@ -1,33 +1,28 @@
-"use strict";
+'use strict';
 
 /*
   subhead Block
 */
-var _ = require('../lodash');
 var Block = require('../block');
 var stToHTML = require('../to-html');
 
-
-
-
 function changeTitle(blockData, level) {
     var block = blockData.$el.find('.st-text-block');
-    if(block.children().html() !== undefined) {
+    if (block.children().html() !== undefined) {
         var blockContent = block.children().html();
     }
     else {
-        var blockContent = block.html();
+        blockContent = block.html();
     }
 
     block.data('content', blockContent);
     if (blockContent.length > 0) {
-       block.html('<' + level + '>' + blockContent +'</' + level + '>');
+       block.html('<' + level + '>' + blockContent + '</' + level + '>');
     }
 }
 
 module.exports = Block.extend({
-
-    type: "subhead",
+    type: 'subhead',
     title: 'Titre',
     icon_name: 'text',
     editorHTML: '<div class="st-required st__title st-text-block" contenteditable="true"></div>',
@@ -63,17 +58,31 @@ module.exports = Block.extend({
             }
         }
     ],
-
-    onBlockRender: function() {
-        //this.getTextBlock().append(template(this));
+     _serializeData: function(){
+        var data = {};
+        var textBlock = this.getTextBlock().html();
+        if (textBlock !== undefined) {
+            data.text = this.toMarkdown(textBlock);
+        }
+        else {
+            data.text = '';
+            return data;
+        }
+        return data;
+    },
+    getTextBlock: function() {
+        this.text_block = this.$('.st-text-block');
+        return this.text_block;
     },
 
     setData: function(blockData) {
-        debugger;
         Object.assign(this.blockStorage.data, blockData || {});
     },
     loadData: function(data){
         this.getTextBlock().html(stToHTML(data.text, this.type));
     },
+    toMarkdown: function(markdown) {
+        return markdown.replace(/^(.+)$/mg, '> $1');
+    }
 
 });
