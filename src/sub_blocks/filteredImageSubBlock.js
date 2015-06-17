@@ -57,20 +57,7 @@ var largeTemplate = _.template([
 .join('\n'));
 
 var blockTemplate = _.template([
-    '<div class="framed-picture framed-picture-<%= id %>  <%= align %>" contenteditable="false" data-object=\'<%= object %>\' style="display:inline-block; position:relative; width:initial; position:relative" id="<%= id %> picture-<%= id %>">',
-        '<div class="st-block__control-ui-elements top" style="position:absolute; top:0; left:0;">',
-            '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--delete-picture st-icon st-block-control-ui-btn--delete-picture<%= id %>" data-id="<%= id %>"  data-icon="bin">',
-            '</div>',
-            '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--toggle-picture st-icon st-block-control-ui-btn--toggle-picture<%= id %>" data-id="<%= id %>"  data-icon="image-">',
-            '</div>',
-            '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--update-picture st-icon st-block-control-ui-btn--update-picture<%= id %>" data-id="<%= id %>"  data-icon="+">',
-            '</div>',
-        '</div>',
-        '<img alt="<%= legend %>" data-id="<%= id %>" src="<%= image %>">',
-        '<legend style="width:<%= pictureWidth %>px">',
-        '<%= legend %> ',
-        '<%= copyright %></legend>',
-    '</div>'
+        '<img class=" picture-<%= id %> <%= align %>" alt="<%= legend %>" data-id="<%= id %>" src="<%= image %>">'
     ].join('\n'));
 
 
@@ -146,18 +133,47 @@ var prototype = {
         });
         return formatsObj;
     },
-    bindRemoveEvent: function($block, elem) {
-        $('.content .st-block-control-ui-btn--delete-picture' + elem).on('click', function() {
-            $(this).parent().parent().remove();
+    bindHover: function(id){
+        var buttons = _.template(['<div class="st-block__control-ui-elements top" style="position:absolute; top:0; left:0; opacity:1; z-index:2">',
+            '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--delete-picture st-icon st-block-control-ui-btn--delete-picture<%= id %>" data-id="<%= id %>"  data-icon="bin">',
+            '</div>',
+            '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--toggle-picture st-icon st-block-control-ui-btn--toggle-picture<%= id %>" data-id="<%= id %>"  data-icon="image-">',
+            '</div>',
+            '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--update-picture st-icon st-block-control-ui-btn--update-picture<%= id %>" data-id="<%= id %>"  data-icon="+">',
+            '</div>',
+        '</div>'
+        ].join('\n'));
+        var media = this.media;
+        var btnTemplates = buttons(media);
+        var that = this;
+        $('.st-text-block').one('mouseenter', 'img.picture-' + media.id, function(){
+            var classes = $(this).attr('class');
+            $(this).wrap('<div class="wrapper ' + classes + '">');
+            $(this).css('position', 'absolute');
+            $('.wrapper').append(btnTemplates).css('position', 'relative');
+            $('.st-block__control-ui-elements').append(btnTemplates).css('opacity', '1').css('float', 'none');
+            that.bindRemoveEvent(media.id);
+            that.bindTogglEvent(media.id);
+        });
+
+
+    },
+
+    bindRemoveEvent: function(elem) {
+        $('.content .st-block-control-ui-btn--delete-picture' + elem).one('click', function() {
+            $(this).parent().parent().parent().remove();
         });
     },
-    bindTogglEvent: function($block, elem) {
-        $('.content .st-block-control-ui-btn--toggle-picture' + elem).on('click', function() {
+    bindTogglEvent: function(elem) {
+        $('.content .st-block-control-ui-btn--toggle-picture' + elem).one('click', function() {
+            debugger;
             $(this).parent().parent().toggleClass('f-left').toggleClass('f-right');
+            $(this).parent().parent().parent().toggleClass('f-left').toggleClass('f-right');
         });
     },
-    bindUpdateEvent: function($block, elem) {
-        $('.content .st-block-control-ui-btn--update-picture' + elem).on('click', function() {
+    bindUpdateEvent: function(elem, $block) {
+        debugger;
+        $('.content .st-block-control-ui-btn--update-picture' + elem).one('click', function() {
              evt.publish('modal-gallery-step-2', $block);
         });
     }

@@ -117,35 +117,13 @@ function startStep2(block) {
 function setEndOfContenteditable(contentEditableElement, html){
     var sel = window.getSelection();
     var range = document.createRange();
-    range.selectNodeContents(contentEditableElement.$('.st-text-block')[0]);
+    html = contentEditableElement.toMarkdown(html);
+    var content = contentEditableElement.$('.st-text-block').html() + html;
 
-    sel.removeAllRanges();
-    sel.addRange(range);
-    var selection = sel.getRangeAt(0);
-    selection.collapse(false);
-    selection.setStart(contentEditableElement.$('.st-text-block')[0], 0);
+    contentEditableElement.$('.st-text-block').html(content);
 
-debugger;
-
-    var el = document.createElement("div");
-    el.innerHTML = html;
-    var frag = document.createDocumentFragment();
-    var node;
-    var lastNode;
-    while ( (node = el.firstChild) ) {
-        lastNode = frag.appendChild(node);
-    }
-    var txtLength = range.toString().length;
-    range.collapse(true);
-    range.insertNode(frag);
-    var sel = window.getSelection();
-    if (lastNode) {
-        range = range.cloneRange();
-        range.setStartAfter(lastNode);
-        sel.removeAllRanges();
-        range.collapse(false);
-    }
 }
+
 
 
 /**
@@ -153,7 +131,7 @@ debugger;
  * @param  {object} block the sir trevor block object to update
  */
 function synchronizeAndOpenStep2(block) {
-    $('.modal-gallery-step-1').on('click', '.validate', function(e){
+    $('.modal-gallery-step-1').one('click', '.validate', function(e){
         e.preventDefault();
         e.stopPropagation();
         var row = $(this).attr('class').split(' ')[1];
@@ -167,7 +145,7 @@ function synchronizeAndOpenStep2(block) {
         var blockId = block.blockID;
         var imageBlock = filteredImage.renderBlock();
         setEndOfContenteditable(block, imageBlock);
-
+        filteredImage.bindHover(blockId);
         $('.modal-gallery-step-1 .modal-close')[0].click();
         $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
         $('.size').text(picture.sizes);
@@ -576,7 +554,6 @@ module.exports = Block.extend({
     },
 
     loadData: function(data){
-        debugger;
         this.imagesData = data.images;
         var ids = data.text.match(/#\w+/g);
         var jsonObject = [];
@@ -610,7 +587,7 @@ module.exports = Block.extend({
 
     },
     toMarkdown: function(markdown) {
-        return markdown.replace(/^(.+)$/mg,'> $1');
+        return markdown.replace(/^(.+)$/mg,'$1');
       }
 
 });
