@@ -418,13 +418,7 @@ module.exports = Block.extend({
     onBlockRender: function() {
         var template = getTemplate({
             frameColor: '#536A4C',
-            frameBorder: '#6C8365',
-            frameDisplay: 'block',
-            frameTextDisplay: 'block',
-            frameTextWidth: '100%',
-            framePictureWidth: 'auto',
-            framePictureHeight: 'auto',
-            framedPictureDisplay: 'hidden'
+            frameBorder: '#6C8365'
         });
 
         this.$framed = $(template);
@@ -534,7 +528,7 @@ module.exports = Block.extend({
             content.find('img').each(function(){
                 var id = $(this).data('id');
                 blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
-                $('img.picture-' +id).replaceWith('#' + id);
+                $('img.picture-' + id).replaceWith('#' + id);
 
                 if ($(this).hasClass('f-left')) {
                     blockData.images[id].align = 'f-left';
@@ -553,8 +547,6 @@ module.exports = Block.extend({
         this.imagesData = data.images;
         var ids = data.text.match(/#\w+/g);
         var that = this;
-        debugger;
-
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
             var url = 'http://api.letudiant.lk/edt/media/' + val;
