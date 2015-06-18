@@ -33,7 +33,7 @@ function filterUpdate(block, contentType) {
     });
 
     block.filterBar.on('update:result', function(results) {
-        var additionalSubBlocks = subBlockManager.build(block.type, results, contentType);
+        var additionalSubBlocks = subBlockManager.build(block.type, contentType, results);
         var subBlockMarkup = subBlockManager.render(additionalSubBlocks);
 
         block.subBlocks = block.subBlocks.concat(additionalSubBlocks);
@@ -48,7 +48,7 @@ function filterSearch(block, contentType) {
     });
 
     block.filterBar.on('search:result', function(results) {
-        block.subBlocks = subBlockManager.build(block.type, results, contentType);
+        block.subBlocks = subBlockManager.build(block.type, contentType, results);
 
         var subBlockMarkup = subBlockManager.render(block.subBlocks);
 

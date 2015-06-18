@@ -48,8 +48,8 @@ var Locales = {
       iframe: {
         'placeholder': "Copie l'URL du site ici"
       },
-      jcs: {
-        'title': 'Sondage'
+      embed: {
+        'title': 'Embed'
       },
       tweet: {
         'title': "Tweet",
@@ -76,10 +76,22 @@ var Locales = {
         no_results: 'No results'
     },
     sub_blocks: {
-        jcs: {
-            personality: 'Test de personnalité',
-            poll: 'Sondage',
-            quiz: 'Quiz'
+        embed: {
+            personality: {
+                title: 'Test de personnalité'
+            },
+            poll: {
+                title: 'Sondage'
+            },
+            quiz: {
+                title: 'Quiz'
+            },
+            script: {
+                title: 'Script',
+                save: 'Sauvegarder',
+                edit: 'Editer',
+                invalid: 'Veuillez vérifier votre script'
+            }
         },
         image: 'Image',
         video: 'Video'

@@ -20,8 +20,9 @@ module.exports = function(block, file, success, error) {
   var data = new FormData();
 
   data.append('attachment[name]', file.name);
-  data.append('attachment[file]', file);
+  data.append('qqfiles', file);
   data.append('attachment[uid]', uid);
+  data.append('application', 'ETU_ETU');
 
   block.resetMessages();
 
@@ -44,13 +45,30 @@ module.exports = function(block, file, success, error) {
   };
 
   var xhr = $.ajax({
-    url: config.defaults.uploadUrl,
+    url: block.globalConfig.apiUrl + block.globalConfig.uploadUrl,
     data: data,
     cache: false,
     contentType: false,
     processData: false,
     dataType: 'json',
-    type: 'POST'
+    type: 'POST',
+    xhr: function() {
+        var xhr = new window.XMLHttpRequest();
+
+        debugger;
+
+        xhr.addEventListener('progress', function (evt) {
+            debugger;
+            console.log(evt.lengthComputable);
+            if (evt.lengthComputable) {
+                var percentComplete = evt.loaded / evt.total;
+                console.log(percentComplete);
+                // progressElem.html(Math.round(percentComplete * 100) + "%");
+            }
+        }, false);
+
+        return xhr;
+    }
   });
 
   block.addQueuedItem(uid, xhr);

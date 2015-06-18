@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-  debug: false,
+  debug: true,
   skipValidation: false,
   version: "0.4.0",
   language: "en",
@@ -26,7 +26,7 @@ module.exports = {
     blockLimit: 0,
     blockTypeLimits: {},
     required: [],
-    uploadUrl: '/attachments',
+    uploadUrl: 'http://api.letudiant.lk/edt/media/upload',
     baseImageUrl: '/sir-trevor-uploads/',
     errorsContainer: undefined,
   }

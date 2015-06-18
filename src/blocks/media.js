@@ -133,7 +133,7 @@ module.exports = Block.extend({
                 .then(function(rawSubBlockData) {
                     var subBlockData = Object.assign({}, rawSubBlockData.content, data);
 
-                    var subBlock = subBlockManager.buildSingle(this.type, subBlockData, data.type);
+                    var subBlock = subBlockManager.buildSingle(this.type, data.type, subBlockData);
 
                     this.$editor.html(subBlock.renderLarge());
 

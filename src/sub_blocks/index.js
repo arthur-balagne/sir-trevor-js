@@ -1,10 +1,11 @@
 var $ = require('jquery');
 
 var subBlockTypes = {
-    jcs: {
+    embed: {
         personality: require('./jcs/personality.class.js'),
         poll: require('./jcs/poll.class.js'),
-        quiz: require('./jcs/quiz.class.js')
+        quiz: require('./jcs/quiz.class.js'),
+        script: require('./script.class.js')
     },
     media: {
         video: require('./media/video.class.js'),
@@ -12,7 +13,7 @@ var subBlockTypes = {
     }
 };
 
-function buildSingleBlock(type, contents, subType) {
+function buildSingleBlock(type, subType, contents) {
     if (typeof subBlockTypes[type][subType] === 'function') {
         return new subBlockTypes[type][subType](contents);
     }
@@ -67,9 +68,9 @@ var SubBlockManager = {
 
     buildSingle: buildSingleBlock,
 
-    build: function(type, contents, subType) {
+    build: function(type, subType, contents) {
         return contents.map(function(singleContent) {
-            return buildSingleBlock(type, singleContent, subType);
+            return buildSingleBlock(type, subType, singleContent);
         });
     }
 };
