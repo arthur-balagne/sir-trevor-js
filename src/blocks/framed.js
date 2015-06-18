@@ -267,7 +267,10 @@ function validateInternalUrl(url) {
     }
     return internal;
 }
-
+/**
+ * Show/Hide controls depending on events
+ *
+ */
 function sliderControls(slider){
     slider.on('buttons:prev:disable', function() {
         $('body .modal-footer .before').hide();
@@ -300,6 +303,11 @@ function sliderControls(slider){
     });
 }
 
+
+/**
+ * Deliver filterbar fields parameters
+ *
+ */
 function filterBarFormatter(jsonFilters) {
     var tabCategories = [];
     tabCategories.push({
@@ -351,6 +359,9 @@ function filterBarFormatter(jsonFilters) {
     return fields;
 }
 
+/**
+ * Filterbar launcher
+ */
 function loadFilterBar(fields, modal) {
     var filterBar = new FilterBar({
         url: apiUrl,
@@ -372,7 +383,6 @@ module.exports = Block.extend({
     controllable: true,
     formattable: true,
     activable: true,
-    _previousSelection: '',
     editorHTML: '<div class="st-text-block" contenteditable="true"></div>',
     eventBus: eventBus,
     controls_position: 'bottom',
@@ -436,7 +446,7 @@ module.exports = Block.extend({
         });
          */
 
-        // Ajax job before rendering modal
+
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
                 xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
         .then(function(data){
@@ -472,7 +482,7 @@ module.exports = Block.extend({
 
                 filterBar.on('search', function(returnedData){
                     var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
-
+                    // Prepare all selects options, then bind them in the object;
                     Object.keys(returnedData).forEach(function(key){
                         var list = '';
                         var formats = returnedData[key].format_ids;
@@ -492,6 +502,8 @@ module.exports = Block.extend({
                         returnedData[key].format_ids = list;
                     });
                     filteredImages = subBlockManager.build('filteredImage', returnedData, null);
+
+                    // reset slides to an empty array
                     slides = [];
 
                     var size = filtersObj[filterBar.nextSearch.format];
@@ -500,11 +512,14 @@ module.exports = Block.extend({
                         filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
                         slides.push(filteredImages[k].renderSmall(returnedData[k], size));
                     });
+
+
                     slider.reset(slides);
                     sliderControls(slider);
                     selectUpdater();
                     updateZoom(filteredImagesTab);
                 });
+
                 selectUpdater();
                 updateZoom(filteredImagesTab);
 
@@ -513,15 +528,16 @@ module.exports = Block.extend({
 
                 synchronizeAndOpenStep2(param);
             });
+
             evt.subscribe('modal-gallery-step-2', function(param) {
                 openModalStep2(modalStep2);
                 synchronizeAndCloseStep2(param);
             });
         }).catch(function(data){
-            console.log(data);
-            debugger;
+            console.error('Something went wrong');
         });
     },
+
     _serializeData: function() {
         var data = {};
         var textBlock = this.getTextBlock().html();
@@ -545,17 +561,20 @@ module.exports = Block.extend({
     setData: function(blockData) {
         var content = this.getTextBlock();
         var frameText =  content.html();
+        var framedContent;
         if (frameText.length > 0) {
-            var framedContent = content.find('img');
+            framedContent = content.find('img');
             if (framedContent.data('object') === undefined) {
                 var html = content.html();
                 blockData.text = html;
                 return blockData.text;
             }
             blockData.images = {};
-            content.find('img').each(function(){
+            content.find('img').each(function(){ // replace all found images with #id
                 var id = $(this).data('id');
+
                 blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
+
                 $('img.picture-' +id).replaceWith('#' + id);
 
                 if ($(this).hasClass('f-left')) {
@@ -589,9 +608,6 @@ module.exports = Block.extend({
                     result.content.size = data.images[val].size;
                     result.content.legend = data.images[val].legend;
                     var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
-
-                    result.content.legend = data.images[val].legend;
-                    result.content.size = data.images[val].size;
                     result.content.align = data.images[val].align;
 
                     filteredBlock.media = result.content;
@@ -600,7 +616,6 @@ module.exports = Block.extend({
 
                     that.getTextBlock().html(data.text);
                 });
-
             };
             promise(url);
         });
