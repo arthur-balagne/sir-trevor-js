@@ -6,7 +6,6 @@
 
 var evt = require('etudiant-mod-mediator');
 var $ = require('jquery');
-var Formatters = require('../formatters');
 var Block = require('../block');
 var stToHTML = require('../to-html');
 var Modal = require('etudiant-mod-modal');
@@ -17,7 +16,7 @@ var eventBus = require('../event-bus.js');
 var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
-var _ = require('../lodash');
+//var Medium = require('medium-editor');
 
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
@@ -95,7 +94,7 @@ function openModalStep2(modal) {
 }
 
 function selectUpdater() {
-    $.each($('.slide-row .sizes'), function(key){
+    $.each($('.slide-row .sizes'), function(){
         if ($(this).children().length === 1) {
             $(this).addClass('hidden');
             $(this).parent().append('<p class="size">' + $(this).children().val() + '</p>');
@@ -112,19 +111,11 @@ function startStep2(block) {
     evt.publish('modal-gallery-step-2', block);
 }
 
-
-
 function setEndOfContenteditable(contentEditableElement, html){
-    var sel = window.getSelection();
-    var range = document.createRange();
     html = contentEditableElement.toMarkdown(html);
     var content = contentEditableElement.$('.st-text-block').html() + html;
-
     contentEditableElement.$('.st-text-block').html(content);
-
 }
-
-
 
 /**
  * Grab all data's, update the sirTrevor block,  then to open next modal
@@ -145,7 +136,7 @@ function synchronizeAndOpenStep2(block) {
         var blockId = block.blockID;
         var imageBlock = filteredImage.renderBlock();
         setEndOfContenteditable(block, imageBlock);
-        filteredImage.bindHover(blockId);
+        filteredImage.bindHover();
         $('.modal-gallery-step-1 .modal-close')[0].click();
         $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
         $('.size').text(picture.sizes);
@@ -166,13 +157,13 @@ function synchronizeAndCloseStep2(block) {
 
     $('[data-modal-dismiss]').on('click', function(){
         var id = $('.modal-row-picture').data('id');
-        if(undefined === block.imagesData){
-            block.imagesData =  [];
+        if (undefined === block.imagesData){
+            block.imagesData = [];
         }
         //block.imagesData = Object.assign(block.imagesData, filteredImagesTab['row-' + id].media);
         block.imagesData = filteredImagesTab['row-' + id].media;
         block.imagesData.align = $('.position').find(':selected').val();
-    })
+    });
 
     $('.framed-picture.framed-picture-' + rowId).addClass(position);
 
@@ -180,8 +171,7 @@ function synchronizeAndCloseStep2(block) {
         var id = $(this).data('row');
         position = $(this).find(':selected').val();
         $('.framed-picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
-
-    })
+    });
 
     $('.picture-link').on('keyup', function() {
         var internal = validateInternalUrl($('.picture-link').val());
@@ -194,9 +184,8 @@ function synchronizeAndCloseStep2(block) {
     });
 
     $('body .modal-gallery-step-2').on('change', '.position', function() {
-        var imageId = $(this).data('row');
-        var position = $('.position').find(':selected').val();
-    $('.framed-picture.framed-picture-' + rowId).addClass(position);
+        position = $('.position').find(':selected').val();
+        $('.framed-picture.framed-picture-' + rowId).addClass(position);
     });
 
     $('body .modal-gallery-step-2').on('click', '.ok', function() {
@@ -257,7 +246,6 @@ function getTemplate(params) {
     return template;
 }
 
-
 /**
  * Helper function to validate internal or external url
  */
@@ -279,24 +267,25 @@ function validateInternalUrl(url) {
     return internal;
 }
 
-
-
 function sliderControls(slider){
-
     slider.on('buttons:prev:disable', function() {
         $('body .modal-footer .before').hide();
     });
+
     slider.on('buttons:prev:enable', function() {
         $('body .modal-footer').show();
         $('body .modal-footer .before').show();
     });
+
     slider.on('buttons:next:disable', function() {
         $('body .modal-footer .next').hide();
     });
+
     slider.on('buttons:next:enable', function() {
         $('body .modal-footer').show();
         $('body .modal-footer .next').show();
     });
+
     slider.on('buttons:all:disable', function() {
         $('body .modal-footer').hide();
     });
@@ -313,22 +302,28 @@ function sliderControls(slider){
 function filterBarFormatter(jsonFilters) {
     var tabCategories = [];
     tabCategories.push({
-        label: "Toutes les catégories",
+        label: 'Toutes les catégories',
         value: 0
-    })
+    });
     Object.keys(jsonFilters.content.categories).forEach(function(k){
         var categorie = jsonFilters.content.categories[k];
-        tabCategories.push({ value: categorie.id , label: categorie.label }) ;
+        tabCategories.push({
+            value: categorie.id,
+            label: categorie.label
+        });
     });
 
     var tabFormats = [];
     tabFormats.push({
-        label: "Tous les formats",
+        label: 'Tous les formats',
         value: 0
-    })
+    });
     Object.keys(jsonFilters.content.formats).forEach(function(k){
         var formats = jsonFilters.content.formats[k];
-        tabFormats.push({ value: formats.id , label: formats.label }) ;
+        tabFormats.push({
+            value: formats.id,
+            label: formats.label
+        });
     });
 
     var fields = [
@@ -373,7 +368,7 @@ module.exports = Block.extend({
     title: function() { return i18n.t('blocks:framed:title'); },
     icon_name: 'quote',
     controllable: true,
-    formattable:true,
+    formattable: true,
     activable: true,
     _previousSelection: '',
     editorHTML: '<div class="st-text-block" contenteditable="true"></div>',
@@ -438,7 +433,12 @@ module.exports = Block.extend({
         var textBlock = this.$inner.find('.st-text-block');
 
         textBlock.wrap(this.$framed);
-
+        /*
+        //Used to unifie the contentEditable behavior
+        var editor = new Medium('.st-text-block', {
+            toolbar: false
+        });
+         */
 
         // Ajax job before rendering modal
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
@@ -469,18 +469,16 @@ module.exports = Block.extend({
                 var fields = filterBarFormatter(modalTemplateFilters);
                 var filterBar = loadFilterBar(fields, $modal);
                 slider.alwaysAppendToDOM($modal);
-
-                filterBar.on('search', function(data){
+                filterBar.on('search', function(returnedData){
                     var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
                     var wrapper = {
-                        content: data
+                        content: returnedData
                     };
-                    var mediasArray = subBlockManager.jsonInit(wrapper, modalTemplateFilters);
-                    filteredImages = subBlockManager.build('filteredImage', data, null);
+                    filteredImages = subBlockManager.build('filteredImage', returnedData, null);
                     slides = [];
                     var size = filtersObj[filterBar.nextSearch.format];
-                    Object.keys(data).forEach(function(k){
-                        filteredImagesTab['row-' + data[k].id] = filteredImages[k];
+                    Object.keys(returnedData).forEach(function(k){
+                        filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
                         slides.push(filteredImages[k].renderSmall(data[k], size));
                     });
                     slider.reset(slides);
@@ -502,19 +500,16 @@ module.exports = Block.extend({
             });
         });
     },
-    _serializeData: function(){
+    _serializeData: function() {
         var data = {};
         var textBlock = this.getTextBlock().html();
-        if (textBlock !== undefined && textBlock.length > 0 ) {
+        if (textBlock !== undefined && textBlock.length > 0) {
             data.text = this.toMarkdown(textBlock);
         }
         else {
             data.text = '';
         }
         return data;
-    },
-    loadData: function(data){
-        this.getTextBlock().html(this.toHTML(data.text));
     },
     setAndLoadData: function(blockData) {
         this.setData(blockData);
@@ -526,21 +521,20 @@ module.exports = Block.extend({
     },
 
     setData: function(blockData) {
-
         var content = this.getTextBlock();
         var frameText =  content.html();
         if (frameText.length > 0) {
-            var framedContent = content.find('.framed-picture');
-            if(framedContent.data('object') === undefined) {
+            var framedContent = content.find('img');
+            if (framedContent.data('object') === undefined) {
                 var html = content.html();
-                return blockData.text = html;
+                blockData.text = html;
+                return blockData.text;
             }
-
             blockData.images = {};
-            $('.framed-picture').each(function(){
-                var id = $(this).attr('id').split(' ')[0];
-                blockData.images[id] = $(this).data('object');
-                $('.framed-picture-' + id).replaceWith('#'+id);
+            content.find('img').each(function(){
+                var id = $(this).data('id');
+                blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
+                $('img.picture-' +id).replaceWith('#' + id);
 
                 if ($(this).hasClass('f-left')) {
                     blockData.images[id].align = 'f-left';
@@ -549,6 +543,8 @@ module.exports = Block.extend({
                     blockData.images[id].align = 'f-right';
                 }
             });
+
+            blockData.text = content.html();
         }
         Object.assign(this.blockStorage.data, blockData || {});
     },
@@ -556,18 +552,20 @@ module.exports = Block.extend({
     loadData: function(data){
         this.imagesData = data.images;
         var ids = data.text.match(/#\w+/g);
-        var jsonObject = [];
         var that = this;
+        debugger;
 
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
-            var url = 'http://api.letudiant.lk/edt/media/'+ val;
+            var url = 'http://api.letudiant.lk/edt/media/' + val;
             var tpl = '';
-
-            var promise = function(url) {
-                    xhr.get(url).then(function(result) {
-                    result.content.size =  data.images[val].size;
-                    result.content.legend =  data.images[val].legend;
+            /**
+             * Callback function to fetch the blocks data from the API
+             */
+            var promise = function(urlParam) {
+                    xhr.get(urlParam).then(function(result) {
+                    result.content.size = data.images[val].size;
+                    result.content.legend = data.images[val].legend;
                     var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
 
                     result.content.legend = data.images[val].legend;
@@ -577,17 +575,17 @@ module.exports = Block.extend({
                     filteredBlock.media = result.content;
                     tpl = filteredBlock.renderBlock();
                     data.text = data.text.replace('#' + val, tpl);
+
                     that.getTextBlock().html(data.text);
                 });
 
-            }
+            };
             promise(url);
         });
         this.getTextBlock().html(stToHTML(data.text));
 
     },
     toMarkdown: function(markdown) {
-        return markdown.replace(/^(.+)$/mg,'$1');
-      }
-
+        return markdown.replace(/^(.+)$/mg, '$1');
+    }
 });

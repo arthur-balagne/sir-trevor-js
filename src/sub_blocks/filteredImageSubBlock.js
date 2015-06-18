@@ -53,11 +53,12 @@ var largeTemplate = _.template([
                 '</div>',
             '</div>',
         '</div>',
-    '</div>']
+    '</div>'
+    ]
 .join('\n'));
 
 var blockTemplate = _.template([
-        '<img class=" picture-<%= id %> <%= align %>" alt="<%= legend %>" data-id="<%= id %>" src="<%= image %>">'
+        '<img contenteditable="false" data-object="<%= object %>" class=" picture-<%= id %> <%= align %>" alt="<%= legend %>" data-id="<%= id %>" src="<%= image %>">'
     ].join('\n'));
 
 
@@ -72,7 +73,7 @@ var prototype = {
     renderSmall: function(jsonMedia, size) {
         this.media = jsonMedia;
         this.media.imagePreview = this.resize('90x90');
-        if(size !== undefined) {
+        if (size !== undefined) {
             this.media.custom = this.resize(size);
         }
         else {
@@ -113,7 +114,7 @@ var prototype = {
             copyright: this.media.copyright,
             pictureWidth: size,
             align: this.media.align,
-            object: JSON.stringify(this.media).replace('\'', '\\')
+            object: encodeURIComponent( JSON.stringify(this.media).replace('\'', '\\') )
         });
         return tpl;
     },
@@ -122,9 +123,9 @@ var prototype = {
     },
     parseFilters: function(jsonFilters) {
         var formatsObj = {};
-        Object.keys(jsonFilters.content).forEach(function(key, value) {
+        Object.keys(jsonFilters.content).forEach(function(key) {
             var formatsTabObject = jsonFilters.content.formats;
-            Object.keys(formatsTabObject).forEach(function(k, val) {
+            Object.keys(formatsTabObject).forEach(function(k) {
                 var formatObject = formatsTabObject[k];
                 var id = formatObject.id;
                 var label = formatObject.label;
@@ -133,8 +134,9 @@ var prototype = {
         });
         return formatsObj;
     },
-    bindHover: function(id){
-        var buttons = _.template(['<div class="st-block__control-ui-elements top" style="position:absolute; top:0; left:0; opacity:1; z-index:2">',
+    bindHover: function(){
+        var buttons = _.template([
+        '<div class="st-block__control-ui-elements top" style="min-width: <%= width %>; position:absolute; top:0; left:0; opacity:1; z-index:2">',
             '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--delete-picture st-icon st-block-control-ui-btn--delete-picture<%= id %>" data-id="<%= id %>"  data-icon="bin">',
             '</div>',
             '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--toggle-picture st-icon st-block-control-ui-btn--toggle-picture<%= id %>" data-id="<%= id %>"  data-icon="image-">',
@@ -144,36 +146,38 @@ var prototype = {
         '</div>'
         ].join('\n'));
         var media = this.media;
+        media.width = this.media.size.split('x')[0];
         var btnTemplates = buttons(media);
         var that = this;
-        $('.st-text-block').one('mouseenter', 'img.picture-' + media.id, function(){
+        $('.st-text-block img').on('mouseenter', function(){
             var classes = $(this).attr('class');
-            $(this).wrap('<div class="wrapper ' + classes + '">');
-            $(this).css('position', 'absolute');
+            $(this).wrap('<div class="picture-wrapper wrapper ' + classes + '" style="width: ' + that.media.size.split('x')[0] + 'px; height:' + that.media.size.split('x')[1] + 'px>"</div>');
             $('.wrapper').append(btnTemplates).css('position', 'relative');
-            $('.st-block__control-ui-elements').append(btnTemplates).css('opacity', '1').css('float', 'none');
+            $('.st-block__control-ui-elements').append(btnTemplates).css('opacity', '1');
             that.bindRemoveEvent(media.id);
             that.bindTogglEvent(media.id);
+            that.bindUpdateEvent(media.id, that);
+        })
+        .on('mouseleave', function() {
+            $(this).unwrap();
+            $('.picture-wrapper').remove();
+            $('.st-block__control-ui-elements').remove();
         });
-
-
     },
 
     bindRemoveEvent: function(elem) {
-        $('.content .st-block-control-ui-btn--delete-picture' + elem).one('click', function() {
+        $('.st-block-control-ui-btn--delete-picture' + elem).on('click', function() {
             $(this).parent().parent().parent().remove();
         });
     },
     bindTogglEvent: function(elem) {
-        $('.content .st-block-control-ui-btn--toggle-picture' + elem).one('click', function() {
-            debugger;
-            $(this).parent().parent().toggleClass('f-left').toggleClass('f-right');
+        $('.st-block-control-ui-btn--toggle-picture' + elem).on('click', function() {
             $(this).parent().parent().parent().toggleClass('f-left').toggleClass('f-right');
+            $(this).parent().parent().parent().find('img').toggleClass('f-left').toggleClass('f-right');
         });
     },
     bindUpdateEvent: function(elem, $block) {
-        debugger;
-        $('.content .st-block-control-ui-btn--update-picture' + elem).one('click', function() {
+        $('.st-block-control-ui-btn--update-picture' + elem).on('click', function() {
              evt.publish('modal-gallery-step-2', $block);
         });
     }
@@ -183,10 +187,3 @@ var prototype = {
 Object.assign(filteredImageSubBlock.prototype, prototype);
 
 module.exports = filteredImageSubBlock;
-
-
-
-
-
-
-
