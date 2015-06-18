@@ -62,8 +62,14 @@ var blockTemplate = _.template([
     ].join('\n'));
 
 
-var filteredImageSubBlock = function() {
-    this.media = null;
+var filteredImageSubBlock = function(media) {
+    if (media !== undefined) {
+        this.media = media;
+    }
+    else {
+        this.media = null;
+    }
+
 };
 
 filteredImageSubBlock.prototype = Object.create(BasicSubBlock.prototype);
@@ -84,10 +90,9 @@ var prototype = {
             id: jsonMedia.id,
             imageCustom: jsonMedia.custom,
             image: jsonMedia.imagePreview,
-            options: jsonMedia.format_ids,
+            options: this.media.format_ids,
             legend: jsonMedia.legend
         });
-
         return tpl;
     },
     renderLarge: function() {
@@ -119,7 +124,7 @@ var prototype = {
         return tpl;
     },
     resize: function(newSize) {
-        return this.media.image.replace('original', newSize);
+        return this.media.file.replace('original', newSize);
     },
     parseFilters: function(jsonFilters) {
         var formatsObj = {};

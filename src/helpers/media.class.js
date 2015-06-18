@@ -45,7 +45,7 @@ var prototype = {
             var formatsTabObject = jsonMedias.content;
             Object.keys(formatsTabObject[value].format_ids).forEach(function(k, val) {
                 formatsTabObject[value].format_ids[k] = optionsTemplate({
-                    image: formatsTabObject[value].image,
+                    image: formatsTabObject[value].file,
                     format: filterObj[formatsTabObject[value].format_ids[k]]
                 })
             });

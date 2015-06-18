@@ -98,6 +98,7 @@ var prototype = {
         this.app = params.app;
         this.url = params.url;
         this.limit = params.limit;
+        this.type = params.type;
         this.fields = params.fields;
         this.template = filterBarTemplate;
 
@@ -143,7 +144,8 @@ var prototype = {
 
         search = Object.assign(search, searchBuilder(this.$elem), {
             limit: this.limit,
-            application: this.app
+            application: this.app,
+            type: this.type
         });
 
         var searchUrl = xhr.paramizeUrl(this.url, search);

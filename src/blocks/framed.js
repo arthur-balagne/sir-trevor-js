@@ -16,6 +16,7 @@ var eventBus = require('../event-bus.js');
 var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
+var _   = require('../lodash.js');
 //var Medium = require('medium-editor');
 
 
@@ -229,7 +230,7 @@ function updateZoom(filteredImages) {
         var zoomedSize = $(this).find(':selected').val();
         var rowId = $(this).parent().parent().attr('class').split(' ')[1];
         if (filteredImages !== undefined) {
-            var originalSize = filteredImages[rowId].media.image;
+            var originalSize = filteredImages[rowId].media.file;
         }
         else {
             return false;
@@ -357,6 +358,7 @@ function loadFilterBar(fields, modal) {
         application: 'etu_etu',
         app: 'etu_etu',
         limit: '20',
+        type: 'image',
         container: modal,
         before: true
     });
@@ -436,7 +438,7 @@ module.exports = Block.extend({
 
         // Ajax job before rendering modal
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
-                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU') ])
+                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
         .then(function(data){
             modalTemplateFilters = data[0];
             modalTemplateStep1 = data[1];
@@ -455,25 +457,48 @@ module.exports = Block.extend({
             };
             var slider = new Slider(params);
             slider.eventBus = eventBus;
+
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
+
                 openModalStep1(modalStep1, slider);
+
                 var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
                 var fields = filterBarFormatter(modalTemplateFilters);
                 var filterBar = loadFilterBar(fields, $modal);
+
                 slider.alwaysAppendToDOM($modal);
+
                 filterBar.on('search', function(returnedData){
                     var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
-                    var wrapper = {
-                        content: returnedData
-                    };
+
+                    Object.keys(returnedData).forEach(function(key){
+                        var list = '';
+                        var formats = returnedData[key].format_ids;
+
+                        Object.keys(formats).forEach(function(k){
+                            formats[k];
+
+                            var optionsTemplate = _.template('<option data-picture="<%= image %>" value="<%= format %>"><%= format %></option>');
+
+                            list = list+ optionsTemplate({
+                                image: returnedData[key].file,
+                                format: filtersObj[formats[k]]
+                            });
+
+                        });
+
+                        returnedData[key].format_ids = list;
+                    });
                     filteredImages = subBlockManager.build('filteredImage', returnedData, null);
                     slides = [];
+
                     var size = filtersObj[filterBar.nextSearch.format];
+
                     Object.keys(returnedData).forEach(function(k){
                         filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
-                        slides.push(filteredImages[k].renderSmall(data[k], size));
+                        slides.push(filteredImages[k].renderSmall(returnedData[k], size));
                     });
                     slider.reset(slides);
                     sliderControls(slider);
@@ -492,6 +517,9 @@ module.exports = Block.extend({
                 openModalStep2(modalStep2);
                 synchronizeAndCloseStep2(param);
             });
+        }).catch(function(data){
+            console.log(data);
+            debugger;
         });
     },
     _serializeData: function() {
@@ -528,7 +556,7 @@ module.exports = Block.extend({
             content.find('img').each(function(){
                 var id = $(this).data('id');
                 blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
-                $('img.picture-' + id).replaceWith('#' + id);
+                $('img.picture-' +id).replaceWith('#' + id);
 
                 if ($(this).hasClass('f-left')) {
                     blockData.images[id].align = 'f-left';
@@ -547,6 +575,8 @@ module.exports = Block.extend({
         this.imagesData = data.images;
         var ids = data.text.match(/#\w+/g);
         var that = this;
+        debugger;
+
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
             var url = 'http://api.letudiant.lk/edt/media/' + val;
