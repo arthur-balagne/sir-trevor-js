@@ -21,7 +21,6 @@ var smallTemplate = _.template([
     '</div>'
 ].join('\n'));
 
-
 var largeTemplate = _.template([
     '<div class="modal-inner-content">',
         '<div class="modal-rows">',
@@ -58,7 +57,10 @@ var largeTemplate = _.template([
 .join('\n'));
 
 var blockTemplate = _.template([
-        '<img contenteditable="false" data-object="<%= object %>" class=" picture-<%= id %> <%= align %>" alt="<%= legend %>" data-id="<%= id %>" src="<%= image %>">'
+    '<figure contenteditable="false" class="f-right">',
+        '<img contenteditable="false" data-width="<%= width %>" class=" picture-<%= id %>" alt="<%= legend %>" data-id="<%= id %>" src="<%= image %>">',
+        '<figcaption contenteditable="false" class="picture-<%= id %>" > <span class="legend"><%= legend %></span> <br> copyright:<span class="copyright"><%= copyright %></span></figcaption>',
+    '</figure>'
     ].join('\n'));
 
 
@@ -119,7 +121,8 @@ var prototype = {
             copyright: this.media.copyright,
             pictureWidth: size,
             align: this.media.align,
-            object: encodeURIComponent( JSON.stringify(this.media).replace('\'', '\\') )
+            size: size,
+            width: this.media.size
         });
         return tpl;
     },
@@ -139,7 +142,8 @@ var prototype = {
         });
         return formatsObj;
     },
-    bindHover: function(){
+    bindHover: function(block, filteredImage){
+
         var buttons = _.template([
         '<div class="st-block__control-ui-elements top" style="min-width: <%= width %>; position:absolute; top:0; left:0; opacity:1; z-index:2">',
             '<div class="st-block-control-ui-btn st-icon st-block-control-ui-btn--delete-picture st-icon st-block-control-ui-btn--delete-picture<%= id %>" data-id="<%= id %>"  data-icon="bin">',
@@ -154,22 +158,21 @@ var prototype = {
         media.width = this.media.size.split('x')[0];
         var btnTemplates = buttons(media);
         var that = this;
-        $('.st-text-block img').on('mouseenter', function(){
-            var classes = $(this).attr('class');
-            $(this).wrap('<div class="picture-wrapper wrapper ' + classes + '" style="width: ' + that.media.size.split('x')[0] + 'px; height:' + that.media.size.split('x')[1] + 'px>"</div>');
+        $('body .st-text-block').on('mouseover', 'figure', function(){
+            var imgClass = $(this).find('img').attr('class');
+            var figureClasses = $(this).attr('class');
+            $(this).wrap('<div class="picture-wrapper wrapper ' + figureClasses +' '+ imgClass + '" style="width: ' + that.media.size.split('x')[0] + 'px; height:' + that.media.size.split('x')[1] + 'px"></div>');
             $('.wrapper').append(btnTemplates).css('position', 'relative');
             $('.st-block__control-ui-elements').append(btnTemplates).css('opacity', '1');
+            $('.st-block__control-ui-elements, .st-block__control-ui-elements *').attr('contenteditable', false);
+
             that.bindRemoveEvent(media.id);
             that.bindTogglEvent(media.id);
-            that.bindUpdateEvent(media.id, that);
-        })
-        .on('mouseleave', function() {
-            $(this).unwrap();
-            $('.picture-wrapper').remove();
-            $('.st-block__control-ui-elements').remove();
+            that.bindUpdateEvent(media, block, filteredImage);
         });
-    },
 
+
+    },
     bindRemoveEvent: function(elem) {
         $('.st-block-control-ui-btn--delete-picture' + elem).on('click', function() {
             $(this).parent().parent().parent().remove();
@@ -177,12 +180,21 @@ var prototype = {
     },
     bindTogglEvent: function(elem) {
         $('.st-block-control-ui-btn--toggle-picture' + elem).on('click', function() {
-            $(this).parent().parent().parent().toggleClass('f-left').toggleClass('f-right');
-            $(this).parent().parent().parent().find('img').toggleClass('f-left').toggleClass('f-right');
+            $(this).parents().find('.wrapper').toggleClass('f-left').toggleClass('f-right');
+            $(this).parents().find('figure').toggleClass('f-left').toggleClass('f-right');
+
+            $('.wrapper figure').unwrap();
+            $('.wrapper').remove();
+            $('.st-block__control-ui-elements').remove();
         });
     },
-    bindUpdateEvent: function(elem, $block) {
-        $('.st-block-control-ui-btn--update-picture' + elem).on('click', function() {
+    bindUpdateEvent: function(elem, $block, filteredImage) {
+        $('.st-block-control-ui-btn--update-picture' + elem.id).on('click', function(e) {
+            $('.wrapper figure').unwrap();
+            $('.wrapper').remove();
+            $('.st-block__control-ui-elements').remove();
+            filteredImage.media.custom = filteredImage.resize(filteredImage.media.size);
+            $block.filteredImage =  filteredImage;
              evt.publish('modal-gallery-step-2', $block);
         });
     }

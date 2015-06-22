@@ -28,6 +28,7 @@ var prototype = {
         this.filterObj = formatsObj;
         return formatsObj;
     },
+
     /**
      * Parse a json list of images
      * @param  {JSON} jsonMedias

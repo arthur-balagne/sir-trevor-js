@@ -17,10 +17,13 @@ var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
 var _   = require('../lodash.js');
-//var Medium = require('medium-editor');
+var Medium = require('medium-editor');
 
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
+var editor;
+var sel;
+var range ;
 
 // create our modals
 var modalStep1 = new Modal({
@@ -112,12 +115,6 @@ function startStep2(block) {
     evt.publish('modal-gallery-step-2', block);
 }
 
-function setEndOfContenteditable(contentEditableElement, html){
-    html = contentEditableElement.toMarkdown(html);
-    var content = contentEditableElement.$('.st-text-block').html() + html;
-    contentEditableElement.$('.st-text-block').html(content);
-}
-
 /**
  * Grab all data's, update the sirTrevor block,  then to open next modal
  * @param  {object} block the sir trevor block object to update
@@ -126,21 +123,47 @@ function synchronizeAndOpenStep2(block) {
     $('.modal-gallery-step-1').one('click', '.validate', function(e){
         e.preventDefault();
         e.stopPropagation();
+
         var row = $(this).attr('class').split(' ')[1];
         var picture = updateData(row);
         var filteredImage = filteredImagesTab[row];
+        var blockId;
+        var imageBlock;
+
         filteredImage.media.size = picture.sizes;
         filteredImage.resize(picture.sizes);
         filteredImage.media.custom = filteredImage.resize(picture.sizes);
         filteredImage.media.align = 'f-right';
         modalTemplateStep2 = filteredImagesTab[row].renderLarge();
-        var blockId = block.blockID;
-        var imageBlock = filteredImage.renderBlock();
-        setEndOfContenteditable(block, imageBlock);
-        filteredImage.bindHover();
-        $('.modal-gallery-step-1 .modal-close')[0].click();
+        blockId = block.blockID;
+        imageBlock = filteredImage.renderBlock();
+
+        startStep2(block);
         $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
         $('.size').text(picture.sizes);
+        $('.st-text-block').focus();
+        if (sel === undefined ){
+            sel = window.getSelection();
+            range = sel.getRangeAt(0);
+        }
+        sel.removeAllRanges();
+        sel.addRange(range);
+        var el = document.createElement("div");
+        el.innerHTML = imageBlock;
+        var frag = document.createDocumentFragment(), node, lastNode;
+        while ( (node = el.firstChild) ) {
+            lastNode = frag.appendChild(node);
+        }
+        range.insertNode(frag);
+        if (lastNode) {
+            range = range.cloneRange();
+            range.setStartAfter(lastNode);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        filteredImage.bindHover(block, filteredImage);
+
     });
 }
 
@@ -150,9 +173,8 @@ function synchronizeAndOpenStep2(block) {
  *
  */
 function synchronizeAndCloseStep2(block) {
+    debugger;
     var blockId = block.blockID;
-    var related = $('.framed-picture-279520' + blockId);
-    $('.modal-gallery-step-1').off('click', '.validate');
     var rowId = $('body .modal-gallery-step-2 .position').data('row');
     var position = $('.position').find(':selected').val();
 
@@ -161,17 +183,29 @@ function synchronizeAndCloseStep2(block) {
         if (undefined === block.imagesData){
             block.imagesData = [];
         }
-        //block.imagesData = Object.assign(block.imagesData, filteredImagesTab['row-' + id].media);
-        block.imagesData = filteredImagesTab['row-' + id].media;
-        block.imagesData.align = $('.position').find(':selected').val();
+        var pictureLegend = $('body .modal-gallery-step-2 .picture-legend').val();
+        if (pictureLegend.length !== 0) {
+            $('.picture-' + rowId +' span.legend').html(pictureLegend);
+        }
+        var pictureLink = $('body .modal-gallery-step-2 .picture-link').val();
+        if (pictureLegend.length !== 0) {
+            $('.picture-' + rowId +' span.link').html(pictureLink);
+        }
+        if(filteredImageTab.length !== 0){
+            block.imagesData = filteredImagesTab['row-' + id].media;
+            block.imagesData.align = $('.position').find(':selected').val();
+        }
+
+
     });
 
-    $('.framed-picture.framed-picture-' + rowId).addClass(position);
+
+    $('.picture-' + rowId).addClass(position);
 
     $('.position').on('change', function(){
         var id = $(this).data('row');
         position = $(this).find(':selected').val();
-        $('.framed-picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
+        $('.picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
     });
 
     $('.picture-link').on('keyup', function() {
@@ -188,23 +222,9 @@ function synchronizeAndCloseStep2(block) {
         position = $('.position').find(':selected').val();
         $('.framed-picture.framed-picture-' + rowId).addClass(position);
     });
-
-    $('body .modal-gallery-step-2').on('click', '.ok', function() {
-        //Update legend
-         var pictureLegend = $('body .modal-gallery-step-2 .picture-legend').val();
-        if (pictureLegend.length !== 0) {
-            $('#' + blockId + ' .frame legend').text(pictureLegend);
-        }
-
-        //Update link
-        if ($('.picture-link').val().length !== 0) {
-            if ($('#' + blockId + ' .framed-picture').parents().first().hasClass('frame-link')){
-                $('#' + blockId + ' .framed-picture').unwrap();
-            }
-            $('#' + blockId + ' .framed-picture').wrap('<a class="frame-link" target="_blank" href="' + $('.picture-link').val() + '">');
-        }
-    });
 }
+
+
 /**
  * Helper function to create a picture object
  * @param  {string} row Id or Class of the picture
@@ -399,31 +419,6 @@ module.exports = Block.extend({
                 var block = this;
                 evt.publish('modal-gallery-step-1', block); //Call the modal event
             }
-        },
-        {
-            slug: 'update-picture',
-            'icon': 'image1',
-            sleep: true,
-            eventTrigger: 'click',
-            fn: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var block = this.$framed;
-                evt.publish('modal-gallery-step-2', block);
-            }
-
-        },
-        {
-            slug: 'toggle-picture',
-            'icon': 'image-',
-            sleep: true,
-            eventTrigger: 'click',
-            fn: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var block = this.$framed;
-                removePicture(e, block);
-            }
         }
 
     ],
@@ -439,16 +434,20 @@ module.exports = Block.extend({
         var textBlock = this.$inner.find('.st-text-block');
 
         textBlock.wrap(this.$framed);
-        /*
-        //Used to unifie the contentEditable behavior
-        var editor = new Medium('.st-text-block', {
-            toolbar: false
-        });
-         */
 
+        //Log selection and range
+        textBlock.on('keypress', function(e){
+            sel = window.getSelection();
+            range = sel.getRangeAt(0);
+            if (e.keyCode == 13) {
+                console.log(e.keyCode);
+              document.execCommand('insertHTML', false, '<br>');
+              return false;
+          }
+        })
 
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
-                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
+                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20') ])
         .then(function(data){
             modalTemplateFilters = data[0];
             modalTemplateStep1 = data[1];
@@ -488,11 +487,9 @@ module.exports = Block.extend({
                         var formats = returnedData[key].format_ids;
 
                         Object.keys(formats).forEach(function(k){
-                            formats[k];
-
                             var optionsTemplate = _.template('<option data-picture="<%= image %>" value="<%= format %>"><%= format %></option>');
 
-                            list = list+ optionsTemplate({
+                            list = list + optionsTemplate({
                                 image: returnedData[key].file,
                                 format: filtersObj[formats[k]]
                             });
@@ -513,7 +510,6 @@ module.exports = Block.extend({
                         slides.push(filteredImages[k].renderSmall(returnedData[k], size));
                     });
 
-
                     slider.reset(slides);
                     sliderControls(slider);
                     selectUpdater();
@@ -530,6 +526,9 @@ module.exports = Block.extend({
             });
 
             evt.subscribe('modal-gallery-step-2', function(param) {
+                if(param.filteredImage !== undefined){
+                    modalTemplateStep2 = param.filteredImage.renderLarge()
+                }
                 openModalStep2(modalStep2);
                 synchronizeAndCloseStep2(param);
             });
@@ -560,31 +559,38 @@ module.exports = Block.extend({
 
     setData: function(blockData) {
         var content = this.getTextBlock();
-        var frameText =  content.html();
+        var frameText =  content.html().replace(/(<\/?div>)/ig,'');
         var framedContent;
         if (frameText.length > 0) {
-            framedContent = content.find('img');
-            if (framedContent.data('object') === undefined) {
-                var html = content.html();
-                blockData.text = html;
+            framedContent = content.find('figure');
+            if (framedContent.length === 0) {
+                blockData.text = frameText;
                 return blockData.text;
             }
             blockData.images = {};
-            content.find('img').each(function(){ // replace all found images with #id
-                var id = $(this).data('id');
-
-                blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
-
-                $('img.picture-' +id).replaceWith('#' + id);
+            framedContent.each(function(){ // replace all found figures with #id
+                var id = $(this).find('img').data('id');
+                blockData.images['row-' + id] = {};
+                var obj = {
+                        id : $(this).find('img').data('id'),
+                        legend: $(this).find('.legend').val(),
+                        size: $(this).find('img').data('width'),
+                }
+                Object.assign(blockData.images['row-' + id], obj);
 
                 if ($(this).hasClass('f-left')) {
-                    blockData.images[id].align = 'f-left';
+                    blockData.images['row-' + id].align = 'f-left';
                 }
                 else {
-                    blockData.images[id].align = 'f-right';
+                    blockData.images['row-' + id].align = 'f-right';
                 }
-            });
+                var searchedString = $(this).parent().html();
+                var searched = new RegExp(searchedString, 'g');
 
+                blockData.text = frameText.replace(searched, '#' + id);
+                console.log(blockData.text);
+
+            });
             blockData.text = content.html();
         }
         Object.assign(this.blockStorage.data, blockData || {});
@@ -594,8 +600,9 @@ module.exports = Block.extend({
         this.imagesData = data.images;
         var ids = data.text.match(/#\w+/g);
         var that = this;
-        debugger;
-
+        if(ids === null ){
+            return this.getTextBlock().html(stToHTML(data.text));
+        }
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
             var url = 'http://api.letudiant.lk/edt/media/' + val;
@@ -604,17 +611,17 @@ module.exports = Block.extend({
              * Callback function to fetch the blocks data from the API
              */
             var promise = function(urlParam) {
-                    xhr.get(urlParam).then(function(result) {
-                    result.content.size = data.images[val].size;
-                    result.content.legend = data.images[val].legend;
+                xhr.get(urlParam).then(function(result) {
+                    result.content.size = data.images['row-' + val].size;
+                    result.content.legend = data.images['row-' + val].legend;
                     var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
-                    result.content.align = data.images[val].align;
-
+                    result.content.align = data.images['row-' + val].align;
+                    console.log(result);
                     filteredBlock.media = result.content;
                     tpl = filteredBlock.renderBlock();
                     data.text = data.text.replace('#' + val, tpl);
-
                     that.getTextBlock().html(data.text);
+                    filteredBlock.bindHover(that, filteredBlock);
                 });
             };
             promise(url);
