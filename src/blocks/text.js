@@ -4,9 +4,9 @@
   Text Block
 */
 
+var evt = require('etudiant-mod-mediator');
 var Block = require('../block');
 var stToHTML = require('../to-html');
-var Medium = require('medium-editor');
 var $ = require('jquery');
 var q  = require('q');
 var Modal = require('etudiant-mod-modal');
@@ -17,13 +17,19 @@ var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
 
+
+
+var apiUrl = 'http://api.letudiant.lk/edt/media';
+var sel;
+var range;
+
 module.exports = Block.extend({
 
-    type: "text",
+    type: 'text',
     controllable: true,
     formattable: true,
     title: function() { return i18n.t('blocks:text:title'); },
-    editorHTML: '<div class="st-required st-text-block" contenteditable="true"></div>',
+    editorHTML: '<div class="st-required text-block st-text-block" contenteditable="true"></div>',
     icon_name: 'text',
     eventBus: eventBus,
     controls_position: 'bottom',
@@ -40,57 +46,39 @@ module.exports = Block.extend({
                 var block = this;
                 evt.publish('modal-gallery-step-1', block); //Call the modal event
             }
-        },
-        {
-            slug: 'update-picture',
-            'icon': 'image1',
-            sleep: true,
-            eventTrigger: 'click',
-            fn: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var block = this.$framed;
-                evt.publish('modal-gallery-step-2', block);
-            }
-
-        },
-        {
-            slug: 'toggle-picture',
-            'icon': 'image-',
-            sleep: true,
-            eventTrigger: 'click',
-            fn: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var block = this.$framed;
-                removePicture(e, block);
-            }
         }
-
     ],
 
-    loadData: function(data){
-        this.getTextBlock().html(stToHTML(data.text, this.type));
-    },
-    getTextBlock: function() {
-        this.text_block = this.$('.st-text-block');
-        return this.text_block;
-    },
      onBlockRender: function() {
-
         this.filteredImagesTab = '';
 
-        var textBlock = this.getTextBlock();
+        var textBlock = this.$inner.find('.st-text-block');
 
-        //Used to unify the contentEditable behavior
-        var editor = new Medium('.st-text-block', {
-            toolbar: false
+        textBlock.on('keypress', function(e){
+            sel = window.getSelection();
+            range = sel.getRangeAt(0);
+            if (e.keyCode === 13) {
+                //console.log(e.keyCode);
+                //document.execCommand('insertHTML', false, '<br>');
+                e.preventDefault();
+                e.stopPropagation();
+                var selection = window.getSelection();
+                var range = selection.getRangeAt(0);
+                var newline = document.createElement('br');
+
+                range.deleteContents();
+                range.insertNode(newline);
+                range.setStartAfter(newline);
+                range.setEndAfter(newline);
+                range.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
         });
-
 
         // Ajax job before rendering modal
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
-                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU') ])
+                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
         .then(function(data){
             modalTemplateFilters = data[0];
             modalTemplateStep1 = data[1];
@@ -109,8 +97,10 @@ module.exports = Block.extend({
             };
             var slider = new Slider(params);
             slider.eventBus = eventBus;
+
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
+                debugger;
                 channel.stopPropagation();
                 openModalStep1(modalStep1, slider);
                 var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
@@ -147,5 +137,92 @@ module.exports = Block.extend({
                 synchronizeAndCloseStep2(param);
             });
         });
+    },
+    _serializeData: function() {
+        var data = {};
+        var textBlock = this.getTextBlock().html();
+        if (textBlock !== undefined && textBlock.length > 0) {
+            data.text = this.toMarkdown(textBlock);
+        }
+        else {
+            data.text = '';
+        }
+        return data;
+    },
+    setAndLoadData: function(blockData) {
+        this.setData(blockData);
+        this.beforeLoadingData();
+    },
+    getTextBlock: function() {
+        this.text_block = this.$('.st-text-block');
+        return this.text_block;
+    },
+
+    setData: function(blockData) {
+        var content = this.getTextBlock();
+        var frameText =  content.html();
+        if (frameText.length > 0) {
+            var framedContent = content.find('img');
+            if (framedContent.data('object') === undefined) {
+                var html = content.html();
+                blockData.text = html;
+                return blockData.text;
+            }
+            blockData.images = {};
+            content.find('img').each(function(){
+                var id = $(this).data('id');
+                blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
+                $('img.picture-' +id).replaceWith('#' + id);
+
+                if ($(this).hasClass('f-left')) {
+                    blockData.images[id].align = 'f-left';
+                }
+                else {
+                    blockData.images[id].align = 'f-right';
+                }
+            });
+
+            blockData.text = content.html();
+        }
+        Object.assign(this.blockStorage.data, blockData || {});
+    },
+
+    loadData: function(data){
+        this.imagesData = data.images;
+        var ids = data.text.match(/#\w+/g);
+        var that = this;
+
+        Object.keys(ids).forEach(function(value) {
+            var val = ids[value].split('#')[1];
+            var url = 'http://api.letudiant.lk/edt/media/' + val;
+            var tpl = '';
+            /**
+             * Callback function to fetch the blocks data from the API
+             */
+            var promise = function(urlParam) {
+                    xhr.get(urlParam).then(function(result) {
+                    result.content.size = data.images[val].size;
+                    result.content.legend = data.images[val].legend;
+                    var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
+
+                    result.content.legend = data.images[val].legend;
+                    result.content.size = data.images[val].size;
+                    result.content.align = data.images[val].align;
+
+                    filteredBlock.media = result.content;
+                    tpl = filteredBlock.renderBlock();
+                    data.text = data.text.replace('#' + val, tpl);
+
+                    that.getTextBlock().html(data.text);
+                });
+
+            };
+            promise(url);
+        });
+        this.getTextBlock().html(stToHTML(data.text));
+
+    },
+    toMarkdown: function(markdown) {
+        return markdown.replace(/^(.+)$/mg, '$1');
     }
 });
