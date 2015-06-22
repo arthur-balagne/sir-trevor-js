@@ -57,7 +57,7 @@ var largeTemplate = _.template([
 .join('\n'));
 
 var blockTemplate = _.template([
-    '<figure contenteditable="false" class="f-right">',
+    '<figure contenteditable="false" class="<%= align %>">',
         '<img contenteditable="false" data-width="<%= width %>" class=" picture-<%= id %>" alt="<%= legend %>" data-id="<%= id %>" src="<%= image %>">',
         '<figcaption contenteditable="false" class="picture-<%= id %>" > <span class="legend"><%= legend %></span> <br> copyright:<span class="copyright"><%= copyright %></span></figcaption>',
     '</figure>'
@@ -154,11 +154,15 @@ var prototype = {
             '</div>',
         '</div>'
         ].join('\n'));
+
         var media = this.media;
         media.width = this.media.size.split('x')[0];
         var btnTemplates = buttons(media);
         var that = this;
-        $('body .st-text-block').on('mouseover', 'figure', function(){
+
+        $('body .st-text-block').on('click', 'figure', function(e){
+            e.preventDefault();
+            e.stopPropagation();
             var imgClass = $(this).find('img').attr('class');
             var figureClasses = $(this).attr('class');
             $(this).wrap('<div class="picture-wrapper wrapper ' + figureClasses +' '+ imgClass + '" style="width: ' + that.media.size.split('x')[0] + 'px; height:' + that.media.size.split('x')[1] + 'px"></div>');
@@ -169,28 +173,29 @@ var prototype = {
             that.bindRemoveEvent(media.id);
             that.bindTogglEvent(media.id);
             that.bindUpdateEvent(media, block, filteredImage);
-        });
-
-
-    },
-    bindRemoveEvent: function(elem) {
-        $('.st-block-control-ui-btn--delete-picture' + elem).on('click', function() {
-            $(this).parent().parent().parent().remove();
-        });
-    },
-    bindTogglEvent: function(elem) {
-        $('.st-block-control-ui-btn--toggle-picture' + elem).on('click', function() {
-            $(this).parents().find('.wrapper').toggleClass('f-left').toggleClass('f-right');
-            $(this).parents().find('figure').toggleClass('f-left').toggleClass('f-right');
-
+        }).on('mouseleave', function(){
             $('.wrapper figure').unwrap();
             $('.wrapper').remove();
             $('.st-block__control-ui-elements').remove();
         });
     },
+    bindRemoveEvent: function(elem) {
+        $('.st-block-control-ui-btn--delete-picture' + elem).one('click', function() {
+            $(this).parent().parent().parent().find('figure').remove();
+        });
+    },
+    bindTogglEvent: function(elem) {
+        $('.st-block-control-ui-btn--toggle-picture' + elem).one('click', function() {
+            $(this).parent().parent().parent().find('figure').toggleClass('f-left').toggleClass('f-right');
+            $('.wrapper').contents().unwrap()
+            $('.wrapper').remove();
+            $('.st-block__control-ui-elements').remove();
+        });
+    },
     bindUpdateEvent: function(elem, $block, filteredImage) {
-        $('.st-block-control-ui-btn--update-picture' + elem.id).on('click', function(e) {
-            $('.wrapper figure').unwrap();
+        $('.st-block-control-ui-btn--update-picture').one('click', function(e) {
+            debugger;
+            $('.wrapper').contents().unwrap()
             $('.wrapper').remove();
             $('.st-block__control-ui-elements').remove();
             filteredImage.media.custom = filteredImage.resize(filteredImage.media.size);

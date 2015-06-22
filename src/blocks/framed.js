@@ -146,25 +146,26 @@ function synchronizeAndOpenStep2(block) {
             range = sel.getRangeAt(0);
             console.log(range.collapsed);
             if(range.collapsed){
-                range.collapse(false);
+                range.collapse(false)
             }
         }
-        sel.removeAllRanges();
-        sel.addRange(range);
-        var el = document.createElement("div");
-        el.innerHTML = imageBlock;
-        debuger;
-        var frag = document.createDocumentFragment(), node, lastNode;
-        while ( (node = el.firstChild) ) {
-            lastNode = frag.appendChild(node);
-        }
-        range.insertNode(frag);
-        if (lastNode) {
-            range = range.cloneRange();
-            range.setStartAfter(lastNode);
-            range.collapse(true);
+        else {
             sel.removeAllRanges();
             sel.addRange(range);
+            var el = document.createElement("div");
+            el.innerHTML = imageBlock;
+            var frag = document.createDocumentFragment(), node, lastNode;
+            while ( (node = el.firstChild) ) {
+                lastNode = frag.appendChild(node);
+            }
+            range.insertNode(frag);
+            if (lastNode) {
+                range = range.cloneRange();
+                range.setStartAfter(lastNode);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
         }
         filteredImage.bindHover(block, filteredImage);
 
@@ -433,6 +434,14 @@ module.exports = Block.extend({
         textBlock.wrap(this.$framed);
 
         //Log selection and range
+        if(sel !== undefined) {
+            range = sel.getRangeAt(0);
+        }
+        textBlock.on('click', function(e){
+            sel = window.getSelection();
+            range = sel.getRangeAt(0);
+        });
+
         textBlock.on('keypress', function(e){
             sel = window.getSelection();
             range = sel.getRangeAt(0);
@@ -578,6 +587,7 @@ module.exports = Block.extend({
             }
 
             blockData.images = {};
+            blockData.text = frameText;
             framedContent.each(function(){ // replace all found figures with #id
                 var id = $(this).find('img').data('id');
                 blockData.images['row-' + id] = {};
@@ -597,12 +607,8 @@ module.exports = Block.extend({
                 else {
                     blockData.images['row-' + id].align = 'f-right';
                 }
-                var container = document.createElement("div");
-                container.appendChild($(this).parents().find('figure').get(0).cloneNode(true));
-
-                var searchedString = $(container).html()
-                var searched = new RegExp(searchedString, 'g');
-                blockData.text = frameText.replace(searched, '#' + id);
+                $('.picture-' + id).parent().replaceWith('#' + id + ' ');
+                blockData.text = content.html();
 
             });
 
