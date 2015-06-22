@@ -144,6 +144,7 @@ function synchronizeAndOpenStep2(block) {
         if (sel === undefined ){
             sel = window.getSelection();
             range = sel.getRangeAt(0);
+            debugger;
         }
         sel.removeAllRanges();
         sel.addRange(range);
@@ -432,10 +433,22 @@ module.exports = Block.extend({
             sel = window.getSelection();
             range = sel.getRangeAt(0);
             if (e.keyCode == 13) {
-                console.log(e.keyCode);
-              document.execCommand('insertHTML', false, '<br>');
-              return false;
-          }
+                //console.log(e.keyCode);
+                //document.execCommand('insertHTML', false, '<br>');
+                e.preventDefault();
+                e.stopPropagation();
+                var selection = window.getSelection();
+                var range = selection.getRangeAt(0);
+                var newline = document.createElement('br');
+
+                range.deleteContents();
+                range.insertNode(newline);
+                range.setStartAfter(newline);
+                range.setEndAfter(newline);
+                range.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
         });
 
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
