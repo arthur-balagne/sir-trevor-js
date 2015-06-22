@@ -20,9 +20,8 @@ var _   = require('../lodash.js');
 
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
-var editor;
 var sel;
-var range ;
+var range;
 
 // create our modals
 var modalStep1 = new Modal({
@@ -126,7 +125,6 @@ function synchronizeAndOpenStep2(block) {
         var row = $(this).attr('class').split(' ')[1];
         var picture = updateData(row);
         var filteredImage = filteredImagesTab[row];
-        var blockId;
         var imageBlock;
 
         filteredImage.media.size = picture.sizes;
@@ -134,28 +132,26 @@ function synchronizeAndOpenStep2(block) {
         filteredImage.media.custom = filteredImage.resize(picture.sizes);
         filteredImage.media.align = 'f-right';
         modalTemplateStep2 = filteredImagesTab[row].renderLarge();
-        blockId = block.blockID;
         imageBlock = filteredImage.renderBlock();
 
         startStep2(block);
         $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
         $('.size').text(picture.sizes);
         $('.st-text-block').focus();
-        if (sel === undefined ){
+        if (sel === undefined) {
             sel = window.getSelection();
             range = sel.getRangeAt(0);
-            console.log(range.collapsed);
-            if(range.collapsed){
-                range.collapse(false)
+            if (range.collapsed) {
+                range.collapse(false);
             }
         }
         else {
             sel.removeAllRanges();
             sel.addRange(range);
-            var el = document.createElement("div");
+            var el = document.createElement('div');
             el.innerHTML = imageBlock;
             var frag = document.createDocumentFragment(), node, lastNode;
-            while ( (node = el.firstChild) ) {
+            while ((node = el.firstChild)) {
                 lastNode = frag.appendChild(node);
             }
             range.insertNode(frag);
@@ -178,22 +174,21 @@ function synchronizeAndOpenStep2(block) {
  *
  */
 function synchronizeAndCloseStep2(block) {
-    var blockId = block.blockID;
     var rowId = $('body .modal-gallery-step-2 .position').data('row');
     var position = $('.position').find(':selected').val();
 
     $('[data-modal-dismiss]').on('click', function(){
-        var id = $('.modal-row-picture').data('id');
         if (undefined === block.imagesData){
             block.imagesData = [];
         }
         var pictureLegend = $('body .modal-gallery-step-2 .picture-legend').val();
         if (pictureLegend.length !== 0) {
-            $('.picture-' + rowId +' span.legend').html(pictureLegend);
+            $('.picture-' + rowId + ' span.legend').html(pictureLegend);
         }
+
         var pictureLink = $('body .modal-gallery-step-2 .picture-link').val();
         if (pictureLink.length !== 0) {
-            $('.picture-' + rowId ).data('link', pictureLink);
+            $('.picture-' + rowId).data('link', pictureLink);
         }
     });
 
@@ -434,7 +429,7 @@ module.exports = Block.extend({
         textBlock.wrap(this.$framed);
 
         //Log selection and range
-        if(sel !== undefined) {
+        if (sel !== undefined) {
             range = sel.getRangeAt(0);
         }
         textBlock.on('click', function(e){
@@ -445,13 +440,11 @@ module.exports = Block.extend({
         textBlock.on('keypress', function(e){
             sel = window.getSelection();
             range = sel.getRangeAt(0);
-            if (e.keyCode == 13) {
-                //console.log(e.keyCode);
-                //document.execCommand('insertHTML', false, '<br>');
+            if (e.keyCode === 13) {
                 e.preventDefault();
                 e.stopPropagation();
                 var selection = window.getSelection();
-                var range = selection.getRangeAt(0);
+                range = selection.getRangeAt(0);
                 var newline = document.createElement('br');
 
                 range.deleteContents();
@@ -544,13 +537,13 @@ module.exports = Block.extend({
             });
 
             evt.subscribe('modal-gallery-step-2', function(param) {
-                if(param.filteredImage !== undefined){
-                    modalTemplateStep2 = param.filteredImage.renderLarge()
+                if (param.filteredImage !== undefined) {
+                    modalTemplateStep2 = param.filteredImage.renderLarge();
                 }
                 openModalStep2(modalStep2);
                 synchronizeAndCloseStep2(param);
             });
-        }).catch(function(data){
+        }).catch(function(){
             console.error('Something went wrong');
         });
     },
@@ -577,7 +570,10 @@ module.exports = Block.extend({
 
     setData: function(blockData) {
         var content = this.getTextBlock();
-        var frameText =  content.html().replace(/(<\/?div>)/ig,'');
+        $('.wrapper').contents().unwrap();
+        $('.wrapper').remove();
+        $('.st-block__control-ui-elements').remove();
+        var frameText =  content.html().replace(/(<\/?div>)/ig, '');
         var framedContent;
         if (frameText.length > 0) {
             framedContent = content.find('figure');
@@ -592,10 +588,10 @@ module.exports = Block.extend({
                 var id = $(this).find('img').data('id');
                 blockData.images['row-' + id] = {};
                 var obj = {
-                    id : $(this).find('img').data('id'),
+                    id: $(this).find('img').data('id'),
                     legend: $(this).find('.legend').val(),
                     size: $(this).find('img').data('width')
-                }
+                };
                 if ($(this).find('img').data('link') !== undefined){
                     obj.link = $(this).find('img').data('link');
                 }
@@ -620,7 +616,7 @@ module.exports = Block.extend({
         this.imagesData = data.images;
         var ids = data.text.match(/#\w+/g);
         var that = this;
-        if(ids === null ){
+        if (ids === null){
             return this.getTextBlock().html(stToHTML(data.text));
         }
         Object.keys(ids).forEach(function(value) {

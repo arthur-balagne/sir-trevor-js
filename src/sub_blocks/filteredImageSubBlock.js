@@ -173,10 +173,6 @@ var prototype = {
             that.bindRemoveEvent(media.id);
             that.bindTogglEvent(media.id);
             that.bindUpdateEvent(media, block, filteredImage);
-        }).on('mouseleave', function(){
-            $('.wrapper figure').unwrap();
-            $('.wrapper').remove();
-            $('.st-block__control-ui-elements').remove();
         });
     },
     bindRemoveEvent: function(elem) {
@@ -194,7 +190,6 @@ var prototype = {
     },
     bindUpdateEvent: function(elem, $block, filteredImage) {
         $('.st-block-control-ui-btn--update-picture').one('click', function(e) {
-            debugger;
             $('.wrapper').contents().unwrap()
             $('.wrapper').remove();
             $('.st-block__control-ui-elements').remove();
