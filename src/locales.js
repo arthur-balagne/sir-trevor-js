@@ -93,6 +93,19 @@ var Locales = {
                 invalid: 'Veuillez vérifier votre script'
             }
         },
+        media: {
+            save: 'Sauvegarder',
+            image: {
+                title: 'Image',
+                legend: 'Legend',
+                copyright: 'Copyright'
+            },
+            video: {
+                title: 'Vidéo',
+                legend: 'Legend',
+                copyright: 'Copyright'
+            }
+        },
         image: 'Image',
         video: 'Video'
     }

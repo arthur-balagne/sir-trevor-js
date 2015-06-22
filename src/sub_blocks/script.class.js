@@ -26,10 +26,12 @@ function checkHTML(html) {
 }
 
 function getInner() {
-    return $(_.template(innerTemplate, {
-        save: i18n.t('sub_blocks:embed:script:save'),
-        edit: i18n.t('sub_blocks:embed:script:edit')
-    }));
+    return $(
+        _.template(innerTemplate, {
+            save: i18n.t('sub_blocks:embed:script:save'),
+            edit: i18n.t('sub_blocks:embed:script:edit')
+        })
+    );
 }
 
 function createBlock(subBlock, id) {

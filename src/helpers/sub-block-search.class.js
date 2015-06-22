@@ -44,7 +44,7 @@ function filterUpdate(block, contentType) {
 
 function filterSearch(block, contentType) {
     block.filterBar.on('search:start', function() {
-
+        // on search start
     });
 
     block.filterBar.on('search:result', function(results) {
@@ -106,8 +106,9 @@ var SubBlockSearch = function() {
 
 var prototype = {
     init: function(params) {
+        var block = this.block = params.block;
+
         var apiUrl = params.apiUrl;
-        var block = params.block;
         var filterConfig = params.filterConfig;
         var sliderConfig = params.sliderConfig;
 
@@ -136,6 +137,16 @@ var prototype = {
             .catch(function(err) {
                 console.error(err);
             });
+    },
+
+    destroy: function() {
+        this.block.filterBar.destroy();
+        this.block.slider.destroy()
+
+        subBlockManager.unBindEventsOnContainer(this.block.$inner);
+
+        this.block.filterBar = null;
+        this.block.slider = null;
     }
 };
 

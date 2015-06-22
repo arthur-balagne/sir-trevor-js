@@ -27,6 +27,15 @@ var chooseableConfig = {
     ]
 };
 
+function prepareCopyrights(copyrights) {
+    return copyrights.map(function(copyright) {
+        return {
+            value: copyright.id,
+            label: copyright.name
+        };
+    });
+}
+
 function onChoose(choices) {
     var block = this;
 
@@ -36,6 +45,8 @@ function onChoose(choices) {
 
     var categoryOptionsPromise = xhr.get(categoryOptionsUrl)
         .then(function(result) {
+            block.copyrights = prepareCopyrights(result.content.copyrights);
+
             return result.content.categories.map(function(category) {
                 return {
                     value: category.id,
@@ -69,7 +80,8 @@ function onChoose(choices) {
         ],
         limit: 20,
         container: block.$inner,
-        application: block.globalConfig.application
+        application: block.globalConfig.application,
+        subType: block.subBlockType
     };
 
     var sliderConfig = {
@@ -99,10 +111,10 @@ function onChoose(choices) {
             type: block.subBlockType
         });
 
-        this.slider.destroy();
-        this.filterBar.destroy();
+        this.subBlockSearch.destroy();
+        this.subBlockSearch = null;
 
-        this.$editor.html(selectedSubBlock.renderLarge());
+        // this.$editor.html(selectedSubBlock.renderLarge());
         this.$inputs.hide();
         this.$editor.show();
     }.bind(this));
@@ -133,9 +145,9 @@ module.exports = Block.extend({
                 .then(function(rawSubBlockData) {
                     var subBlockData = Object.assign({}, rawSubBlockData.content, data);
 
-                    var subBlock = subBlockManager.buildSingle(this.type, data.type, subBlockData);
+                    var mediaSubBlock = subBlockManager.buildSingle(this.type, data.type, subBlockData);
 
-                    this.$editor.html(subBlock.renderLarge());
+                    // this.$editor.html(mediaSubBlock.renderLarge());
 
                     this.ready();
                 }.bind(this))
@@ -161,26 +173,60 @@ module.exports = Block.extend({
         var file = transferData.files[0];
         var urlAPI = (typeof window.URL !== 'undefined') ? window.URL : (typeof window.webkitURL !== 'undefined') ? window.webkitURL : null;
 
-        if (/image/.test(file.type)) {
+        if (/image|video/.test(file.type)) {
             this.loading();
 
-            this.$inputs.hide();
-            this.$editor.html($('<img>', {
-                src: urlAPI.createObjectURL(file)
-            })).show();
 
-            this.uploader(
-                file,
-                function(data) {
-                    this.setData(data);
-                    this.ready();
-                },
-                function(error) {
-                    this.addMessage(i18n.t('blocks:image:upload_error'));
-                    this.ready();
-                    console.error(error);
-                }
-            );
+            this.$dropzone.html($('<img>', {
+                'class': 'placeholder-image',
+                src: urlAPI.createObjectURL(file)
+            }));
+
+            this.$uploader.hide();
+
+            this.subBlockSearch.destroy();
+            this.subBlockSearch = null;
+
+            // this.uploader(
+                // file,
+                // function(uploadData) {
+                    // var retrieveUrl = this.globalConfig.apiUrl + 'edt' + '/' + this.type + '/' + uploadData.idMedia;
+                    var retrieveUrl = 'http://api.letudiant.lk/edt/media/281615';
+
+                    xhr.get(retrieveUrl)
+                        .then(function(subBlockData) {
+                            this.$inputs.hide();
+
+                            var mediaSubBlock = subBlockManager.buildSingle(this.type, this.subBlockType, subBlockData.content);
+
+                            mediaSubBlock.activateEditable(this.copyrights);
+
+                            mediaSubBlock.appendTo(this.$editor);
+
+                            this.$editor.show();
+
+                            // mediaSubBlock.appendTo(this.$editor);
+
+                            // mediaSubBlock.registerEvents();
+
+                            this.ready();
+
+                            // this.$editor.html(mediaSubBlock.renderLarge());
+                            // mediaSubBlock.bindToRenderedElement(this.$editor.find('.st-sub-block'));
+                        }.bind(this))
+                        .catch(function(err) {
+                            throw new Error('No block returned for id:' + uploadData.idMedia + ' ' + err);
+                        }.bind(this));
+
+                    // this.setData(uploadedMediaData);
+                    // this.ready();
+                // },
+                // function(error) {
+                    // this.addMessage(i18n.t('blocks:image:upload_error'));
+                    // this.ready();
+                    // console.error(error);
+                // }
+            // );
         }
     }
 });

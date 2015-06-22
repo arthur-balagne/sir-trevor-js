@@ -15,15 +15,15 @@ BasicSubBlock.prototype = {
     },
 
     getElem: function() {
-        this.$elem = $(['data-sub-block-id="' + this.id + '"']);
+        this.$elem = $([ 'data-sub-block-id="' + this.id + '"' ]);
     },
 
     renderSmall: function() {
-        return _.template(this.smallTemplate, this.contents, { imports: { '_': _ }});
+        return _.template(this.smallTemplate, this.contents, { imports: { '_': _ } });
     },
 
     renderLarge: function() {
-        return _.template(this.largeTemplate, this.contents, { imports: { '_': _ }});
+        return _.template(this.largeTemplate, this.contents, { imports: { '_': _ } });
     }
 };
 

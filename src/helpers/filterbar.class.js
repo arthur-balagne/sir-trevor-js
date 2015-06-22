@@ -95,6 +95,7 @@ var prototype = {
         this.limit = params.limit;
         this.fields = params.fields;
         this.application = params.application;
+        this.subType = params.subType;
 
         if (params.container) {
             params.container.prepend(this.render(this.fields));
@@ -136,6 +137,10 @@ var prototype = {
 
         if (this.application) {
             search.application = this.application;
+        }
+
+        if (this.subType) {
+            search.type = this.subType;
         }
 
         this.nextSearch = search;

@@ -55,15 +55,10 @@ module.exports = function(block, file, success, error) {
     xhr: function() {
         var xhr = new window.XMLHttpRequest();
 
-        debugger;
-
         xhr.addEventListener('progress', function (evt) {
-            debugger;
-            console.log(evt.lengthComputable);
             if (evt.lengthComputable) {
                 var percentComplete = evt.loaded / evt.total;
                 console.log(percentComplete);
-                // progressElem.html(Math.round(percentComplete * 100) + "%");
             }
         }, false);
 
