@@ -144,12 +144,16 @@ function synchronizeAndOpenStep2(block) {
         if (sel === undefined ){
             sel = window.getSelection();
             range = sel.getRangeAt(0);
-            debugger;
+            console.log(range.collapsed);
+            if(range.collapsed){
+                range.collapse(false);
+            }
         }
         sel.removeAllRanges();
         sel.addRange(range);
         var el = document.createElement("div");
         el.innerHTML = imageBlock;
+        debuger;
         var frag = document.createDocumentFragment(), node, lastNode;
         while ( (node = el.firstChild) ) {
             lastNode = frag.appendChild(node);
