@@ -17,7 +17,6 @@ var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
 var _   = require('../lodash.js');
-var Medium = require('medium-editor');
 
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
@@ -173,7 +172,6 @@ function synchronizeAndOpenStep2(block) {
  *
  */
 function synchronizeAndCloseStep2(block) {
-    debugger;
     var blockId = block.blockID;
     var rowId = $('body .modal-gallery-step-2 .position').data('row');
     var position = $('.position').find(':selected').val();
@@ -188,15 +186,9 @@ function synchronizeAndCloseStep2(block) {
             $('.picture-' + rowId +' span.legend').html(pictureLegend);
         }
         var pictureLink = $('body .modal-gallery-step-2 .picture-link').val();
-        if (pictureLegend.length !== 0) {
-            $('.picture-' + rowId +' span.link').html(pictureLink);
+        if (pictureLink.length !== 0) {
+            $('.picture-' + rowId ).data('link', pictureLink);
         }
-        if(filteredImageTab.length !== 0){
-            block.imagesData = filteredImagesTab['row-' + id].media;
-            block.imagesData.align = $('.position').find(':selected').val();
-        }
-
-
     });
 
 
@@ -444,7 +436,7 @@ module.exports = Block.extend({
               document.execCommand('insertHTML', false, '<br>');
               return false;
           }
-        })
+        });
 
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
                 xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20') ])
@@ -567,14 +559,18 @@ module.exports = Block.extend({
                 blockData.text = frameText;
                 return blockData.text;
             }
+
             blockData.images = {};
             framedContent.each(function(){ // replace all found figures with #id
                 var id = $(this).find('img').data('id');
                 blockData.images['row-' + id] = {};
                 var obj = {
-                        id : $(this).find('img').data('id'),
-                        legend: $(this).find('.legend').val(),
-                        size: $(this).find('img').data('width'),
+                    id : $(this).find('img').data('id'),
+                    legend: $(this).find('.legend').val(),
+                    size: $(this).find('img').data('width')
+                }
+                if ($(this).find('img').data('link') !== undefined){
+                    obj.link = $(this).find('img').data('link');
                 }
                 Object.assign(blockData.images['row-' + id], obj);
 
@@ -584,14 +580,15 @@ module.exports = Block.extend({
                 else {
                     blockData.images['row-' + id].align = 'f-right';
                 }
-                var searchedString = $(this).parent().html();
-                var searched = new RegExp(searchedString, 'g');
+                var container = document.createElement("div");
+                container.appendChild($(this).parents().find('figure').get(0).cloneNode(true));
 
+                var searchedString = $(container).html()
+                var searched = new RegExp(searchedString, 'g');
                 blockData.text = frameText.replace(searched, '#' + id);
-                console.log(blockData.text);
 
             });
-            blockData.text = content.html();
+
         }
         Object.assign(this.blockStorage.data, blockData || {});
     },
@@ -616,7 +613,6 @@ module.exports = Block.extend({
                     result.content.legend = data.images['row-' + val].legend;
                     var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
                     result.content.align = data.images['row-' + val].align;
-                    console.log(result);
                     filteredBlock.media = result.content;
                     tpl = filteredBlock.renderBlock();
                     data.text = data.text.replace('#' + val, tpl);
