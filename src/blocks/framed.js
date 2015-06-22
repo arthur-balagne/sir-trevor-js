@@ -563,6 +563,9 @@ module.exports = Block.extend({
         var ids = data.text.match(/#\w+/g);
         var that = this;
         debugger;
+        if (ids === null) {
+            return data;
+        }
 
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
