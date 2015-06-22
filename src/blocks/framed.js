@@ -16,10 +16,19 @@ var eventBus = require('../event-bus.js');
 var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
+<<<<<<< HEAD
 //var Medium = require('medium-editor');
 
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
+=======
+var _   = require('../lodash.js');
+
+
+var apiUrl = 'http://api.letudiant.lk/edt/media';
+var sel;
+var range;
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
 
 // create our modals
 var modalStep1 = new Modal({
@@ -111,12 +120,15 @@ function startStep2(block) {
     evt.publish('modal-gallery-step-2', block);
 }
 
+<<<<<<< HEAD
 function setEndOfContenteditable(contentEditableElement, html){
     html = contentEditableElement.toMarkdown(html);
     var content = contentEditableElement.$('.st-text-block').html() + html;
     contentEditableElement.$('.st-text-block').html(content);
 }
 
+=======
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
 /**
  * Grab all data's, update the sirTrevor block,  then to open next modal
  * @param  {object} block the sir trevor block object to update
@@ -125,14 +137,24 @@ function synchronizeAndOpenStep2(block) {
     $('.modal-gallery-step-1').one('click', '.validate', function(e){
         e.preventDefault();
         e.stopPropagation();
+<<<<<<< HEAD
         var row = $(this).attr('class').split(' ')[1];
         var picture = updateData(row);
         var filteredImage = filteredImagesTab[row];
+=======
+
+        var row = $(this).attr('class').split(' ')[1];
+        var picture = updateData(row);
+        var filteredImage = filteredImagesTab[row];
+        var imageBlock;
+
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         filteredImage.media.size = picture.sizes;
         filteredImage.resize(picture.sizes);
         filteredImage.media.custom = filteredImage.resize(picture.sizes);
         filteredImage.media.align = 'f-right';
         modalTemplateStep2 = filteredImagesTab[row].renderLarge();
+<<<<<<< HEAD
         var blockId = block.blockID;
         var imageBlock = filteredImage.renderBlock();
         setEndOfContenteditable(block, imageBlock);
@@ -140,6 +162,41 @@ function synchronizeAndOpenStep2(block) {
         $('.modal-gallery-step-1 .modal-close')[0].click();
         $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
         $('.size').text(picture.sizes);
+=======
+        imageBlock = filteredImage.renderBlock();
+
+        startStep2(block);
+        $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
+        $('.size').text(picture.sizes);
+        $('.st-text-block').focus();
+        if (sel === undefined) {
+            sel = window.getSelection();
+            range = sel.getRangeAt(0);
+            if (range.collapsed) {
+                range.collapse(false);
+            }
+        }
+        else {
+            sel.removeAllRanges();
+            sel.addRange(range);
+            var el = document.createElement('div');
+            el.innerHTML = imageBlock;
+            var frag = document.createDocumentFragment(), node, lastNode;
+            while ((node = el.firstChild)) {
+                lastNode = frag.appendChild(node);
+            }
+            range.insertNode(frag);
+            if (lastNode) {
+                range = range.cloneRange();
+                range.setStartAfter(lastNode);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+        filteredImage.bindHover(block, filteredImage);
+
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
     });
 }
 
@@ -149,13 +206,17 @@ function synchronizeAndOpenStep2(block) {
  *
  */
 function synchronizeAndCloseStep2(block) {
+<<<<<<< HEAD
     var blockId = block.blockID;
     var related = $('.framed-picture-279520' + blockId);
     $('.modal-gallery-step-1').off('click', '.validate');
+=======
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
     var rowId = $('body .modal-gallery-step-2 .position').data('row');
     var position = $('.position').find(':selected').val();
 
     $('[data-modal-dismiss]').on('click', function(){
+<<<<<<< HEAD
         var id = $('.modal-row-picture').data('id');
         if (undefined === block.imagesData){
             block.imagesData = [];
@@ -166,11 +227,33 @@ function synchronizeAndCloseStep2(block) {
     });
 
     $('.framed-picture.framed-picture-' + rowId).addClass(position);
+=======
+        if (undefined === block.imagesData){
+            block.imagesData = [];
+        }
+        var pictureLegend = $('body .modal-gallery-step-2 .picture-legend').val();
+        if (pictureLegend.length !== 0) {
+            $('.picture-' + rowId + ' span.legend').html(pictureLegend);
+        }
+
+        var pictureLink = $('body .modal-gallery-step-2 .picture-link').val();
+        if (pictureLink.length !== 0) {
+            $('.picture-' + rowId).data('link', pictureLink);
+        }
+    });
+
+
+    $('.picture-' + rowId).addClass(position);
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
 
     $('.position').on('change', function(){
         var id = $(this).data('row');
         position = $(this).find(':selected').val();
+<<<<<<< HEAD
         $('.framed-picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
+=======
+        $('.picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
     });
 
     $('.picture-link').on('keyup', function() {
@@ -187,6 +270,7 @@ function synchronizeAndCloseStep2(block) {
         position = $('.position').find(':selected').val();
         $('.framed-picture.framed-picture-' + rowId).addClass(position);
     });
+<<<<<<< HEAD
 
     $('body .modal-gallery-step-2').on('click', '.ok', function() {
         //Update legend
@@ -204,6 +288,11 @@ function synchronizeAndCloseStep2(block) {
         }
     });
 }
+=======
+}
+
+
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
 /**
  * Helper function to create a picture object
  * @param  {string} row Id or Class of the picture
@@ -229,7 +318,11 @@ function updateZoom(filteredImages) {
         var zoomedSize = $(this).find(':selected').val();
         var rowId = $(this).parent().parent().attr('class').split(' ')[1];
         if (filteredImages !== undefined) {
+<<<<<<< HEAD
             var originalSize = filteredImages[rowId].media.image;
+=======
+            var originalSize = filteredImages[rowId].media.file;
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         }
         else {
             return false;
@@ -266,7 +359,14 @@ function validateInternalUrl(url) {
     }
     return internal;
 }
+<<<<<<< HEAD
 
+=======
+/**
+ * Show/Hide controls depending on events
+ *
+ */
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
 function sliderControls(slider){
     slider.on('buttons:prev:disable', function() {
         $('body .modal-footer .before').hide();
@@ -299,6 +399,14 @@ function sliderControls(slider){
     });
 }
 
+<<<<<<< HEAD
+=======
+
+/**
+ * Deliver filterbar fields parameters
+ *
+ */
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
 function filterBarFormatter(jsonFilters) {
     var tabCategories = [];
     tabCategories.push({
@@ -350,6 +458,12 @@ function filterBarFormatter(jsonFilters) {
     return fields;
 }
 
+<<<<<<< HEAD
+=======
+/**
+ * Filterbar launcher
+ */
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
 function loadFilterBar(fields, modal) {
     var filterBar = new FilterBar({
         url: apiUrl,
@@ -357,6 +471,10 @@ function loadFilterBar(fields, modal) {
         application: 'etu_etu',
         app: 'etu_etu',
         limit: '20',
+<<<<<<< HEAD
+=======
+        type: 'image',
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         container: modal,
         before: true
     });
@@ -370,7 +488,10 @@ module.exports = Block.extend({
     controllable: true,
     formattable: true,
     activable: true,
+<<<<<<< HEAD
     _previousSelection: '',
+=======
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
     editorHTML: '<div class="st-text-block" contenteditable="true"></div>',
     eventBus: eventBus,
     controls_position: 'bottom',
@@ -387,6 +508,7 @@ module.exports = Block.extend({
                 var block = this;
                 evt.publish('modal-gallery-step-1', block); //Call the modal event
             }
+<<<<<<< HEAD
         },
         {
             slug: 'update-picture',
@@ -412,13 +534,19 @@ module.exports = Block.extend({
                 var block = this.$framed;
                 removePicture(e, block);
             }
+=======
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         }
 
     ],
     onBlockRender: function() {
         var template = getTemplate({
             frameColor: '#536A4C',
+<<<<<<< HEAD
             frameBorder: '#6C8365',
+=======
+            frameBorder: '#6C8365'
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         });
 
         this.$framed = $(template);
@@ -427,6 +555,7 @@ module.exports = Block.extend({
         var textBlock = this.$inner.find('.st-text-block');
 
         textBlock.wrap(this.$framed);
+<<<<<<< HEAD
         textBlock.on('keypress', function(e){
             sel = window.getSelection();
             range = sel.getRangeAt(0);
@@ -437,6 +566,26 @@ module.exports = Block.extend({
                 e.stopPropagation();
                 var selection = window.getSelection();
                 var range = selection.getRangeAt(0);
+=======
+
+        //Log selection and range
+        if (sel !== undefined) {
+            range = sel.getRangeAt(0);
+        }
+        textBlock.on('click', function(e){
+            sel = window.getSelection();
+            range = sel.getRangeAt(0);
+        });
+
+        textBlock.on('keypress', function(e){
+            sel = window.getSelection();
+            range = sel.getRangeAt(0);
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                e.stopPropagation();
+                var selection = window.getSelection();
+                range = selection.getRangeAt(0);
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
                 var newline = document.createElement('br');
 
                 range.deleteContents();
@@ -449,9 +598,14 @@ module.exports = Block.extend({
             }
         });
 
+<<<<<<< HEAD
         // Ajax job before rendering modal
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
                 xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
+=======
+        q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
+                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20') ])
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         .then(function(data){
             modalTemplateFilters = data[0];
             modalTemplateStep1 = data[1];
@@ -470,6 +624,7 @@ module.exports = Block.extend({
             };
             var slider = new Slider(params);
             slider.eventBus = eventBus;
+<<<<<<< HEAD
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
@@ -490,11 +645,61 @@ module.exports = Block.extend({
                         filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
                         slides.push(filteredImages[k].renderSmall(data[k], size));
                     });
+=======
+
+            //Subcribe modals to mediator
+            evt.subscribe('modal-gallery-step-1', function(param, channel) {
+                channel.stopPropagation();
+
+                openModalStep1(modalStep1, slider);
+
+                var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
+                var fields = filterBarFormatter(modalTemplateFilters);
+                var filterBar = loadFilterBar(fields, $modal);
+
+                slider.alwaysAppendToDOM($modal);
+
+                filterBar.on('search', function(returnedData){
+                    var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
+                    // Prepare all selects options, then bind them in the object;
+                    Object.keys(returnedData).forEach(function(key){
+                        var list = '';
+                        var formats = returnedData[key].format_ids;
+
+                        Object.keys(formats).forEach(function(k){
+                            var optionsTemplate = _.template('<option data-picture="<%= image %>" value="<%= format %>"><%= format %></option>');
+
+                            list = list + optionsTemplate({
+                                image: returnedData[key].file,
+                                format: filtersObj[formats[k]]
+                            });
+
+                        });
+
+                        returnedData[key].format_ids = list;
+                    });
+                    filteredImages = subBlockManager.build('filteredImage', returnedData, null);
+
+                    // reset slides to an empty array
+                    slides = [];
+
+                    var size = filtersObj[filterBar.nextSearch.format];
+
+                    Object.keys(returnedData).forEach(function(k){
+                        filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
+                        slides.push(filteredImages[k].renderSmall(returnedData[k], size));
+                    });
+
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
                     slider.reset(slides);
                     sliderControls(slider);
                     selectUpdater();
                     updateZoom(filteredImagesTab);
                 });
+<<<<<<< HEAD
+=======
+
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
                 selectUpdater();
                 updateZoom(filteredImagesTab);
 
@@ -503,12 +708,28 @@ module.exports = Block.extend({
 
                 synchronizeAndOpenStep2(param);
             });
+<<<<<<< HEAD
             evt.subscribe('modal-gallery-step-2', function(param) {
                 openModalStep2(modalStep2);
                 synchronizeAndCloseStep2(param);
             });
         });
     },
+=======
+
+            evt.subscribe('modal-gallery-step-2', function(param) {
+                if (param.filteredImage !== undefined) {
+                    modalTemplateStep2 = param.filteredImage.renderLarge();
+                }
+                openModalStep2(modalStep2);
+                synchronizeAndCloseStep2(param);
+            });
+        }).catch(function(){
+            console.error('Something went wrong');
+        });
+    },
+
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
     _serializeData: function() {
         var data = {};
         var textBlock = this.getTextBlock().html();
@@ -531,6 +752,7 @@ module.exports = Block.extend({
 
     setData: function(blockData) {
         var content = this.getTextBlock();
+<<<<<<< HEAD
         var frameText =  content.html();
         if (frameText.length > 0) {
             var framedContent = content.find('img');
@@ -554,6 +776,46 @@ module.exports = Block.extend({
             });
 
             blockData.text = content.html();
+=======
+        $('.wrapper').contents().unwrap();
+        $('.wrapper').remove();
+        $('.st-block__control-ui-elements').remove();
+        var frameText =  content.html().replace(/(<\/?div>)/ig, '');
+        var framedContent;
+        if (frameText.length > 0) {
+            framedContent = content.find('figure');
+            if (framedContent.length === 0) {
+                blockData.text = frameText;
+                return blockData.text;
+            }
+
+            blockData.images = {};
+            blockData.text = frameText;
+            framedContent.each(function(){ // replace all found figures with #id
+                var id = $(this).find('img').data('id');
+                blockData.images['row-' + id] = {};
+                var obj = {
+                    id: $(this).find('img').data('id'),
+                    legend: $(this).find('.legend').val(),
+                    size: $(this).find('img').data('width')
+                };
+                if ($(this).find('img').data('link') !== undefined){
+                    obj.link = $(this).find('img').data('link');
+                }
+                Object.assign(blockData.images['row-' + id], obj);
+
+                if ($(this).hasClass('f-left')) {
+                    blockData.images['row-' + id].align = 'f-left';
+                }
+                else {
+                    blockData.images['row-' + id].align = 'f-right';
+                }
+                $('.picture-' + id).parent().replaceWith('#' + id + ' ');
+                blockData.text = content.html();
+
+            });
+
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         }
         Object.assign(this.blockStorage.data, blockData || {});
     },
@@ -562,11 +824,17 @@ module.exports = Block.extend({
         this.imagesData = data.images;
         var ids = data.text.match(/#\w+/g);
         var that = this;
+<<<<<<< HEAD
         debugger;
         if (ids === null) {
             return data;
         }
 
+=======
+        if (ids === null){
+            return this.getTextBlock().html(stToHTML(data.text));
+        }
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
             var url = 'http://api.letudiant.lk/edt/media/' + val;
@@ -575,6 +843,7 @@ module.exports = Block.extend({
              * Callback function to fetch the blocks data from the API
              */
             var promise = function(urlParam) {
+<<<<<<< HEAD
                     xhr.get(urlParam).then(function(result) {
                     result.content.size = data.images[val].size;
                     result.content.legend = data.images[val].legend;
@@ -591,6 +860,19 @@ module.exports = Block.extend({
                     that.getTextBlock().html(data.text);
                 });
 
+=======
+                xhr.get(urlParam).then(function(result) {
+                    result.content.size = data.images['row-' + val].size;
+                    result.content.legend = data.images['row-' + val].legend;
+                    var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
+                    result.content.align = data.images['row-' + val].align;
+                    filteredBlock.media = result.content;
+                    tpl = filteredBlock.renderBlock();
+                    data.text = data.text.replace('#' + val, tpl);
+                    that.getTextBlock().html(data.text);
+                    filteredBlock.bindHover(that, filteredBlock);
+                });
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
             };
             promise(url);
         });

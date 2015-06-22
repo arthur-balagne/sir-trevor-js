@@ -2,8 +2,8 @@
   Block Table
 */
 
-var _ = require('../lodash')
-  , $ = require('jquery');
+var _ = require('../lodash');
+var $ = require('jquery');
 
 var Block = require('../block');
 
@@ -317,7 +317,6 @@ module.exports = Block.extend({
         if (_.isUndefined(this.table_block)) {
             this.table_block = this.$('.st-table-block');
         }
-
         return this.table_block;
     },
 
@@ -339,7 +338,13 @@ module.exports = Block.extend({
         function rowToMarkdown(row) {
             var cells = $(row).children(),
                 md = cells.map(function() {
-                    return $(this).text();
+                    if ($(this).attr('colspan') !== undefined) {
+                        var txt = '#colspan' + $(this).attr('colspan') + ' ' + $(this).text();
+                    }
+                    else {
+                        var txt = '#colspan1'+ ' ' + $(this).text();
+                    }
+                    return txt;
                 }).get().join(' | ');
 
             if (cells[0].tagName === 'TH') {
@@ -362,6 +367,31 @@ module.exports = Block.extend({
 
         return markdown;
     },
+
+    _serializeData: function() {
+        var data = {};
+        var tableBlock = this.$table;
+        data.text = this.toMarkdown(tableBlock);
+
+        return data;
+    },
+    loadData: function(data){
+        this.getTextBlock().html(this.toHTML(data.text));
+    },
+    setAndLoadData: function(blockData) {
+        this.setData(blockData);
+        this.beforeLoadingData();
+    },
+    getTextBlock: function() {
+        if (_.isUndefined(this.text_block)) {
+            this.text_block = this.$('.st-text-block');
+        }else{
+            this.text_block = this.$('.st-table-block');
+        }
+
+        return this.text_block;
+    },
+
     toHTML: function(markdown) {
         var html = $('<table><caption contenteditable></caption><thead><tr></tr></thead><tbody></tbody></table>'),
             lines = markdown.split('\n'),
@@ -369,25 +399,52 @@ module.exports = Block.extend({
 
         var lastline = lines[lines.length - 1];
 
+        function getHashTag(text) {
+            return text.match(/#\S+/g);
+        }
+        function splitHashTag(hashtag, searched) {
+            if(hashtag.indexOf(searched) >= 0){
+                return hashtag.split(searched)[1];
+            }
+        }
+        function removeHashTag(hashtag, text) {
+            return text.replace(hashtag, '');
+        }
+
         if (lastline.match(caption_re)) {
             html.find('caption').text(lastline.match(caption_re)[1]);
             lines = lines.slice(0, lines.length - 1);
         }
+        var content = '';
 
-        // Add header row
-        _.each(lines[0].split(' | '), function(content) {
-            html.find('thead tr').append('<th contenteditable>' + content + '</th>');
+        $.each(lines[0].split(' | '), function(param, content) {
+            var hashtags = getHashTag(content);
+                colspan = '';
+                var colspanValue = '';
+                Object.keys(hashtags).forEach(function(key){
+                    colspan = hashtags[key];
+                    colspanValue = splitHashTag(hashtags[key], '#colspan');
+                });
+                var content = removeHashTag(colspan, content);
+            html.find('thead tr').append('<th colspan="' + colspanValue + '" contenteditable>' + content + '</th>');
         });
 
-        // Add remaining rows
-        _.each(lines.slice(2, lines.length), function(line) {
+        $.each(lines.slice(2, lines.length), function(line, tab) {
             var row = $('<tr>');
-            _.each(line.split(' | '), function(content) {
-                row.append('<td contenteditable>' + content + '</th>');
+            $.each(tab.split(' | '), function(content, param) {
+                var hashtags = getHashTag(param);
+                colspan = '';
+                var colspanValue = '';
+                Object.keys(hashtags).forEach(function(key){
+                    colspan = hashtags[key];
+                    colspanValue = splitHashTag(hashtags[key], '#colspan');
+                });
+                var param = removeHashTag(colspan, param);
+                row.append('<td colspan="' + colspanValue + '" contenteditable>' + param + '</td>');
             });
             html.find('tbody').append(row);
         });
 
-        return html[0].outerHTML;
+        return html[0];
     }
 });

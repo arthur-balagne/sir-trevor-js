@@ -25,8 +25,8 @@ module.exports = {
         }
 
         // Loop on controls to add them to the toolbar
-        this.controls.forEach(function(control) {
-            this.addUiControl(control, this.$control_ui);
+        this.controls.forEach(function(control, index) {
+            this.addUiControl(control, this.$control_ui, index);
         }, this);
 
         this.$inner.append(this.$control_ui);
@@ -75,7 +75,7 @@ module.exports = {
         this.$activable_ui = null;
     },
 
-    addUiControl: function(control, $target) {
+    addUiControl: function(control, $target, index) {
         // The UI Control can be a simple icon or a custom HTML
         if (!control.icon && !control.html) {
             console.error('UIcontrol "' + control.slug + '": You must choose an icon or html for your control.');
@@ -86,8 +86,21 @@ module.exports = {
             console.error('UIcontrol "' + control.slug + '": You must set a callback function.');
             return false;
         }
+        if (this.activable === true) {
+            var uiControl = this.getControlTemplate(control, 'hidden');
+            this.eventBus.bind('button:control-' + index + ':enable', function() {
+                uiControl.removeClass('hidden');
+            });
+            this.eventBus.bind('button:control-' + index + ':disable', function() {
+                uiControl.addClass('hidden');
+            });
 
-        var uiControl = this.getControlTemplate(control);
+        }
+        else {
+            uiControl = this.getControlTemplate(control);
+        }
+
+
 
         // By default, the trigger is a click event
         var eventTrigger = control.eventTrigger ? control.eventTrigger : 'click';
@@ -110,8 +123,11 @@ module.exports = {
         });
     },
 
-    getControlTemplate: function(control) {
+    getControlTemplate: function(control, customClass) {
         var tag = $('<div class="st-block-control-ui-btn"></div>');
+        if (customClass !== undefined) {
+            tag.addClass(customClass);
+        }
 
         if (control.activated) {
             tag.addClass('activated');

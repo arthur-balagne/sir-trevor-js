@@ -4,8 +4,17 @@
   Jeux, Concours et Sondages Block
 */
 
+<<<<<<< HEAD
 var xhr     = require('etudiant-mod-xhr');
 var animate = require('velocity-commonjs/velocity.ui');
+=======
+var $ = require('jquery');
+//var velocity = require("velocity-animate");
+var xhr = require('etudiant-mod-xhr');
+
+var Block    = require('../block');
+var stToHTML = require('../to-html');
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
 
 var Block     = require('../block');
 var Slider    = require('../helpers/slider.class.js');

@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-  debug: false,
+  debug: true,
   skipValidation: false,
   version: "0.4.0",
   language: "en",

@@ -93,11 +93,19 @@ var prototype = {
         this.app = params.app;
         this.url = params.url;
         this.limit = params.limit;
+        this.type = params.type;
         this.fields = params.fields;
+        this.template = filterBarTemplate;
 
         if (params.container) {
-            params.container.prepend(this.render(this.fields));
-            this.bindToDOM(params.container);
+            if (params.before === true) {
+                params.container.before(this.render(this.fields));
+                this.bindToDOM(params.container.parent());
+            }
+            else {
+                params.container.append(this.render(this.fields));
+                this.bindToDOM(params.container);
+            }
         }
     },
 
@@ -128,7 +136,13 @@ var prototype = {
         eventName = eventName || 'search';
 
         search = Object.assign(search, searchBuilder(this.$elem), {
+<<<<<<< HEAD
             limit: this.limit
+=======
+            limit: this.limit,
+            application: this.app,
+            type: this.type
+>>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
         });
 
         this.nextSearch = search;
