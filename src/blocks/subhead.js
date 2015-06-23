@@ -33,7 +33,7 @@ module.exports = Block.extend({
         {
             slug: 'h1',
             eventTrigger: 'click',
-            icon: 'h1',
+            html: '<span>Titre 1</span>',
             fn: function(e) {
                 e.preventDefault();
                 changeTitle(this, 'h1');
@@ -42,7 +42,7 @@ module.exports = Block.extend({
         {
             slug: 'h2',
             eventTrigger: 'click',
-            icon: 'h2',
+            html: '<span>Titre 2</span>',
             fn: function(e) {
                 e.preventDefault();
                 changeTitle(this, 'h2');
@@ -51,7 +51,7 @@ module.exports = Block.extend({
         {
             slug: 'h3',
             eventTrigger: 'click',
-            icon: 'h3',
+            html: '<span>Titre 3</span>',
             fn: function(e) {
                 e.preventDefault();
                 changeTitle(this, 'h3');
