@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /*
   Text Block
@@ -53,6 +53,42 @@ function changeOriginalPictureSize(src, size) {
         src = src.replace('original', size);
         return src;
     }
+}
+
+/**
+ * Helper function to create a picture object
+ * @param  {string} row Id or Class of the picture
+ * @return {object}     Picture object
+ */
+function updateData(row) {
+    var picture = {};
+    picture.url = $('.modal-row-picture.' + row).data('image');
+    picture.sizes = $('.modal-row-content.' + row + ' .sizes').find(':selected').val();
+    picture.width = picture.sizes.split('x')[0];
+    picture.height = picture.sizes.split('x')[1];
+    picture.name = picture.url;
+    return picture;
+}
+
+/**
+ * Helper function to validate internal or external url
+ */
+function validateInternalUrl(url) {
+    var hostname = new RegExp(location.host);
+    var internal;
+    if (hostname.test(url)){
+       internal = true;
+    }
+    else if (url.slice(0, 1) === '#'){
+        internal = true;
+    }
+    else if (url.slice(0, 1) === '/'){
+        internal = true;
+    }
+    else {
+        internal = false;
+    }
+    return internal;
 }
 
 /**
@@ -216,20 +252,6 @@ function synchronizeAndCloseStep2(block) {
     });
 }
 
-/**
- * Helper function to create a picture object
- * @param  {string} row Id or Class of the picture
- * @return {object}     Picture object
- */
-function updateData(row) {
-    var picture = {};
-    picture.url = $('.modal-row-picture.' + row).data('image');
-    picture.sizes = $('.modal-row-content.' + row + ' .sizes').find(':selected').val();
-    picture.width = picture.sizes.split('x')[0];
-    picture.height = picture.sizes.split('x')[1];
-    picture.name = picture.url;
-    return picture;
-}
 
 /**
  * Helper function to update the all data's image with the selected size value.
@@ -252,27 +274,6 @@ function updateZoom(filteredImages) {
     });
 }
 
-
-/**
- * Helper function to validate internal or external url
- */
-function validateInternalUrl(url) {
-    var hostname = new RegExp(location.host);
-    var internal;
-    if (hostname.test(url)){
-       internal = true;
-    }
-    else if (url.slice(0, 1) === '#'){
-        internal = true;
-    }
-    else if (url.slice(0, 1) === '/'){
-        internal = true;
-    }
-    else {
-        internal = false;
-    }
-    return internal;
-}
 /**
  * Show/Hide controls depending on events
  *
@@ -393,14 +394,13 @@ function getSelectedContent($block) {
         sel.addRange(range);
         if (sel.rangeCount) {
 
-            var container = document.createElement("div");
+            var container = document.createElement('div');
             for (var i = 0, len = sel.rangeCount; i < len; ++i) {
                 container.appendChild(sel.getRangeAt(i).cloneContents());
             }
             html = container.innerHTML;
+            return html;
         }
-    return html;
-
     }
     else {
         console.error('your browser isnt supported yet');
@@ -437,9 +437,9 @@ module.exports = Block.extend({
             'icon': 'Paragraph',
             sleep: true,
             eventTrigger: 'click',
-            fn: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+            fn: function(ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
                 var block = this;
                 var firstParagraph = getSelectedContent(this);
                 var secondParagraph = this.getTextBlock().html().replace(firstParagraph, '');
@@ -448,7 +448,7 @@ module.exports = Block.extend({
 
                 var data = { text: secondParagraph } ;
 
-                var block = this.mediator.trigger('block:create', 'text', data);
+                block = this.mediator.trigger('block:create', 'text', data);
             }
         }
     ],
@@ -456,12 +456,11 @@ module.exports = Block.extend({
      onBlockRender: function() {
         this.filteredImagesTab = '';
         var textBlock = this.$inner.find('.st-text-block');
-        textBlock.on('click', function(e){
-
-            if($(this).hasClass('st-block-control-ui-btn')){
-                return
+        textBlock.on('click', function(){
+            if ($(this).hasClass('st-block-control-ui-btn')) {
+                return;
             }
-            console.log('Updated Selection');
+
             sel = window.getSelection();
             range = sel.getRangeAt(0);
         });
@@ -470,11 +469,10 @@ module.exports = Block.extend({
             sel = window.getSelection();
             range = sel.getRangeAt(0);
             if (e.keyCode === 13) {
-                console.log('Enter pressed');
                 e.preventDefault();
                 e.stopPropagation();
                 var selection = window.getSelection();
-                var range = selection.getRangeAt(0);
+                range = selection.getRangeAt(0);
                 var newline = document.createElement('br');
 
                 range.deleteContents();
@@ -521,9 +519,6 @@ module.exports = Block.extend({
                 slider.alwaysAppendToDOM($modal);
                 filterBar.on('search', function(returnedData){
                     var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
-                    var wrapper = {
-                        content: returnedData
-                    };
                     filteredImages = subBlockManager.build('filteredImage', returnedData, null);
                     slides = [];
                     var size = filtersObj[filterBar.nextSearch.format];
@@ -584,7 +579,7 @@ module.exports = Block.extend({
                 content.find('img').each(function(){
                     var id = $(this).data('id');
                     blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
-                    $('img.picture-' +id).replaceWith('#' + id);
+                    $('img.picture-' + id).replaceWith('#' + id);
 
                     if ($(this).hasClass('f-left')) {
                         blockData.images[id].align = 'f-left';
