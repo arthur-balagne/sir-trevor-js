@@ -17,7 +17,6 @@ var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
 
-
 var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
 var range;
@@ -119,6 +118,7 @@ function startStep2(block) {
  */
 function synchronizeAndOpenStep2(block) {
     $('.modal-gallery-step-1').one('click', '.validate', function(e){
+
         e.preventDefault();
         e.stopPropagation();
 
@@ -133,7 +133,6 @@ function synchronizeAndOpenStep2(block) {
         filteredImage.media.align = 'f-right';
         modalTemplateStep2 = filteredImagesTab[row].renderLarge();
         imageBlock = filteredImage.renderBlock();
-
         startStep2(block);
         $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
         $('.size').text(picture.sizes);
@@ -217,7 +216,6 @@ function synchronizeAndCloseStep2(block) {
     });
 }
 
-
 /**
  * Helper function to create a picture object
  * @param  {string} row Id or Class of the picture
@@ -254,11 +252,6 @@ function updateZoom(filteredImages) {
     });
 }
 
-function getTemplate(params) {
-    var template = '<div class="frame"  style="box-sizing:border-box; display:inline-block; width:100%; background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
-    template += '</div>';
-    return template;
-}
 
 /**
  * Helper function to validate internal or external url
@@ -388,6 +381,26 @@ function loadFilterBar(fields, modal) {
     });
     return filterBar;
 }
+/**
+ * Grab datas after the cursor
+ * @return {[type]} [description]
+ */
+function getSelectedContent($block) {
+    var before = '';
+    if (sel !== undefined) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+        range = sel.getRangeAt(0);
+        range.collapse(true);
+        range.setStart($block.getTextBlock().get(0), 0);
+        before = range.toString();
+        return before;
+    }
+    else {
+        console.error('your browser isnt supported yet');
+    }
+}
+
 
 module.exports = Block.extend({
 
@@ -412,20 +425,46 @@ module.exports = Block.extend({
                 var block = this;
                 evt.publish('modal-gallery-step-1', block); //Call the modal event
             }
+        },
+        {
+            slug: 'add-paragraph',
+            'icon': 'Paragraph',
+            sleep: true,
+            eventTrigger: 'click',
+            fn: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var block = this;
+                var firstParagraph = getSelectedContent(this);
+                var secondParagraph = this.getTextBlock().html().replace(firstParagraph, '');
+                this.getTextBlock().html(firstParagraph);
+                this.instanceID = block.blockID;
+
+                var data = { text: secondParagraph } ;
+
+                var block = this.mediator.trigger('block:create', 'text', data);
+            }
         }
     ],
 
      onBlockRender: function() {
         this.filteredImagesTab = '';
-
         var textBlock = this.$inner.find('.st-text-block');
+        textBlock.on('click', function(e){
 
+            if($(this).hasClass('st-block-control-ui-btn')){
+                return
+            }
+            console.log('Updated Selection');
+            sel = window.getSelection();
+            range = sel.getRangeAt(0);
+        });
         textBlock.on('keypress', function(e){
+            e.stopPropagation();
             sel = window.getSelection();
             range = sel.getRangeAt(0);
             if (e.keyCode === 13) {
-                //console.log(e.keyCode);
-                //document.execCommand('insertHTML', false, '<br>');
+                console.log('Enter pressed');
                 e.preventDefault();
                 e.stopPropagation();
                 var selection = window.getSelection();
@@ -445,15 +484,14 @@ module.exports = Block.extend({
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
                 xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
         .then(function(data){
-            debugger;
-            var mediasArray = subBlockManager.jsonInit(modalTemplateStep1, modalTemplateFilters);
+            var mediasArray = subBlockManager.jsonInit(data[1], data[0]);
+
             var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
             var slides = [];
-            Object.keys(modalTemplateStep1.content).forEach(function(k){
-                filteredImagesTab['row-' + modalTemplateStep1.content[k].id] = filteredImages[k];
-                slides.push(filteredImages[k].renderSmall(modalTemplateStep1.content[k]));
+            Object.keys(data[1].content).forEach(function(k){
+                filteredImagesTab['row-' + data[1].content[k].id] = filteredImages[k];
+                slides.push(filteredImages[k].renderSmall(data[1].content[k]));
             });
-            debugger;
 
             modalTemplateFilters = data[0];
             modalTemplateStep1 = data[1];
@@ -468,7 +506,6 @@ module.exports = Block.extend({
             slider.eventBus = eventBus;
 
             //Subcribe modals to mediator
-            console.log(evt.subscribe('modal-gallery-step-1', function(param, channel) {}));
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
                 openModalStep1(modalStep1, slider);
@@ -535,21 +572,23 @@ module.exports = Block.extend({
             if (framedContent.data('object') === undefined) {
                 var html = content.html();
                 blockData.text = html;
-                return blockData.text;
             }
-            blockData.images = {};
-            content.find('img').each(function(){
-                var id = $(this).data('id');
-                blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
-                $('img.picture-' +id).replaceWith('#' + id);
+            else {
+                blockData.images = {};
+                content.find('img').each(function(){
+                    var id = $(this).data('id');
+                    blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
+                    $('img.picture-' +id).replaceWith('#' + id);
 
-                if ($(this).hasClass('f-left')) {
-                    blockData.images[id].align = 'f-left';
-                }
-                else {
-                    blockData.images[id].align = 'f-right';
-                }
-            });
+                    if ($(this).hasClass('f-left')) {
+                        blockData.images[id].align = 'f-left';
+                    }
+                    else {
+                        blockData.images[id].align = 'f-right';
+                    }
+                });
+            }
+
 
             blockData.text = content.html();
         }
@@ -558,8 +597,11 @@ module.exports = Block.extend({
 
     loadData: function(data){
         this.imagesData = data.images;
-        var ids = data.text.match(/#\w+/g);
+        var ids = '';
         var that = this;
+        if (data.text !== undefined) {
+            ids = data.text.match(/#\w+/g);
+        }
 
         if (ids === null) {
             that.getTextBlock().html(data.text);

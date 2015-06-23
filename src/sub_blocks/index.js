@@ -31,12 +31,9 @@ function handleClick(event) {
     }
     else {
         var id = $(event.currentTarget).data('sub-block-id').toString();
-<<<<<<< HEAD
 
         event.data.callback(id, event.currentTarget);
-=======
-        event.data.callback(id);
->>>>>>> 41fc64b5712f0d797a7bb953f112d5174fd09b59
+
     }
 }
 var  media = new Media();
