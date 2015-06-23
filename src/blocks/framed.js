@@ -567,7 +567,6 @@ module.exports = Block.extend({
         this.text_block = this.$('.st-text-block');
         return this.text_block;
     },
-
     setData: function(blockData) {
         var content = this.getTextBlock();
         $('.wrapper').contents().unwrap();
@@ -579,35 +578,34 @@ module.exports = Block.extend({
             framedContent = content.find('figure');
             if (framedContent.length === 0) {
                 blockData.text = frameText;
-                return blockData.text;
             }
+            else{
+                blockData.images = {};
+                blockData.text = frameText;
+                framedContent.each(function(){ // replace all found figures with #id
+                    var id = $(this).find('img').data('id');
+                    blockData.images['row-' + id] = {};
+                    var obj = {
+                        id: $(this).find('img').data('id'),
+                        legend: $(this).find('.legend').val(),
+                        size: $(this).find('img').data('width')
+                    };
+                    if ($(this).find('img').data('link') !== undefined){
+                        obj.link = $(this).find('img').data('link');
+                    }
+                    Object.assign(blockData.images['row-' + id], obj);
 
-            blockData.images = {};
-            blockData.text = frameText;
-            framedContent.each(function(){ // replace all found figures with #id
-                var id = $(this).find('img').data('id');
-                blockData.images['row-' + id] = {};
-                var obj = {
-                    id: $(this).find('img').data('id'),
-                    legend: $(this).find('.legend').val(),
-                    size: $(this).find('img').data('width')
-                };
-                if ($(this).find('img').data('link') !== undefined){
-                    obj.link = $(this).find('img').data('link');
-                }
-                Object.assign(blockData.images['row-' + id], obj);
+                    if ($(this).hasClass('f-left')) {
+                        blockData.images['row-' + id].align = 'f-left';
+                    }
+                    else {
+                        blockData.images['row-' + id].align = 'f-right';
+                    }
+                    $('.picture-' + id).parent().replaceWith('#' + id + ' ');
+                    blockData.text = content.html();
 
-                if ($(this).hasClass('f-left')) {
-                    blockData.images['row-' + id].align = 'f-left';
-                }
-                else {
-                    blockData.images['row-' + id].align = 'f-right';
-                }
-                $('.picture-' + id).parent().replaceWith('#' + id + ' ');
-                blockData.text = content.html();
-
-            });
-
+                });
+            }
         }
         Object.assign(this.blockStorage.data, blockData || {});
     },
