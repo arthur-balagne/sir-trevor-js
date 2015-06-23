@@ -386,15 +386,21 @@ function loadFilterBar(fields, modal) {
  * @return {[type]} [description]
  */
 function getSelectedContent($block) {
-    var before = '';
+    var html = '';
     if (sel !== undefined) {
         sel.removeAllRanges();
-        sel.addRange(range);
-        range = sel.getRangeAt(0);
-        range.collapse(true);
         range.setStart($block.getTextBlock().get(0), 0);
-        before = range.toString();
-        return before;
+        sel.addRange(range);
+        if (sel.rangeCount) {
+
+            var container = document.createElement("div");
+            for (var i = 0, len = sel.rangeCount; i < len; ++i) {
+                container.appendChild(sel.getRangeAt(i).cloneContents());
+            }
+            html = container.innerHTML;
+        }
+    return html;
+
     }
     else {
         console.error('your browser isnt supported yet');
