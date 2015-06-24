@@ -188,7 +188,14 @@ function synchronizeAndCloseStep2(block) {
 
         var pictureLink = $('body .modal-gallery-step-2 .picture-link').val();
         if (pictureLink.length !== 0) {
-            $('.picture-' + rowId).data('link', pictureLink);
+            $('img.picture-' + rowId).data('link', pictureLink);
+            if ($('img.picture-' + rowId).parent().prop('tagName') == 'A') {
+                $('img.picture-' + rowId).parent().attr('href', pictureLink);
+            }
+            else {
+                $('img.picture-' + rowId).wrap('<a href="'+pictureLink+'"></a>')
+            }
+
         }
     });
 
@@ -198,7 +205,8 @@ function synchronizeAndCloseStep2(block) {
     $('.position').on('change', function(){
         var id = $(this).data('row');
         position = $(this).find(':selected').val();
-        $('.picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
+        $('img.picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
+        $('img.picture-' + id).closest('figure').removeClass('f-right').removeClass('f-left').addClass(position);
     });
 
     $('.picture-link').on('keyup', function() {
@@ -590,8 +598,8 @@ module.exports = Block.extend({
                         legend: $(this).find('.legend').val(),
                         size: $(this).find('img').data('width')
                     };
-                    if ($(this).find('img').data('link') !== undefined){
-                        obj.link = $(this).find('img').data('link');
+                    if ($(this).find('img').parent().prop('tagName') === 'A'){
+                        obj.link = $(this).find('img').parent().attr('href');
                     }
                     Object.assign(blockData.images['row-' + id], obj);
 
@@ -634,6 +642,10 @@ module.exports = Block.extend({
                     tpl = filteredBlock.renderBlock();
                     data.text = data.text.replace('#' + val, tpl);
                     that.getTextBlock().html(data.text);
+                    if (data.images['row-' + val].link !== undefined) {
+                        that.getTextBlock().find('img.picture-'+val).wrap('<a href="'+ data.images['row-' + val].link +'"></a>');
+                    }
+
                     filteredBlock.bindHover(that, filteredBlock);
                 });
             };
