@@ -10,6 +10,27 @@ var _   = require('../lodash.js');
 var $ = require('jquery');
 var Slider = require('../helpers/slider.class.js');
 
+var colorHandler = {
+    blue: [
+        '#0A122A',
+        '#2E9AFE',
+        '#2E64FE'
+    ],
+    red: [
+        '#2A0A0A',
+        '#8A0808',
+        '#FE2E2E'
+    ],
+    green: [
+        '#088A08',
+        '#04B404',
+        '#00FF00'
+    ]
+};
+
+var colorLine = _.template('<tr><%= line %></tr>');
+
+var colorElement = _.template('<td style="width: 15px; height:15px" data-color="<%= color %>" bgcolor="<%= color %>"></td>');
 
 var blockTemplate = _.template([
 '<div class="st-text-block" contenteditable="true">',
@@ -22,6 +43,7 @@ var blockTemplate = _.template([
     '</div>',
 '</div>'
 ].join('\n'));
+
 
 var colorpicker =  _.template([
     '<select class="colors">',
@@ -59,6 +81,39 @@ function changePictureOnClick($selected, $block) {
     var selectedSrc =  $selected.attr('src');
     $block.find('figure img').attr('src', selectedSrc);
 }
+function getColors() {
+    var table = document.createElement('table');
+    Object.keys(colorHandler).forEach(function(l){
+        var tr = '';
+        var tds = '';
+        var actualLine = colorHandler[l];
+        Object.keys(actualLine).forEach(function(element){
+            var td = colorElement({
+                color: actualLine[element]
+            });
+            tds = tds + td
+        });
+        tr = colorLine({
+            line: tds
+        });
+        $(table).append(tr);
+
+    });
+    $(table).css('display','inline-block');
+    $(table).css('border', 'none !important');
+    return table;
+}
+function selectedColorWatcher($block) {
+    $block.$el.find('.st-block__control-ui td').on('click', function(){
+        var color = $(this).data('color');
+        changeSelectedColor(color, $block);
+        $(this).parents('table').remove();
+    });
+}
+
+function changeSelectedColor(color, $block) {
+    $block.$editor.find('.title').css('color', color);
+}
 
 module.exports = Block.extend({
     type: 'Illustrated',
@@ -73,13 +128,18 @@ module.exports = Block.extend({
     [
         {
             slug: 'change-color',
-            eventTrigger: 'change',
+            eventTrigger: 'click',
             fn: function(e) {
-                e.preventDefault();
-                var color = this.$el.find('.colors').find('option:selected').attr('value');
-                this.$el.find('.title').css('color', color);
+                var colorsTable = getColors();
+                if (this.$control_ui.find('table').length == 0) {
+                    this.$control_ui.append(getColors());
+                    selectedColorWatcher(this);
+                }
+                else if(this.$control_ui.find('table').length == 1){
+                    this.$control_ui.find('table').remove();
+                }
             },
-            html: colorpicker()
+            html: '<span>Couleur</span>'
         },
         {
             slug: 'change-picture',
@@ -109,6 +169,7 @@ module.exports = Block.extend({
                         copyright: 'Ford'
                     }
                 ]);
+
                 if(this.$el.find('.illustrated .media').val() === undefined) {
                     this.$el.find('.illustrated').append(mediaTemplate());
                     var that = this;
@@ -143,8 +204,6 @@ module.exports = Block.extend({
                         var file = ev.originalEvent.dataTransfer.files[0];
                         var urlAPI = (typeof URL !== "undefined") ? URL : (typeof webkitURL !== "undefined") ? webkitURL : null;
 
-
-                        debugger;
                         $('figure img').attr('src', urlAPI.createObjectURL(file));
                         that.uploader(
                             file,
@@ -160,7 +219,7 @@ module.exports = Block.extend({
                     });
                 }
             },
-            html: '<span>Icon</span>'
+            html: '<span>Icone</span>'
         }
     ],
     editorHTML: blockTemplate({
@@ -185,7 +244,7 @@ module.exports = Block.extend({
             templateObject.imgSrc = data.img.src;
             templateObject.imgAlt = data.img.alt;
         }
-        tpl = blockTemplate();
+        tpl = blockTemplate(templateObject);
         this.getTextBlock().html(stToHTML(data.text, this.type));
     },
     setData: function(data) {
