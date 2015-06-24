@@ -141,6 +141,11 @@ module.exports = Block.extend({
                         ev.preventDefault();
                         ev.stopPropagation();
                         var file = ev.originalEvent.dataTransfer.files[0];
+                        var urlAPI = (typeof URL !== "undefined") ? URL : (typeof webkitURL !== "undefined") ? webkitURL : null;
+
+
+                        debugger;
+                        $('figure img').attr('src', urlAPI.createObjectURL(file));
                         that.uploader(
                             file,
                             function(data) {
