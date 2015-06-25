@@ -420,6 +420,7 @@ module.exports = Block.extend({
 
                 var editor = new Editor();
                 var block = this;
+                editor.updateSelection(sel, range);
                 var firstParagraph = editor.getSelectedContent(this);
                 var secondParagraph = editor.getTextAfterParagraph(block, firstParagraph)
                 this.getTextBlock().html(firstParagraph);

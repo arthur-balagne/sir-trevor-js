@@ -12,12 +12,9 @@ var range;
 
 var prototype = {
 
-    updateSelection: function(selection) {
+    updateSelection: function(selection, blockRange) {
         sel = selection;
-        this.updateRange();
-    },
-    updateRange: function() {
-        range = sel.getRangeAt(0);
+        range = blockRange;
     },
     /**
     * Grab datas after the cursor
