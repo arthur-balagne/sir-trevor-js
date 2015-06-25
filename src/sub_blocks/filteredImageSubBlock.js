@@ -178,6 +178,7 @@ var prototype = {
     bindRemoveEvent: function(elem) {
         $('.st-block-control-ui-btn--delete-picture' + elem).one('click', function() {
             $(this).parent().parent().parent().find('figure').remove();
+            $('.st-block__control-ui-elements').remove();
         });
     },
     bindTogglEvent: function(elem) {
