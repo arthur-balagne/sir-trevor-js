@@ -32,6 +32,10 @@ barChart.updateDataSetDatas(1, [ 65, 59, 80, 81, 56, 55, 40, 25 ]);
 barChart.updateLabels([ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August']);
 
 console.log(barChart.validate());
+if(barChart.validate()){
+    var labelsTpl = barChart.renderLabels();
+    console.log(labelsTpl);
+}
 
 debugger;
 

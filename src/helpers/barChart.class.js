@@ -1,4 +1,5 @@
 var _ = require('../lodash');
+var $ = require('jquery');
 
 
 var BarChart = function() {
@@ -45,8 +46,7 @@ BarChart.prototype = {
             this.labels = params.labels;
         }
     },
-    getB
-    createDataSet: function (params){
+    createDataSet: function (params) {
         this.dataSets.push({
             id: params.id,
             label: params.label,
@@ -57,7 +57,7 @@ BarChart.prototype = {
             data: params.data
         });
     },
-    validate: function(){
+    validate: function() {
         var valid = true;
         var labels = this.labels;
         var dataSets = this.dataSets;
@@ -69,7 +69,7 @@ BarChart.prototype = {
         });
         return valid;
     },
-    findDatasetById: function(id){
+    findDatasetById: function(id) {
         var position = false;
         var dataSets = this.dataSets;
         Object.keys(dataSets).forEach(function(d) {
@@ -93,51 +93,32 @@ BarChart.prototype = {
         var tpl = labelsCreationTemplate();
 
         $('.add').on('click', function(){
-        var value = $('.list-input').val();
-        if( value.length > 0) {
-            $('.list').append('<li data-name="' + value + '" >' + value + '<span><a href="#">Supprimer<a></span></li>')
-        }
-        else {
-            return;
-        }
-});
+            var value = $('.list-input').val();
+            if( value.length > 0) {
+                $('.list').append('<li data-name="' + value + '" >' + value + '<span><a href="#">Supprimer<a></span></li>')
+            }
+            else {
+                return;
+            }
+        });
 
-$('.delete').on('click', function(e){
-    e.preventDefault();
-    $(this).closest('li').remove();
-});
+        $('.delete').on('click', function(e){
+            e.preventDefault();
+            $(this).closest('li').remove();
+        });
 
-$('.validate').on('click', function(e){
-    e.preventDefault();
-    var datas = [];
-    var lis = $('.list').find('li');
-    console.log(lis);
-    $.each(lis, function(key, value){
-        datas.push($(value).data('name'));
-    });
-    console.log(datas);
-});
+        $('.validate').on('click', function(e){
+            e.preventDefault();
+            var datas = [];
+            var lis = $('.list').find('li');
+            console.log(lis);
+            $.each(lis, function(key, value){
+                datas.push($(value).data('name'));
+            });
+        });
+        return tpl;
     }
 
 };
 
 module.exports = BarChart;
-
-// $(document).ready(function() {
-//     var max_fields      = 10; //maximum input boxes allowed
-//     var wrapper         = $(".input_fields_wrap"); //Fields wrapper
-//     var add_button      = $(".add_field_button"); //Add button ID
-
-//     var x = 1; //initlal text box count
-//     $(add_button).click(function(e){ //on add input button click
-//         e.preventDefault();
-//         if(x < max_fields){ //max input box allowed
-//             x++; //text box increment
-//             $(wrapper).append('<div><input type="text" name="mytext[]"/><a href="#" class="remove_field">Remove</a></div>'); //add input box
-//         }
-//     });
-
-//     $(wrapper).on("click",".remove_field", function(e){ //user click on remove text
-//         e.preventDefault(); $(this).parent('div').remove(); x--;
-//     })
-// });
