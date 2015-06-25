@@ -77,7 +77,7 @@ function onChoose(choices) {
         bindEventsOnScriptSubBlock(this, scriptSubBlock);
     }
     else {
-        var thematicOptionsUrl = block.globalConfig.apiUrl + 'jcs' + '/thematics/list/' + getPath(choices.contentType);
+        var thematicOptionsUrl = block.globalConfig.apiUrl + 'jcs/thematics/list/' + getPath(choices.contentType);
 
         var thematicOptionsPromise = xhr.get(thematicOptionsUrl)
             .then(function(result) {
@@ -99,7 +99,7 @@ function onChoose(choices) {
             });
 
         var filterConfig = {
-            url: block.globalConfig.apiUrl + 'jcs' + '/' + getPath(choices.contentType) + '/search',
+            url: block.globalConfig.apiUrl + 'jcs/' + getPath(choices.contentType) + '/search',
             fields: [
                 {
                     type: 'search',
@@ -175,7 +175,7 @@ module.exports = Block.extend({
             else {
                 this.loading();
 
-                var retrieveUrl = this.globalConfig.apiUrl + 'jcs' + '/' + getPath(data.type) + '/' + data.id + '/' + data.application;
+                var retrieveUrl = this.globalConfig.apiUrl + 'jcs/' + getPath(data.type) + '/' + data.id + '/' + data.application;
 
                 xhr.get(retrieveUrl)
                     .then(function(subBlockData) {

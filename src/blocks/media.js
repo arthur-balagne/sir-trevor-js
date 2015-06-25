@@ -106,15 +106,18 @@ function onChoose(choices) {
     }.bind(this));
 
     this.subBlockSearch.on('selected', function(selectedSubBlock) {
-        this.setData({
-            id: selectedSubBlock.contents.id,
-            type: block.subBlockType
-        });
+        // this.setData({
+        //     id: selectedSubBlock.contents.id,
+        //     type: block.subBlockType
+        // });
 
         this.subBlockSearch.destroy();
         this.subBlockSearch = null;
 
-        // this.$editor.html(selectedSubBlock.renderLarge());
+        this.$editor.html(selectedSubBlock.renderLarge());
+
+        selectedSubBlock.bindToRenderedHTML();
+
         this.$inputs.hide();
         this.$editor.show();
     }.bind(this));
@@ -147,7 +150,13 @@ module.exports = Block.extend({
 
                     var mediaSubBlock = subBlockManager.buildSingle(this.type, data.type, subBlockData);
 
-                    // this.$editor.html(mediaSubBlock.renderLarge());
+                    this.$editor.html(mediaSubBlock.renderLarge());
+
+                    mediaSubBlock.bindToRenderedHTML();
+
+                    mediaSubBlock.on('save', function(data) {
+                        console.log(data);
+                    });
 
                     this.ready();
                 }.bind(this))
@@ -176,7 +185,6 @@ module.exports = Block.extend({
         if (/image|video/.test(file.type)) {
             this.loading();
 
-
             this.$dropzone.html($('<img>', {
                 'class': 'placeholder-image',
                 src: urlAPI.createObjectURL(file)
@@ -199,20 +207,15 @@ module.exports = Block.extend({
 
                             var mediaSubBlock = subBlockManager.buildSingle(this.type, this.subBlockType, subBlockData.content);
 
-                            mediaSubBlock.activateEditable(this.copyrights);
+                            mediaSubBlock.addData({ copyrights: this.copyrights })
 
-                            mediaSubBlock.appendTo(this.$editor);
+                            this.$editor.html(mediaSubBlock.renderEditable());
+
+                            mediaSubBlock.bindToRenderedHTML();
 
                             this.$editor.show();
 
-                            // mediaSubBlock.appendTo(this.$editor);
-
-                            // mediaSubBlock.registerEvents();
-
                             this.ready();
-
-                            // this.$editor.html(mediaSubBlock.renderLarge());
-                            // mediaSubBlock.bindToRenderedElement(this.$editor.find('.st-sub-block'));
                         }.bind(this))
                         .catch(function(err) {
                             throw new Error('No block returned for id:' + uploadData.idMedia + ' ' + err);

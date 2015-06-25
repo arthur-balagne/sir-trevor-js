@@ -17,6 +17,8 @@ var outerTemplate = [
         '<figure class="st-sub-block-image">',
             '<img src="<%= file %>" />',
         '</figure>',
+        '<%= editArea %>',
+        '<%= footer %>',
     '</div>'
 ].join('\n');
 
@@ -33,7 +35,7 @@ var innerEditTemplate = [
         '</div>',
         '<div class="st-sub-block-edit-item">',
             '<label>Copyright</label>',
-            '<select multiple>',
+            '<select name="copyright" multiple>',
                 '<% _.forEach(copyrights, function(copyright) { %>',
                     '<option value="<%= copyright.value %>"><%= copyright.label %></option>',
                 '<% }); %>',
@@ -50,18 +52,10 @@ var footerTemplate = [
     '</footer>'
 ].join('\n');
 
-function getEditArea(params) {
-    return $(
-        _.template(innerEditTemplate, params, { imports: { '_': _ } })
-    );
-}
-
 function getFooter() {
-    return $(
-        _.template(footerTemplate, {
-            save: i18n.t('sub_blocks:media:save')
-        })
-    );
+    return _.template(footerTemplate, {
+        save: i18n.t('sub_blocks:media:save')
+    });
 }
 
 var ImageSubBlock = function() {
@@ -76,35 +70,47 @@ ImageSubBlock.prototype = Object.create(BasicMediaSubBlock.prototype);
 ImageSubBlock.prototype.constructor = BasicMediaSubBlock;
 
 var prototype = {
-    activateRestricted: function() {
+    renderEditable: function() {
+        this.isEditable = true;
 
-    },
-
-    activateEditable: function(copyrights) {
-        this.$elem = $(
-            _.template(outerTemplate, this.contents)
+        var editArea = _.template(innerEditTemplate,
+            {
+                legend: this.contents.legend,
+                copyrights: this.contents.copyrights
+            },
+            {
+                imports: {
+                    '_': _
+                }
+            }
         );
 
-        this.$editArea = getEditArea({
+        return _.template(outerTemplate,
+            {
+                id: this.id,
+                type: this.type,
+                file: this.contents.file,
+                editArea: editArea,
+                footer: getFooter()
+            }
+        );
+    },
+
+    renderLarge: function() {
+        var editArea = _.template(innerStaticTemplate, {
             legend: this.contents.legend,
-            copyrights: copyrights
+            copyright: this.contents.copyright
         });
 
-        this.$editArea.appendTo(this.$elem);
-
-        this.$footer = getFooter();
-
-        this.$saveButton = this.$footer.find('button[data-button-type="save"]');
-
-        this.$footer.appendTo(this.$elem);
-    },
-
-    registerEvents: function() {
-        this.$saveButton.on('click', this.save);
-    },
-
-    save: function() {
-
+        return _.template(outerTemplate,
+            {
+                id: this.id,
+                type: this.type,
+                file: this.contents.file,
+                editArea: editArea,
+                footer: getFooter()
+            }
+        );
     }
 };
 
