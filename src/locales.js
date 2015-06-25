@@ -61,7 +61,7 @@ var Locales = {
         'title': 'Titre'
       },
       subhead: {
-        'title': 'Titre'
+        'title': 'Sous titre'
       },
       table: {
         'title': 'Table',
