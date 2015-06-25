@@ -60,6 +60,9 @@ var Locales = {
       heading: {
         'title': 'Titre'
       },
+      subhead: {
+        'title': 'Titre'
+      },
       table: {
         'title': 'Table',
         'default': 'Defaut',

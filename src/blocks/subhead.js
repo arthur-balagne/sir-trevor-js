@@ -16,7 +16,9 @@ function changeTitle(blockData, level) {
 
 module.exports = Block.extend({
     type: 'subhead',
-    title: 'Titre',
+    title: function() {
+        return i18n.t('blocks:subhead:title');
+    },
     icon_name: 'text',
     editorHTML: '<div class="st-required st__title st-text-block" contenteditable="true"></div>',
     controllable: true,
