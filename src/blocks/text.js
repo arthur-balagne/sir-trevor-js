@@ -18,7 +18,6 @@ module.exports = Block.extend({
   icon_name: 'text',
 
   loadData: function(data){
-    debugger;
     this.getTextBlock().html(stToHTML(data.text, this.type));
   }
 });

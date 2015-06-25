@@ -199,7 +199,6 @@ function synchronizeAndCloseStep2(block) {
         }
     });
 
-
     $('.picture-' + rowId).addClass(position);
 
     $('.position').on('change', function(){
@@ -272,20 +271,26 @@ function getTemplate(params) {
  * Helper function to validate internal or external url
  */
 function validateInternalUrl(url) {
-    var hostname = new RegExp(location.host);
+    var hostNames = [
+        'http://www.letudiant.fr',
+        'http://www.editor-poc.lh',
+        'http://www.letudiant.fr/trendy'
+    ];
     var internal;
-    if (hostname.test(url)){
-       internal = true;
-    }
-    else if (url.slice(0, 1) === '#'){
-        internal = true;
-    }
-    else if (url.slice(0, 1) === '/'){
-        internal = true;
-    }
-    else {
-        internal = false;
-    }
+    var internal = false;
+    Object.keys(hostNames).forEach(function(k){
+        var hostname = hostNames[k];
+        if (url.indexOf(hostname) >= 0) {
+           internal = true;
+        }
+        else if (url.slice(0, 1) === '#'){
+            internal = true;
+        }
+        else if (url.slice(0, 1) === '/'){
+            internal = true;
+        }
+    });
+
     return internal;
 }
 /**
@@ -293,26 +298,27 @@ function validateInternalUrl(url) {
  *
  */
 function sliderControls(slider){
+
     slider.on('buttons:prev:disable', function() {
-        $('body .modal-footer .before').hide();
+        $('body .modal-footer .before').addClass('inactive');
     });
 
     slider.on('buttons:prev:enable', function() {
         $('body .modal-footer').show();
-        $('body .modal-footer .before').show();
+        $('body .modal-footer .before').removeClass('inactive');
     });
 
     slider.on('buttons:next:disable', function() {
-        $('body .modal-footer .next').hide();
+        $('body .modal-footer .next').addClass('inactive');
     });
 
     slider.on('buttons:next:enable', function() {
         $('body .modal-footer').show();
-        $('body .modal-footer .next').show();
+        $('body .modal-footer .next').removeClass('inactive');
     });
 
     slider.on('buttons:all:disable', function() {
-        $('body .modal-footer').hide();
+        $('body .modal-footer').addClass('inactive');
     });
 
     $('body .modal-footer').on('click', '.before', function(){
@@ -645,7 +651,6 @@ module.exports = Block.extend({
                     if (data.images['row-' + val].link !== undefined) {
                         that.getTextBlock().find('img.picture-'+val).wrap('<a href="'+ data.images['row-' + val].link +'"></a>');
                     }
-
                     filteredBlock.bindHover(that, filteredBlock);
                 });
             };
