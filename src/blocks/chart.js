@@ -7,10 +7,38 @@
 var Block = require('../block');
 var stToHTML = require('../to-html');
 var Chart = require('chart.js');
+var BarChart = require('../helpers/barChart.class.js');
+
+var barChart = new BarChart();
+
+barChart.init({
+    labels: [ 'January']
+});
+
+barChart.createDataSet(
+    {
+        id : 1,
+        label: 'My First dataset',
+        fillColor: 'rgba(220,220,220,0.5)',
+        strokeColor: 'rgba(220,220,220,0.8)',
+        highlightFill: 'rgba(220,220,220,0.75)',
+        highlightStroke: 'rgba(220,220,220,1)',
+        data: [65]
+    }
+);
+console.log(barChart.findDatasetById(1));
+console.log(barChart.validate());
+barChart.updateDataSetDatas(1, [ 65, 59, 80, 81, 56, 55, 40, 25 ]);
+barChart.updateLabels([ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August']);
+
+console.log(barChart.validate());
+
+debugger;
+
 
 var chartData = {
     Bar: {
-        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July' ],
+        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August'],
         datasets: [
             {
                 label: 'My First dataset',
@@ -18,7 +46,7 @@ var chartData = {
                 strokeColor: 'rgba(220,220,220,0.8)',
                 highlightFill: 'rgba(220,220,220,0.75)',
                 highlightStroke: 'rgba(220,220,220,1)',
-                data: [ 65, 59, 80, 81, 56, 55, 40 ]
+                data: [ 65, 59, 80, 81, 56, 55, 40, 25 ]
             },
             {
                 label: 'My Second dataset',
@@ -26,7 +54,7 @@ var chartData = {
                 strokeColor: 'rgba(151,187,205,0.8)',
                 highlightFill: 'rgba(151,187,205,0.75)',
                 highlightStroke: 'rgba(151,187,205,1)',
-                data: [ 28, 48, 40, 19, 86, 27, 90 ]
+                data: [ 28, 48, 40, 19, 86, 27, 90, 56 ]
             }
         ]
     },
