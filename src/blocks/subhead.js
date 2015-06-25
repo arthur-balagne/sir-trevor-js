@@ -6,6 +6,7 @@
 var Block = require('../block');
 var stToHTML = require('../to-html');
 
+
 function changeTitle(blockData, level) {
     var block = blockData.getTextBlock();
     var blockContent = block.children().html();
@@ -81,9 +82,11 @@ module.exports = Block.extend({
         this.getTextBlock().html(stToHTML(data.text, this.type));
     },
     toMarkdown: function(markdown) {
-        return markdown.replace(/(?:<h1>)?([^<>]+)?(?:<\/h1>)/g,'#$1')
-                       .replace(/(?:<h2>)?([^<>]+)?(?:<\/h2>)/g,'##$1')
-                       .replace(/(?:<h3>)?([^<>]+)?(?:<\/h3>)/g,'###$1');
+        var stToMarkdown = require('../to-markdown');
+        markdown =  markdown.replace(/<h1>(.*?)<\/h1>/g,'#$1')
+                       .replace(/<h2>(.*?)<\/h2>/g,'##$1')
+                       .replace(/<h2>(.*?)<\/h2>/g,'###$1');
+        return stToMarkdown(markdown);
     },
     toHTML: function(markdown) {
         return markdown.replace(/###(.*)/g, '<h3>$1</h3>')
