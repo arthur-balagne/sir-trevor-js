@@ -3,14 +3,26 @@ var _ = require('../lodash.js');
 var Media = require('../helpers/media.class.js');
 
 var subBlockTypes = {
-    jcs: require('./jcsSubBlock.js'),
+    jcs: {
+        sondage: require('./jcs/sondageJcsSubBlock.js'),
+        quiz: require('./jcs/quizJcsSubBlock.js'),
+        profil: require('./jcs/testJcsSubBlock.js'),
+    },
     video: require('./videoSubBlock.js'),
     image: require('./imageSubBlock.js'),
     filteredImage: require('./filteredImageSubBlock.js')
 };
 
 function buildSingleBlock(type, contents, subType) {
-    return new subBlockTypes[type](contents, subType);
+    if (typeof subBlockTypes[type] === 'function') {
+        return new subBlockTypes[type](contents);
+    }
+    else if (typeof subBlockTypes[type][subType] === 'function') {
+        return new subBlockTypes[type][subType](contents);
+    }
+    else {
+      throw new Error('No matching type or subtype found for ' + type + ' and/or ' + subType);
+    }
 }
 
 function handleClick(event) {
@@ -20,6 +32,7 @@ function handleClick(event) {
     else {
         var id = $(event.currentTarget).data('sub-block-id').toString();
         event.data.callback(id);
+
     }
 }
 var  media = new Media();
@@ -37,7 +50,7 @@ var SubBlockManager = {
     getSubBlockById: function(id, subBlocks) {
         var retrievedSubBlock;
         subBlocks.some(function(subBlock) {
-            if (subBlock.id === id) {
+            if (subBlock.id.toString() === id.toString()) {
                 retrievedSubBlock = subBlock;
                 return true;
             }
@@ -69,6 +82,8 @@ var SubBlockManager = {
             return subBlock.renderSmall();
         });
     },
+
+    buildSingle: buildSingleBlock,
 
     build: function(type, contents, subType) {
         return contents.map(function(singleContent) {

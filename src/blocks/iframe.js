@@ -67,14 +67,18 @@ module.exports = Block.extend({
     ],
 
     onBlockRender: function() {
+        this.$iframeWrapper.appendTo(this.$inner);
+    },
+
+    beforeBlockRender: function() {
         var template = getTemplate({
             height: 300,
             scrolling: 'no',
             visible: false
         });
 
-        this.$inner.prepend(template);
-        this.$iframe = this.$inner.find('iframe');
+        this.$iframeWrapper = $(template);
+        this.$iframe = this.$iframeWrapper.find('iframe');
     },
 
     loadData: function(data) {

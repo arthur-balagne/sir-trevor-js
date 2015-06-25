@@ -45,6 +45,9 @@ var Locales = {
       iframe: {
         'placeholder': "Copie l'URL du site ici"
       },
+      sondage: {
+        'title': 'Sondage'
+      },
       tweet: {
         'title': "Tweet",
         'fetch_error': "Un problème est survenu lors de la récupération de votre tweet"

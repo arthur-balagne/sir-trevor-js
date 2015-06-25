@@ -1,6 +1,7 @@
 var $ = require('jquery');
 var eventablejs = require('eventablejs');
 var _ = require('../lodash');
+var animate = require('velocity-commonjs/velocity.ui');
 
 var Slide = require('./slide.class.js');
 
@@ -96,43 +97,24 @@ var registerButtons = function() {
     });
 };
 
-var renderControls = function(controls) {
-    var controlTemplate = _.template([
-        '<div class="st-slider-controls">',
-            '<%= buttons %>',
-        '</div>'
-    ].join('\n'));
-
-    var buttonTemplate = _.template([
-        '<button <%= button_attr %>>',
-            '<span><%= button_text %></span>',
-        '</button>'
-    ].join('\n'));
-
-    var buttonMarkup = '';
-
-    Object.keys(controls).forEach(function(key) {
-        buttonMarkup += buttonTemplate({
-            button_attr: 'data-direction="' + key + '"',
-            button_text: controls[key]
-        });
-    });
-
-    return controlTemplate({
-        buttons: buttonMarkup
-    });
-};
-
-var sliderTemplate = _.template([
+var sliderTemplate = [
     '<div class="st-block__slider">',
         '<div class="st-slider">',
             '<div class="st-slider-container">',
                 '<%= content %>',
             '</div>',
         '</div>',
-        '<%= controls %>',
+        '<% if (controls) { %>',
+            '<div class="st-slider-controls">',
+                '<% _.forEach(controls, function(control, key) { %>',
+                    '<button class="st-btn" data-direction="<%= key %>">',
+                        '<span><%= control %></span>',
+                    '</button>',
+                '<% }); %>',
+            '</div>',
+        '<% } %>',
     '</div>'
-].join('\n'));
+].join('\n');
 
 var noSlidesTemplate = [
     '<span class="st-slider-no-slides">',
@@ -169,20 +151,15 @@ var prototype = {
 
     render: function() {
         var slidesMarkup = '';
-        var controlsMarkup = '';
-
-        if (this.config.controls) {
-            controlsMarkup = renderControls(this.config.controls);
-        }
 
         this.slides.forEach(function(slide) {
             slidesMarkup += slide.render();
         });
 
-        return this.template({
+        return _.template(sliderTemplate, {
             content: slidesMarkup,
-            controls: controlsMarkup
-        });
+            controls: this.config.controls
+        }, { imports: { '_': _ }});
     },
 
     appendToDOM: function(container) {
@@ -248,27 +225,35 @@ var prototype = {
         this.slides = [];
         this.hasEmitted = false;
 
-        if (newSlides) {
-            var slidesMarkup = '';
+        animate(this.$elem[0], { opacity: 0 }, { duration: 200 })
+            .then(function() {
+                if (newSlides) {
+                    var slidesMarkup = '';
 
-            this.slides =  prepareSlides(newSlides, this.config.itemsPerSlide);
+                    this.slides =  prepareSlides(newSlides, this.config.itemsPerSlide);
 
-            this.slides.forEach(function(slide) {
-                slidesMarkup += slide.render();
-            });
+                    this.slides.forEach(function(slide) {
+                        slidesMarkup += slide.render();
+                    });
 
-            this.$slideContainer.html(slidesMarkup);
-        }
-        else {
-            this.$slideContainer.html(noSlidesTemplate);
-        }
+                    this.$slideContainer.html(slidesMarkup);
+                }
+                else {
+                    this.$slideContainer.html(noSlidesTemplate);
+                }
 
-        calculateSliderDimensions.call(this, true);
-        checkButtons.call(this);
+                calculateSliderDimensions.call(this, true);
+                checkButtons.call(this);
+
+                return Promise.resolve();
+            }.bind(this))
+            .then(function() {
+                return animate(this.$elem[0], { opacity: 1 }, { duration: 200 });
+            }.bind(this));
     },
 
     goTo: function(index) {
-        this.$slideContainer.css('left', '-' + ((100 / this.config.increment).toFixed(2) * index) + '%');
+        animate(this.$slideContainer[0], { left: '-' + ((100 / this.config.increment).toFixed(2) * index) + '%' }, { queue: false, duration: 400, easing: 'ease-in-out' });
 
         this.currentIndex = index;
 

@@ -4,35 +4,53 @@
   Jeux, Concours et Sondages Block
 */
 
-var $ = require('jquery');
-//var velocity = require("velocity-animate");
-var xhr = require('etudiant-mod-xhr');
-
-var Block    = require('../block');
-var stToHTML = require('../to-html');
-
+var xhr     = require('etudiant-mod-xhr');
+var animate = require('velocity-commonjs/velocity.ui');
+var Block     = require('../block');
 var Slider    = require('../helpers/slider.class.js');
 var FilterBar = require('../helpers/filterbar.class.js');
-
-var apiUrl = 'http://api.letudiant.lk/jcs/';
+var Spinner   = require('../helpers/spinner.class.js');
 
 var subBlockManager = require('../sub_blocks/index.js');
+
+var apiUrl = 'http://api.letudiant.lk/jcs/';
+var filterOptionsUrl = apiUrl + 'thematique/list/';
+
+var chooseableConfig = {
+    name: 'contentType',
+    options: [
+        {
+            title: 'Sondage',
+            value: 'sondage'
+        }, {
+            title: 'Quiz',
+            value: 'quiz'
+        }, {
+            title: 'Test de personnalité',
+            value: 'profil'
+        }
+    ]
+};
 
 function registerClickOnContents(block) {
     if (block.hasRegisteredClick !== true) {
         block.hasRegisteredClick = true;
 
-        subBlockManager.bindEventsOnContainer(block.$inner, function(selectedSubBlockId) {
-            block.slider.destroy();
-            block.filterBar.destroy();
+        subBlockManager.bindEventsOnContainer(block.$inner, function(selectedSubBlockId, clickedElem) {
 
-            var selectedSubBlock = subBlockManager.getSubBlockById(selectedSubBlockId, block.subBlocks);
+            animate(clickedElem, 'callout.bounce', { duration: 400 })
+                .then(function() {
+                    block.slider.destroy();
+                    block.filterBar.destroy();
 
-            block.setAndLoadData(selectedSubBlock.contents);
+                    var selectedSubBlock = subBlockManager.getSubBlockById(selectedSubBlockId, block.subBlocks);
 
-            block.$inner.append(selectedSubBlock.renderLarge());
+                    block.setAndLoadData(selectedSubBlock.contents);
 
-            subBlockManager.unBindEventsOnContainer(block.$inner);
+                    block.$inner.append(selectedSubBlock.renderLarge());
+
+                    subBlockManager.unBindEventsOnContainer(block.$inner);
+                });
         });
     }
 }
@@ -43,7 +61,7 @@ function filterUpdate(block, contentType) {
     });
 
     block.filterBar.on('update', function(results) {
-        var additionalSubBlocks = subBlockManager.build('jcs', results, contentType);
+        var additionalSubBlocks = subBlockManager.build(block.type, results, contentType);
         var subBlockMarkup = subBlockManager.render(additionalSubBlocks);
 
         block.subBlocks = block.subBlocks.concat(additionalSubBlocks);
@@ -54,55 +72,42 @@ function filterUpdate(block, contentType) {
 
 function filterSearch(block, contentType) {
     block.filterBar.on('search', function(results) {
-        block.subBlocks = subBlockManager.build('jcs', results, contentType);
+        block.$spinner.fadeOut()
+            .then(function() {
+                block.subBlocks = subBlockManager.build('jcs', results, contentType);
 
-        var subBlockMarkup = subBlockManager.render(block.subBlocks);
+                var subBlockMarkup = subBlockManager.render(block.subBlocks);
 
-        block.slider.reset(subBlockMarkup);
+                block.slider.reset(subBlockMarkup);
 
-        registerClickOnContents(block);
+                registerClickOnContents(block);
+            });
     });
 
     block.filterBar.on('noResult', function() {
         block.subBlocks = [];
 
-        block.slider.reset();
+        block.$spinner.fadeOut()
+            .then(function() {
+                block.slider.reset();
+            });
     });
 }
 
-module.exports = Block.extend({
+function onChoose(choices) {
+    var block = this;
 
-    stateable: true,
+    block.$spinner = new Spinner();
+    block.subBlocks = [];
+    block.selectedContentType = choices.contentType;
 
-    chooseable: {
-        name: 'contentType',
-        options: [
-            {
-                title: 'Sondage',
-                value: 'sondage'
-            },
-            {
-                title: 'Quiz',
-                value: 'quiz'
-            },
-            {
-                title: 'Test de personnalité',
-                value: 'profil'
-            }
-        ]
-    },
+    var filterBarUrl = apiUrl + block.selectedContentType + '/search';
 
-    onChoose: function(choices) {
-        this.subBlocks = [];
-        this.selectedContentType = choices.contentType;
+    block.$spinner.appendTo(block.$inner);
 
-        var filterBarUrl = apiUrl + this.selectedContentType + '/search';
-
-        return xhr.get('http://api.letudiant.lk/jcs/thematique/list')
+    return xhr.get(filterOptionsUrl + choices.contentType)
         .then(function(result) {
             return result.content;
-        }, function(err) {
-            console.error(err);
         })
         .then(function(filterOptionsRaw) {
 
@@ -113,61 +118,72 @@ module.exports = Block.extend({
                 };
             });
 
-            this.filterBar = new FilterBar({
+            block.filterBar = new FilterBar({
                 url: filterBarUrl,
                 fields: [
                     {
                         type: 'search',
                         name: 'query',
-                        label: 'Rechercher'
-                    },
-                    {
+                        placeholder: 'Rechercher',
+                    }, {
                         type: 'select',
                         name: 'thematic',
-                        label: 'Thematique',
-                        placeholder: 'Sélectionnez une thématique',
+                        placeholder: 'Thematique',
                         options: filterOptions
                     }
                 ],
                 limit: 20,
-                app: 'ETU_ETU',
-                container: this.$inner
+                container: block.$inner
             });
 
-            this.slider = new Slider({
+            block.slider = new Slider({
                 controls: {
                     next: 'Next',
                     prev: 'Prev'
                 },
                 itemsPerSlide: 2,
                 increment: 2,
-                container: this.$inner
+                container: block.$inner
             });
 
-            filterSearch(this, this.selectedContentType);
-            filterUpdate(this, this.selectedContentType);
+            filterSearch(block, block.selectedContentType);
+            filterUpdate(block, block.selectedContentType);
 
-            this.filterBar.search();
-        }.bind(this));
-    },
+            block.filterBar.search();
+        })
+        .catch(function(err) {
+            console.error(err);
+        });
+}
 
-    type: 'Jcs',
+module.exports = Block.extend({
+
+    chooseable: true,
+
+    type: 'jcs',
 
     title: function() {
-        return 'Jeux';
+        return i18n.t('blocks:sondage:title');
     },
 
     editorHTML: '',
 
-    icon_name: 'text',
+    icon_name: 'poll',
 
     loadData: function(data) {
-        // this.getTextBlock().html(stToHTML(data.text, this.type));
-    },
-
-    beforeBlockRender: function() {
+        if (data) {
+            this.subBlockData = data;
+        }
     },
 
     onBlockRender: function() {
+        if (!this.subBlockData) {
+            this.createChoices(chooseableConfig, onChoose.bind(this));
+        }
+        else {
+            var subBlock = subBlockManager.buildSingle(this.type, this.subBlockData, this.subBlockData.type);
+
+            this.$inner.append(subBlock.renderLarge());
+        }
     }
 });
