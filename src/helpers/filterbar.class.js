@@ -136,13 +136,9 @@ var prototype = {
         eventName = eventName || 'search';
 
         search = Object.assign(search, searchBuilder(this.$elem), {
-<<<<<<< HEAD
             limit: this.limit,
             application: this.app,
             type: this.type
-=======
-            limit: this.limit
->>>>>>> 9c1d7e5a813064cf0d87027a852bd1af9f9fa7d1
         });
 
         this.nextSearch = search;
