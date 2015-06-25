@@ -100,6 +100,10 @@ module.exports = {
             uiControl = this.getControlTemplate(control);
         }
 
+        if (this.paragraphable !== true && control.slug === 'add-paragraph') {
+            return;
+        }
+
 
 
         // By default, the trigger is a click event

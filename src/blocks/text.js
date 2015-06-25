@@ -16,6 +16,7 @@ var eventBus = require('../event-bus.js');
 var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
+var Editor = require('../helpers/editable.class.js');
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
@@ -382,37 +383,13 @@ function loadFilterBar(fields, modal) {
     });
     return filterBar;
 }
-/**
- * Grab datas after the cursor
- * @return {[type]} [description]
- */
-function getSelectedContent($block) {
-    var html = '';
-    if (sel !== undefined) {
-        sel.removeAllRanges();
-        range.setStart($block.getTextBlock().get(0), 0);
-        sel.addRange(range);
-        if (sel.rangeCount) {
-
-            var container = document.createElement('div');
-            for (var i = 0, len = sel.rangeCount; i < len; ++i) {
-                container.appendChild(sel.getRangeAt(i).cloneContents());
-            }
-            html = container.innerHTML;
-            return html;
-        }
-    }
-    else {
-        console.error('your browser isnt supported yet');
-    }
-}
-
 
 module.exports = Block.extend({
 
     type: 'text',
     controllable: true,
     formattable: true,
+    paragraphable: true,
     title: function() { return i18n.t('blocks:text:title'); },
     editorHTML: '<div class="st-required text-block st-text-block" contenteditable="true"></div>',
     icon_name: 'text',
@@ -440,9 +417,11 @@ module.exports = Block.extend({
             fn: function(ev) {
                 ev.preventDefault();
                 ev.stopPropagation();
+
+                var editor = new Editor();
                 var block = this;
-                var firstParagraph = getSelectedContent(this);
-                var secondParagraph = this.getTextBlock().html().replace(firstParagraph, '');
+                var firstParagraph = editor.getSelectedContent(this);
+                var secondParagraph = editor.getTextAfterParagraph(block, firstParagraph)
                 this.getTextBlock().html(firstParagraph);
                 this.instanceID = block.blockID;
 
