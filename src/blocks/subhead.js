@@ -7,15 +7,8 @@ var Block = require('../block');
 var stToHTML = require('../to-html');
 
 function changeTitle(blockData, level) {
-    var block = blockData.$el.find('.st-text-block');
-    if (block.children().html() !== undefined) {
-        var blockContent = block.children().html();
-    }
-    else {
-        blockContent = block.html();
-    }
-
-    block.data('content', blockContent);
+    var block = blockData.getTextBlock();
+    var blockContent = block.children().html();
     if (blockContent.length > 0) {
        block.html('<' + level + '>' + blockContent + '</' + level + '>');
     }
@@ -92,6 +85,4 @@ module.exports = Block.extend({
                        .replace(/#(.*)/g, '<h1>$1</h1>');
 
     }
-    //r = r.replace(/^==== (.*)=*/gm, '<h4>$1</h4>');
-
 });
