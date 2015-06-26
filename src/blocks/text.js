@@ -28,62 +28,14 @@ var range;
 
 
 
-/**
- * Helper function to update the all data's image with the selected size value.
- */
-function updateZoom(filteredImages) {
-    $('#modal-gallery-step-1').on('change', '.modal-row-content .sizes', function(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        var zoomedSize = $(this).find(':selected').val();
-        var rowId = $(this).parent().parent().attr('class').split(' ')[1];
-        if (filteredImages !== undefined) {
-            var originalSize = filteredImagesTab[rowId].media.file;
-        }
-        else {
-            return false;
-        }
-        var newSize = modalHelper.changeOriginalPictureSize(originalSize, zoomedSize);
-
-        $('.modal-row-picture.' + rowId).attr('data-image', newSize);
-    });
-}
-
 function getTemplate(params) {
     var template = '<div class="frame"  style="box-sizing:border-box; display:inline-block; width:100%; background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
     template += '</div>';
     return template;
 }
 
-/**
- * Helper function to validate internal or external url
- */
-function validateInternalUrl(url) {
-    var hostNames = [
-        'http://www.letudiant.fr',
-        'http://www.editor-poc.lh',
-        'http://www.letudiant.fr/trendy'
-    ];
-    var internal;
-    var internal = false;
-    Object.keys(hostNames).forEach(function(k){
-        var hostname = hostNames[k];
-        if (url.indexOf(hostname) >= 0) {
-           internal = true;
-        }
-        else if (url.slice(0, 1) === '#'){
-            internal = true;
-        }
-        else if (url.slice(0, 1) === '/'){
-            internal = true;
-        }
-    });
-
-    return internal;
-}
 
 module.exports = Block.extend({
-
     type: 'text',
     controllable: true,
     formattable: true,
@@ -215,13 +167,32 @@ module.exports = Block.extend({
                 slider.alwaysAppendToDOM($modal);
                 filterBar.on('search', function(returnedData){
                     var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
+                    Object.keys(returnedData).forEach(function(key){
+                        var list = '';
+                        var formats = returnedData[key].format_ids;
+
+                        Object.keys(formats).forEach(function(k){
+                            var optionsTemplate = _.template('<option data-picture="<%= image %>" value="<%= format %>"><%= format %></option>');
+
+                            list = list + optionsTemplate({
+                                image: returnedData[key].file,
+                                format: filtersObj[formats[k]]
+                            });
+
+                        });
+
+                        returnedData[key].format_ids = list;
+                    });
                     filteredImages = subBlockManager.build('filteredImage', returnedData, null);
                     slides = [];
-                    var size = '90x90';
-
+                    if (filtersObj[filterBar.nextSearch.format] !== undefined) {
+                        var size = filtersObj[filterBar.nextSearch.format];
+                    }
+                    else {
+                        var size = '90';
+                    }
                     Object.keys(returnedData).forEach(function(k){
                         modalHelper.filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
-                        debugger;
                         slides.push(filteredImages[k].renderSmall(returnedData[k], size));
                     });
                     slider.reset(slides);
@@ -254,42 +225,48 @@ module.exports = Block.extend({
         }
         return data;
     },
-    setAndLoadData: function(blockData) {
-        this.setData(blockData);
-        this.beforeLoadingData();
-    },
-    getTextBlock: function() {
-        this.text_block = this.$('.st-text-block');
-        return this.text_block;
-    },
-
     setData: function(blockData) {
+        debugger;
+        var modal1 = modalHelper.modalStep1;
+        var modal2 = modalHelper.modalStep2;
         var content = this.getTextBlock();
-        var frameText =  content.html();
+        this.$editor.find('.wrapper').contents().unwrap();
+        this.$editor.find('.wrapper').remove();
+        $('.st-block__control-ui-elements').remove();
+        var frameText =  content.html().replace(/(<\/?div>)/ig, '');
+        var framedContent;
         if (frameText.length > 0) {
-            var framedContent = content.find('img');
-            if (framedContent.data('object') === undefined) {
-                var html = content.html();
-                blockData.text = html;
+            framedContent = content.find('figure');
+            if (framedContent.length === 0) {
+                blockData.text = frameText;
             }
-            else {
+            else{
                 blockData.images = {};
-                content.find('img').each(function(){
-                    var id = $(this).data('id');
-                    blockData.images[id] = JSON.parse(decodeURIComponent($(this).data('object')));
-                    $('img.picture-' + id).replaceWith('#' + id);
+                blockData.text = frameText;
+                framedContent.each(function(){ // replace all found figures with #id
+                    var id = $(this).find('img').data('id');
+                    blockData.images['row-' + id] = {};
+                    var obj = {
+                        id: $(this).find('img').data('id'),
+                        legend: $(this).find('.legend').val(),
+                        size: $(this).find('img').data('width')
+                    };
+                    if ($(this).find('img').parent().prop('tagName') === 'A'){
+                        obj.link = $(this).find('img').parent().attr('href');
+                    }
+                    Object.assign(blockData.images['row-' + id], obj);
 
                     if ($(this).hasClass('f-left')) {
-                        blockData.images[id].align = 'f-left';
+                        blockData.images['row-' + id].align = 'f-left';
                     }
                     else {
-                        blockData.images[id].align = 'f-right';
+                        blockData.images['row-' + id].align = 'f-right';
                     }
+                    $('.picture-' + id).parent().replaceWith('#' + id + ' ');
+                    blockData.text = content.html();
+
                 });
             }
-
-
-            blockData.text = content.html();
         }
         Object.assign(this.blockStorage.data, blockData || {});
     },
@@ -336,8 +313,5 @@ module.exports = Block.extend({
         });
         this.getTextBlock().html(stToHTML(data.text));
 
-    },
-    toMarkdown: function(markdown) {
-        return markdown.replace(/^(.+)$/mg, '$1');
     }
 });

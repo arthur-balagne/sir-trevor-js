@@ -1,5 +1,5 @@
-var _           = require('../lodash.js');
-var xhr         = require('etudiant-mod-xhr');
+var _  = require('../lodash.js');
+var xhr = require('etudiant-mod-xhr');
 var eventablejs = require('eventablejs');
 var zoom = require('etudiant-mod-zoom');
 var evt = require('etudiant-mod-mediator');
@@ -48,8 +48,6 @@ function validateInternalUrl(url) {
 
 
 var prototype = {
-
-
     /**
     * Change the keyword 'original' with another string
     * @param  {string} src  the original value from API
@@ -169,6 +167,7 @@ var prototype = {
         picture.name = picture.url;
         return picture;
     },
+
     /**
     * Deliver filterbar fields parameters
     *
@@ -344,7 +343,6 @@ var prototype = {
                 else {
                     $('img.picture-' + rowId).wrap('<a href="'+pictureLink+'"></a>')
                 }
-
             }
         });
 
@@ -358,7 +356,6 @@ var prototype = {
         });
 
         $('.picture-link').on('keyup', function(e) {
-            debugger;
             var internal = validateInternalUrl($('.picture-link').val());
             if (!internal) {
                 $('.external-link').text('Lien externe');
