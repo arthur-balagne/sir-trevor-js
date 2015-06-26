@@ -19,9 +19,36 @@ var ModalHelper = function() {
 var apiUrl = 'http://api.letudiant.lk/edt/media';
 
 
+/**
+* Helper function to validate internal or external url
+*/
+function validateInternalUrl(url) {
+    var hostNames = [
+        'http://www.letudiant.fr',
+        'http://www.editor-poc.lh',
+        'http://www.letudiant.fr/trendy'
+    ];
+    var internal;
+    var internal = false;
+    Object.keys(hostNames).forEach(function(k){
+        var hostname = hostNames[k];
+        if (url.indexOf(hostname) >= 0) {
+           internal = true;
+        }
+        else if (url.slice(0, 1) === '#'){
+            internal = true;
+        }
+        else if (url.slice(0, 1) === '/'){
+            internal = true;
+        }
+    });
+
+    return internal;
+};
 
 
 var prototype = {
+
 
     /**
     * Change the keyword 'original' with another string
@@ -161,6 +188,7 @@ var prototype = {
         return fields;
     },
 
+
     /**
      * Helper function to update the all data's image with the selected size value.
      */
@@ -232,7 +260,6 @@ var prototype = {
                 }
             }
             else {
-                debugger;
                 that.sel.removeAllRanges();
                 that.sel.addRange(that.range);
                 var el = document.createElement('div');
@@ -261,6 +288,7 @@ var prototype = {
     synchronizeAndCloseStep2: function(block) {
         var rowId = $('body .modal-gallery-step-2 .position').data('row');
         var position = $('.position').find(':selected').val();
+        var that = this;
 
         $('[data-modal-dismiss]').on('click', function(){
             if (undefined === block.imagesData){
@@ -293,7 +321,8 @@ var prototype = {
             $('img.picture-' + id).closest('figure').removeClass('f-right').removeClass('f-left').addClass(position);
         });
 
-        $('.picture-link').on('keyup', function() {
+        $('.picture-link').on('keyup', function(e) {
+            debugger;
             var internal = validateInternalUrl($('.picture-link').val());
             if (!internal) {
                 $('.external-link').text('Lien externe');

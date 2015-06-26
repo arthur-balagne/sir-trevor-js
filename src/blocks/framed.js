@@ -70,32 +70,7 @@ function getTemplate(params) {
     return template;
 }
 
-/**
- * Helper function to validate internal or external url
- */
-function validateInternalUrl(url) {
-    var hostNames = [
-        'http://www.letudiant.fr',
-        'http://www.editor-poc.lh',
-        'http://www.letudiant.fr/trendy'
-    ];
-    var internal;
-    var internal = false;
-    Object.keys(hostNames).forEach(function(k){
-        var hostname = hostNames[k];
-        if (url.indexOf(hostname) >= 0) {
-           internal = true;
-        }
-        else if (url.slice(0, 1) === '#'){
-            internal = true;
-        }
-        else if (url.slice(0, 1) === '/'){
-            internal = true;
-        }
-    });
 
-    return internal;
-}
 /**
  * Show/Hide controls depending on events
  *
