@@ -81,44 +81,6 @@ function validateInternalUrl(url) {
 
     return internal;
 }
-/**
- * Show/Hide controls depending on events
- *
- */
-function sliderControls(slider){
-
-    slider.on('buttons:prev:disable', function() {
-        $('body .modal-footer .before').addClass('disabled');
-    });
-
-    slider.on('buttons:prev:enable', function() {
-        $('body .modal-footer').show();
-        $('body .modal-footer .before').removeClass('disabled');
-    });
-
-    slider.on('buttons:next:disable', function() {
-        $('body .modal-footer .next').addClass('disabled');
-    });
-
-    slider.on('buttons:next:enable', function() {
-        $('body .modal-footer').show();
-        $('body .modal-footer .next').removeClass('disabled');
-    });
-
-    slider.on('buttons:all:disable', function() {
-        $('body .modal-footer').hide();
-    });
-
-    $('body .modal-footer').on('click', '.before', function(){
-        slider.prev();
-    });
-
-    $('body .modal-footer ').on('click', '.next', function(){
-        slider.next();
-    });
-}
-
-
 
 module.exports = Block.extend({
 
@@ -230,7 +192,6 @@ module.exports = Block.extend({
                 modalHelper.filteredImagesTab['row-' + data[1].content[k].id] = filteredImages[k];
                 slides.push(filteredImages[k].renderSmall(data[1].content[k]));
             });
-            debugger;
 
             var modalTemplateFilters = data[0];
             var modalTemplateStep1 = data[1];
@@ -247,7 +208,6 @@ module.exports = Block.extend({
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
-                debugger;
                 modalHelper.openModalStep1(modalHelper.modalStep1, slider);
                 var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
                 var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
@@ -257,14 +217,15 @@ module.exports = Block.extend({
                     var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
                     filteredImages = subBlockManager.build('filteredImage', returnedData, null);
                     slides = [];
-                    var size = filtersObj[filterBar.nextSearch.format];
+                    var size = '90x90';
 
                     Object.keys(returnedData).forEach(function(k){
-                        filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
-                        slides.push(filteredImages[k].renderSmall(data[k], size));
+                        modalHelper.filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
+                        debugger;
+                        slides.push(filteredImages[k].renderSmall(returnedData[k], size));
                     });
                     slider.reset(slides);
-                    sliderControls(slider);
+                    modalHelper.sliderControls(slider);
                     modalHelper.selectUpdater();
                     modalHelper.updateZoom(modalHelper.filteredImagesTab);
                 });
@@ -272,7 +233,7 @@ module.exports = Block.extend({
                 modalHelper.updateZoom(modalHelper.filteredImagesTab);
 
                 $('body .modal-footer .before').hide();
-                sliderControls(slider);
+                modalHelper.sliderControls(slider);
 
                 modalHelper.synchronizeAndOpenStep2(param);
             });
