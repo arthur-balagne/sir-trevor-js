@@ -5,23 +5,24 @@
 */
 
 var evt = require('etudiant-mod-mediator');
+var $ = require('jquery');
 var Block = require('../block');
 var stToHTML = require('../to-html');
-var $ = require('jquery');
 var q  = require('q');
 var Modal = require('etudiant-mod-modal');
-var zoom = require('etudiant-mod-zoom');
 var Slider   = require('../helpers/slider.class.js');
 var eventBus = require('../event-bus.js');
 var subBlockManager = require('../sub_blocks/index.js');
 var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
-var Editor = require('../helpers/editable.class.js');
+var _   = require('../lodash.js');
+var Spinner = require('spin.js');
+var ModalHelper   = require('../helpers/modal.class.js');
+var modalHelper = new ModalHelper();
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
 var range;
-
 
 // create our modals
 var modalStep1 = new Modal({
@@ -41,220 +42,6 @@ var modalTemplateStep2;
 var filteredImagesTab = [];
 
 /**
- * Change the keyword 'original' with another string
- * @param  {string} src  the original value from API
- * @param  {string} size the newpicture size
- * @return {string} Well formated string with the new size
- */
-function changeOriginalPictureSize(src, size) {
-    if (src === undefined) {
-        return false;
-    }
-    if (src.indexOf('original') > 0) {
-        src = src.replace('original', size);
-        return src;
-    }
-}
-
-/**
- * Helper function to create a picture object
- * @param  {string} row Id or Class of the picture
- * @return {object}     Picture object
- */
-function updateData(row) {
-    var picture = {};
-    picture.url = $('.modal-row-picture.' + row).data('image');
-    picture.sizes = $('.modal-row-content.' + row + ' .sizes').find(':selected').val();
-    picture.width = picture.sizes.split('x')[0];
-    picture.height = picture.sizes.split('x')[1];
-    picture.name = picture.url;
-    return picture;
-}
-
-/**
- * Helper function to validate internal or external url
- */
-function validateInternalUrl(url) {
-    var hostname = new RegExp(location.host);
-    var internal;
-    if (hostname.test(url)){
-       internal = true;
-    }
-    else if (url.slice(0, 1) === '#'){
-        internal = true;
-    }
-    else if (url.slice(0, 1) === '/'){
-        internal = true;
-    }
-    else {
-        internal = false;
-    }
-    return internal;
-}
-
-/**
- * Hydrate a modal with well formated HTML
- * @param  {obj} modalStep The modal object
- * @param  {string} template  well formated template
- */
-function openModalStep1(modalStep, template) {
-    var tpl = template.render() !== undefined ? template.render() : modalTemplateStep1;
-
-    modalStep.render({
-        header: '<header>Image</header>',
-        content: tpl,
-        footer: {
-            next: 'Suite',
-            before: 'Précédent'
-        }
-    });
-
-    zoom.init({
-        scope: '.modal-gallery-step-1',
-        container: '.modal'
-    });
-    modalStep.open();
-}
-
-/**
- * Hydrate a modal with well formated HTML
- */
-function openModalStep2(modal) {
-    modal.render({
-        header: '<header>Image</header>',
-        content: modalTemplateStep2,
-        footer: {
-            ok: 'Ok',
-            dismiss: 'Annuler'
-        }
-    });
-    modal.open();
-}
-
-function selectUpdater() {
-    $.each($('.slide-row .sizes'), function(){
-        if ($(this).children().length === 1) {
-            $(this).addClass('hidden');
-            $(this).parent().append('<p class="size">' + $(this).children().val() + '</p>');
-        }
-        else {
-            $(this).removeClass('hidden');
-        }
-    });
-}
-
-function startStep2(block) {
-    modalStep1.close();
-    eventBus.trigger('button:control-0:enable');
-    evt.publish('modal-gallery-step-2', block);
-}
-
-/**
- * Grab all data's, update the sirTrevor block,  then to open next modal
- * @param  {object} block the sir trevor block object to update
- */
-function synchronizeAndOpenStep2(block) {
-    $('.modal-gallery-step-1').one('click', '.validate', function(e){
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        var row = $(this).attr('class').split(' ')[1];
-        var picture = updateData(row);
-        var filteredImage = filteredImagesTab[row];
-        var imageBlock;
-
-        filteredImage.media.size = picture.sizes;
-        filteredImage.resize(picture.sizes);
-        filteredImage.media.custom = filteredImage.resize(picture.sizes);
-        filteredImage.media.align = 'f-right';
-        modalTemplateStep2 = filteredImagesTab[row].renderLarge();
-        imageBlock = filteredImage.renderBlock();
-        startStep2(block);
-        $('.preview').attr('src', filteredImagesTab[row].media.imageResized);
-        $('.size').text(picture.sizes);
-        $('.st-text-block').focus();
-        if (sel === undefined) {
-            sel = window.getSelection();
-            range = sel.getRangeAt(0);
-            if (range.collapsed) {
-                range.collapse(false);
-            }
-        }
-        else {
-            sel.removeAllRanges();
-            sel.addRange(range);
-            var el = document.createElement('div');
-            el.innerHTML = imageBlock;
-            var frag = document.createDocumentFragment(), node, lastNode;
-            while ((node = el.firstChild)) {
-                lastNode = frag.appendChild(node);
-            }
-            range.insertNode(frag);
-            if (lastNode) {
-                range = range.cloneRange();
-                range.setStartAfter(lastNode);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-        }
-        filteredImage.bindHover(block, filteredImage);
-
-    });
-}
-
-/**
- * Grab all data's, update the sirTrevor block,  then to close actual modal
- * @param  {object} block the sir trevor block object to update
- *
- */
-function synchronizeAndCloseStep2(block) {
-    var rowId = $('body .modal-gallery-step-2 .position').data('row');
-    var position = $('.position').find(':selected').val();
-
-    $('[data-modal-dismiss]').on('click', function(){
-        if (undefined === block.imagesData){
-            block.imagesData = [];
-        }
-        var pictureLegend = $('body .modal-gallery-step-2 .picture-legend').val();
-        if (pictureLegend.length !== 0) {
-            $('.picture-' + rowId + ' span.legend').html(pictureLegend);
-        }
-
-        var pictureLink = $('body .modal-gallery-step-2 .picture-link').val();
-        if (pictureLink.length !== 0) {
-            $('.picture-' + rowId).data('link', pictureLink);
-        }
-    });
-
-
-    $('.picture-' + rowId).addClass(position);
-
-    $('.position').on('change', function(){
-        var id = $(this).data('row');
-        position = $(this).find(':selected').val();
-        $('.picture-' + id).removeClass('f-right').removeClass('f-left').addClass(position);
-    });
-
-    $('.picture-link').on('keyup', function() {
-        var internal = validateInternalUrl($('.picture-link').val());
-        if (!internal) {
-            $('.external-link').text('Lien externe');
-        }
-        else {
-            $('.external-link').text('');
-        }
-    });
-
-    $('body .modal-gallery-step-2').on('change', '.position', function() {
-        position = $('.position').find(':selected').val();
-        $('.framed-picture.framed-picture-' + rowId).addClass(position);
-    });
-}
-
-
-/**
  * Helper function to update the all data's image with the selected size value.
  */
 function updateZoom(filteredImages) {
@@ -264,38 +51,71 @@ function updateZoom(filteredImages) {
         var zoomedSize = $(this).find(':selected').val();
         var rowId = $(this).parent().parent().attr('class').split(' ')[1];
         if (filteredImages !== undefined) {
-            var originalSize = filteredImages[rowId].media.file;
+            var originalSize = filteredImagesTab[rowId].media.file;
         }
         else {
             return false;
         }
-        var newSize = changeOriginalPictureSize(originalSize, zoomedSize);
+        var newSize = modalHelper.changeOriginalPictureSize(originalSize, zoomedSize);
 
         $('.modal-row-picture.' + rowId).attr('data-image', newSize);
     });
 }
 
+function getTemplate(params) {
+    var template = '<div class="frame"  style="box-sizing:border-box; display:inline-block; width:100%; background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
+    template += '</div>';
+    return template;
+}
+
+/**
+ * Helper function to validate internal or external url
+ */
+function validateInternalUrl(url) {
+    var hostNames = [
+        'http://www.letudiant.fr',
+        'http://www.editor-poc.lh',
+        'http://www.letudiant.fr/trendy'
+    ];
+    var internal;
+    var internal = false;
+    Object.keys(hostNames).forEach(function(k){
+        var hostname = hostNames[k];
+        if (url.indexOf(hostname) >= 0) {
+           internal = true;
+        }
+        else if (url.slice(0, 1) === '#'){
+            internal = true;
+        }
+        else if (url.slice(0, 1) === '/'){
+            internal = true;
+        }
+    });
+
+    return internal;
+}
 /**
  * Show/Hide controls depending on events
  *
  */
 function sliderControls(slider){
+
     slider.on('buttons:prev:disable', function() {
-        $('body .modal-footer .before').hide();
+        $('body .modal-footer .before').addClass('disabled');
     });
 
     slider.on('buttons:prev:enable', function() {
         $('body .modal-footer').show();
-        $('body .modal-footer .before').show();
+        $('body .modal-footer .before').removeClass('disabled');
     });
 
     slider.on('buttons:next:disable', function() {
-        $('body .modal-footer .next').hide();
+        $('body .modal-footer .next').addClass('disabled');
     });
 
     slider.on('buttons:next:enable', function() {
         $('body .modal-footer').show();
-        $('body .modal-footer .next').show();
+        $('body .modal-footer .next').removeClass('disabled');
     });
 
     slider.on('buttons:all:disable', function() {
@@ -312,77 +132,6 @@ function sliderControls(slider){
 }
 
 
-/**
- * Deliver filterbar fields parameters
- *
- */
-function filterBarFormatter(jsonFilters) {
-    var tabCategories = [];
-    tabCategories.push({
-        label: 'Toutes les catégories',
-        value: 0
-    });
-    Object.keys(jsonFilters.content.categories).forEach(function(k){
-        var categorie = jsonFilters.content.categories[k];
-        tabCategories.push({
-            value: categorie.id,
-            label: categorie.label
-        });
-    });
-
-    var tabFormats = [];
-    tabFormats.push({
-        label: 'Tous les formats',
-        value: 0
-    });
-    Object.keys(jsonFilters.content.formats).forEach(function(k){
-        var formats = jsonFilters.content.formats[k];
-        tabFormats.push({
-            value: formats.id,
-            label: formats.label
-        });
-    });
-
-    var fields = [
-        {
-            type: 'search',
-            name: 'q',
-            label: 'Rechercher'
-        },
-        {
-            type: 'select',
-            name: 'category',
-            label: 'Catégories',
-            placeholder: 'Sélectionnez une catégorie',
-            options: tabCategories
-        },
-        {
-            type: 'select',
-            name: 'format',
-            label: 'Formats',
-            placeholder: 'Sélectionnez un format',
-            options: tabFormats
-        }
-    ];
-    return fields;
-}
-
-/**
- * Filterbar launcher
- */
-function loadFilterBar(fields, modal) {
-    var filterBar = new FilterBar({
-        url: apiUrl,
-        fields: fields,
-        application: 'etu_etu',
-        app: 'etu_etu',
-        limit: '20',
-        type: 'image',
-        container: modal,
-        before: true
-    });
-    return filterBar;
-}
 
 module.exports = Block.extend({
 
@@ -434,8 +183,18 @@ module.exports = Block.extend({
     ],
 
      onBlockRender: function() {
-        this.filteredImagesTab = '';
-        var textBlock = this.$inner.find('.st-text-block');
+         modalHelper.modalStep1 = new Modal({
+            slug: 'gallery-step-1',
+            animation: 'fade',
+            theme: 'medias'
+        });
+        modalHelper.modalStep2 = new Modal({
+            slug: 'gallery-step-2',
+            animation: 'fade',
+            theme: 'media'
+        });
+
+        var textBlock = this.getTextBlock();
         textBlock.on('click', function(){
             if ($(this).hasClass('st-block-control-ui-btn')) {
                 return;
@@ -444,10 +203,18 @@ module.exports = Block.extend({
             sel = window.getSelection();
             range = sel.getRangeAt(0);
         });
+        //Log selection and range
+        if (modalHelper.sel !== undefined) {
+            modalHelper.range = modalHelper.sel.getRangeAt(0);
+        }
+        textBlock.on('click', function(e){
+            modalHelper.sel = window.getSelection();
+            modalHelper.range = modalHelper.sel.getRangeAt(0);
+        });
+
         textBlock.on('keypress', function(e){
-            e.stopPropagation();
-            sel = window.getSelection();
-            range = sel.getRangeAt(0);
+            modalHelper.sel = window.getSelection();
+            modalHelper.range = modalHelper.sel.getRangeAt(0);
             if (e.keyCode === 13) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -461,7 +228,7 @@ module.exports = Block.extend({
                 range.setEndAfter(newline);
                 range.collapse(false);
                 selection.removeAllRanges();
-                selection.addRange(range);
+                modalHelper.sel.addRange(range);
             }
         });
         // Ajax job before rendering modal
@@ -473,7 +240,7 @@ module.exports = Block.extend({
             var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
             var slides = [];
             Object.keys(data[1].content).forEach(function(k){
-                filteredImagesTab['row-' + data[1].content[k].id] = filteredImages[k];
+                modalHelper.filteredImagesTab['row-' + data[1].content[k].id] = filteredImages[k];
                 slides.push(filteredImages[k].renderSmall(data[1].content[k]));
             });
 
@@ -492,36 +259,37 @@ module.exports = Block.extend({
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
-                openModalStep1(modalStep1, slider);
+                modalHelper.openModalStep1(modalStep1, slider);
                 var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
-                var fields = filterBarFormatter(modalTemplateFilters);
-                var filterBar = loadFilterBar(fields, $modal);
+                var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
+                var filterBar = modalHelper.loadFilterBar(fields, $modal);
                 slider.alwaysAppendToDOM($modal);
                 filterBar.on('search', function(returnedData){
                     var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
                     filteredImages = subBlockManager.build('filteredImage', returnedData, null);
                     slides = [];
                     var size = filtersObj[filterBar.nextSearch.format];
+
                     Object.keys(returnedData).forEach(function(k){
                         filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
                         slides.push(filteredImages[k].renderSmall(data[k], size));
                     });
                     slider.reset(slides);
                     sliderControls(slider);
-                    selectUpdater();
-                    updateZoom(filteredImagesTab);
+                    modalHelper.selectUpdater();
+                    modalHelper.updateZoom(modalHelper.filteredImagesTab);
                 });
-                selectUpdater();
-                updateZoom(filteredImagesTab);
+                modalHelper.selectUpdater();
+                modalHelper.updateZoom(modalHelper.filteredImagesTab);
 
                 $('body .modal-footer .before').hide();
                 sliderControls(slider);
 
-                synchronizeAndOpenStep2(param);
+                modalHelper.synchronizeAndOpenStep2(param);
             });
             evt.subscribe('modal-gallery-step-2', function(param) {
-                openModalStep2(modalStep2);
-                synchronizeAndCloseStep2(param);
+                modalHelper.openModalStep2(modalStep2);
+                modalHelper.synchronizeAndCloseStep2(param);
             });
         });
     },
