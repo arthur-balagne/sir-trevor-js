@@ -59,7 +59,7 @@ var largeTemplate = _.template([
 var blockTemplate = _.template([
     '<figure contenteditable="false" class="<%= align %>">',
         '<img contenteditable="false" data-width="<%= width %>" class=" picture-<%= id %>" alt="<%= legend %>" data-id="<%= id %>" src="<%= image %>">',
-        '<figcaption contenteditable="false" class="picture-<%= id %>" > <span class="legend"><%= legend %></span> <br> copyright:<span class="copyright"><%= copyright %></span></figcaption>',
+        '<figcaption width="<%= pictureWidth %>px" contenteditable="false" class="picture-<%= id %>" > <span class="legend"><%= legend %></span> copyright:<span class="copyright"><%= copyright %></span></figcaption>',
     '</figure>'
     ].join('\n'));
 
@@ -113,7 +113,6 @@ var prototype = {
     renderBlock: function() {
         var tpl = null;
         var size = this.media.size.split('x')[0];
-
         tpl = blockTemplate({
             id: this.media.id,
             image: this.resize(this.media.size),
@@ -178,6 +177,7 @@ var prototype = {
     bindRemoveEvent: function(elem) {
         $('.st-block-control-ui-btn--delete-picture' + elem).one('click', function() {
             $(this).parent().parent().parent().find('figure').remove();
+            debugger;
             $('.st-block__control-ui-elements').remove();
         });
     },
