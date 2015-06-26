@@ -26,22 +26,7 @@ var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
 var range;
 
-// create our modals
-var modalStep1 = new Modal({
-    slug: 'gallery-step-1',
-    animation: 'fade',
-    theme: 'medias'
-});
-var modalStep2 = new Modal({
-    slug: 'gallery-step-2',
-    animation: 'fade',
-    theme: 'media'
-});
-// modal templates;
-var modalTemplateFilters;
-var modalTemplateStep1;
-var modalTemplateStep2;
-var filteredImagesTab = [];
+
 
 /**
  * Helper function to update the all data's image with the selected size value.
@@ -185,7 +170,7 @@ module.exports = Block.extend({
     ],
 
      onBlockRender: function() {
-         modalHelper.modalStep1 = new Modal({
+        modalHelper.modalStep1 = new Modal({
             slug: 'gallery-step-1',
             animation: 'fade',
             theme: 'medias'
@@ -245,9 +230,10 @@ module.exports = Block.extend({
                 modalHelper.filteredImagesTab['row-' + data[1].content[k].id] = filteredImages[k];
                 slides.push(filteredImages[k].renderSmall(data[1].content[k]));
             });
+            debugger;
 
-            modalTemplateFilters = data[0];
-            modalTemplateStep1 = data[1];
+            var modalTemplateFilters = data[0];
+            var modalTemplateStep1 = data[1];
             eventBus.trigger('button:control-0:enable');
 
             var params = {
@@ -261,8 +247,9 @@ module.exports = Block.extend({
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
-                modalHelper.openModalStep1(modalStep1, slider);
-                var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
+                debugger;
+                modalHelper.openModalStep1(modalHelper.modalStep1, slider);
+                var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
                 var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
                 var filterBar = modalHelper.loadFilterBar(fields, $modal);
                 slider.alwaysAppendToDOM($modal);
@@ -290,7 +277,7 @@ module.exports = Block.extend({
                 modalHelper.synchronizeAndOpenStep2(param);
             });
             evt.subscribe('modal-gallery-step-2', function(param) {
-                modalHelper.openModalStep2(modalStep2);
+                modalHelper.openModalStep2(modalHelper.modalStep2);
                 modalHelper.synchronizeAndCloseStep2(param);
             });
         });
