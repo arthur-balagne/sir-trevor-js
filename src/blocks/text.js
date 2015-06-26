@@ -18,6 +18,8 @@ var xhr = require('etudiant-mod-xhr');
 var _   = require('../lodash.js');
 var Spinner = require('spin.js');
 var ModalHelper   = require('../helpers/modal.class.js');
+var Editor = require('../helpers/editable.class.js');
+
 var modalHelper = new ModalHelper();
 
 var apiUrl = 'http://api.letudiant.lk/edt/media';
