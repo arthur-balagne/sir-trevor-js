@@ -193,8 +193,10 @@ module.exports = Block.extend({
                         ev.stopPropagation();
                         var file = ev.originalEvent.dataTransfer.files[0];
                         var urlAPI = (typeof URL !== "undefined") ? URL : (typeof webkitURL !== "undefined") ? webkitURL : null;
-                        debugger;
                         that.$el.find('figure img').attr('src', urlAPI.createObjectURL(file));
+                        /*
+                        Need the server to send a 200response or the POST upload will fail
+                         */
                         that.uploader(
                             file,
                             function(data) {
