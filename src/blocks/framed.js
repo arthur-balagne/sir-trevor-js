@@ -55,6 +55,7 @@ function validateInternalUrl(url) {
 
     return internal;
 }
+
 /**
  * Show/Hide controls depending on events
  *
@@ -91,6 +92,7 @@ function sliderControls(slider){
         slider.next();
     });
 }
+
 function textBlockListenners(textBlock){
     textBlock.on('click', function(){
         if ($(this).hasClass('st-block-control-ui-btn')) {
@@ -98,6 +100,7 @@ function textBlockListenners(textBlock){
         }
         sel = window.getSelection();
         range = sel.getRangeAt(0);
+
     });
      textBlock.on('click', function(e){
         if ($(this).hasClass('st-block-control-ui-btn')) {
@@ -177,7 +180,6 @@ function getModalMedias(block){
                         });
 
                     });
-
                     returnedData[key].format_ids = list;
                 });
                 filteredImages = subBlockManager.build('filteredImage', returnedData, null);
@@ -290,6 +292,7 @@ module.exports = Block.extend({
     },
     setData: function(blockData) {
         var content = this.getTextBlock();
+
         $('.wrapper').contents().unwrap();
         $('.wrapper').remove();
         $('.st-block__control-ui-elements').remove();
@@ -347,6 +350,7 @@ module.exports = Block.extend({
              * Callback function to fetch the blocks data from the API
              */
             var promise = function(urlParam) {
+
                 xhr.get(urlParam).then(function(result) {
                     result.content.size = data.images['row-' + val].size;
                     result.content.legend = data.images['row-' + val].legend;

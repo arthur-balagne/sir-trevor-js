@@ -267,9 +267,8 @@ var prototype = {
     * @param  {object} block the sir trevor block object to update
     */
     synchronizeAndOpenStep2: function(block) {
-
         var that = this;
-        $('.modal-gallery-step-1 .validate').one('click', function(e){
+        $('.modal-gallery-step-1').one('click', '.validate', function(e){
             e.preventDefault();
             e.stopPropagation();
             var row = $(this).attr('class').split(' ')[1];
@@ -281,7 +280,6 @@ var prototype = {
             filteredImage.resize(picture.sizes);
             filteredImage.media.custom = filteredImage.resize(picture.sizes);
             filteredImage.media.align = 'f-right';
-
             modalTemplateStep2 = that.filteredImagesTab[row].renderLarge();
             imageBlock = filteredImage.renderBlock();
             block.filteredImage = filteredImage;
@@ -289,6 +287,7 @@ var prototype = {
             $('.modal-gallery-step-2 .preview').attr('src', that.filteredImagesTab[row].media.imageResized);
             $('.modal-gallery-step-2 .size').text(picture.sizes);
             block.$el.focus()
+
             if (that.sel === undefined) {
                 that.sel = window.getSelection();
                 that.range = that.sel.getRangeAt(0);
@@ -301,19 +300,19 @@ var prototype = {
                 that.sel.addRange(that.range);
             }
             var el = document.createElement('div');
-                el.innerHTML = imageBlock;
-                var frag = document.createDocumentFragment(), node, lastNode;
-                while ((node = el.firstChild)) {
-                    lastNode = frag.appendChild(node);
-                }
-                that.range.insertNode(frag);
-                if (lastNode) {
-                    that.range = that.range.cloneRange();
-                    that.range.setStartAfter(lastNode);
-                    that.range.collapse(true);
-                    that.sel.removeAllRanges();
-                    that.sel.addRange(that.range);
-                }
+            el.innerHTML = imageBlock;
+            var frag = document.createDocumentFragment(), node, lastNode;
+            while ((node = el.firstChild)) {
+                lastNode = frag.appendChild(node);
+            }
+            that.range.insertNode(frag);
+            if (lastNode) {
+                that.range = that.range.cloneRange();
+                that.range.setStartAfter(lastNode);
+                that.range.collapse(true);
+                that.sel.removeAllRanges();
+                that.sel.addRange(that.range);
+            }
             filteredImage.bindHover(block, filteredImage);
         });
     },

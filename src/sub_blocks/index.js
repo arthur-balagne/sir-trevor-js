@@ -31,7 +31,7 @@ function handleClick(event) {
     }
     else {
         var id = $(event.currentTarget).data('sub-block-id').toString();
-        event.data.callback(id);
+        event.data.callback(id, event.currentTarget);
 
     }
 }
