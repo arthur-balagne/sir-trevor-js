@@ -45,16 +45,6 @@ var blockTemplate = _.template([
 ].join('\n'));
 
 
-var colorpicker =  _.template([
-    '<select class="colors">',
-        '<option class="bcg-black" value="#000000">Noir</option>',
-        '<option class="bcg-white"  value="#ffffff">Blanc</option>',
-        '<option class="bcg-blue"  value="#4679bd">Bleu</option>',
-        '<option class="bcg-brown"  value="#B35C1E">Marron</option>',
-        '<option class="bcg-grey"  value="#DADADA">Gris</option>',
-    '</select>'
-].join('\n'));
-
 var mediaTemplate = _.template([
     '<div class="media">',
         '<div class="header"><a href="#" class="close-media">x</a></div>',
@@ -203,8 +193,8 @@ module.exports = Block.extend({
                         ev.stopPropagation();
                         var file = ev.originalEvent.dataTransfer.files[0];
                         var urlAPI = (typeof URL !== "undefined") ? URL : (typeof webkitURL !== "undefined") ? webkitURL : null;
-
-                        $('figure img').attr('src', urlAPI.createObjectURL(file));
+                        debugger;
+                        that.$el.find('figure img').attr('src', urlAPI.createObjectURL(file));
                         that.uploader(
                             file,
                             function(data) {
@@ -283,8 +273,9 @@ module.exports = Block.extend({
     },
 
     onBlockRender: function() {
-        $('.illustrated figure').one('click', function(){
-            $('.st-block-control-ui-btn--change-picture').trigger('click');
+        var that = this;
+        this.getTextBlock().find('figure').one('click', function(){
+            that.$el.find('.st-block-control-ui-btn--change-picture').trigger('click');
         });
     }
 
