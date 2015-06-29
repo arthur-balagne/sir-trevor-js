@@ -26,17 +26,7 @@ var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
 var range;
 
-// create our modals
-var modalStep1 = new Modal({
-    slug: 'gallery-step-1',
-    animation: 'fade',
-    theme: 'medias'
-});
-var modalStep2 = new Modal({
-    slug: 'gallery-step-2',
-    animation: 'fade',
-    theme: 'media'
-});
+
 // modal templates;
 var modalTemplateFilters;
 var modalTemplateStep1;
@@ -70,7 +60,32 @@ function getTemplate(params) {
     return template;
 }
 
+/**
+ * Helper function to validate internal or external url
+ */
+function validateInternalUrl(url) {
+    var hostNames = [
+        'http://www.letudiant.fr',
+        'http://www.editor-poc.lh',
+        'http://www.letudiant.fr/trendy'
+    ];
+    var internal;
+    var internal = false;
+    Object.keys(hostNames).forEach(function(k){
+        var hostname = hostNames[k];
+        if (url.indexOf(hostname) >= 0) {
+           internal = true;
+        }
+        else if (url.slice(0, 1) === '#'){
+            internal = true;
+        }
+        else if (url.slice(0, 1) === '/'){
+            internal = true;
+        }
+    });
 
+    return internal;
+}
 /**
  * Show/Hide controls depending on events
  *
@@ -105,6 +120,42 @@ function sliderControls(slider){
 
     $('body .modal-footer ').on('click', '.next', function(){
         slider.next();
+    });
+}
+function textBlockListenners(textBlock){
+    textBlock.on('click', function(){
+        if ($(this).hasClass('st-block-control-ui-btn')) {
+            return;
+        }
+        sel = window.getSelection();
+        range = sel.getRangeAt(0);
+    });
+     textBlock.on('click', function(e){
+        if ($(this).hasClass('st-block-control-ui-btn')) {
+            return;
+        }
+        modalHelper.sel = window.getSelection();
+        modalHelper.range = modalHelper.sel.getRangeAt(0);
+    });
+
+    textBlock.on('keypress', function(e){
+        modalHelper.sel = window.getSelection();
+        modalHelper.range = modalHelper.sel.getRangeAt(0);
+        if (e.keyCode === 13) {
+            e.preventDefault();
+            e.stopPropagation();
+            var selection = window.getSelection();
+            range = selection.getRangeAt(0);
+            var newline = document.createElement('br');
+
+            range.deleteContents();
+            range.insertNode(newline);
+            range.setStartAfter(newline);
+            range.setEndAfter(newline);
+            range.collapse(false);
+            selection.removeAllRanges();
+            modalHelper.sel.addRange(range);
+        }
     });
 }
 
@@ -151,41 +202,14 @@ module.exports = Block.extend({
             animation: 'fade',
             theme: 'media'
         });
+
         this.$framed = $(template);
 
 
-        var textBlock = this.$inner.find('.st-text-block');
+        var textBlock = this.getTextBlock();
+        textBlockListenners(textBlock);
 
         textBlock.wrap(this.$framed);
-
-        //Log selection and range
-        if (modalHelper.sel !== undefined) {
-            modalHelper.range = modalHelper.sel.getRangeAt(0);
-        }
-        textBlock.on('click', function(e){
-            modalHelper.sel = window.getSelection();
-            modalHelper.range = modalHelper.sel.getRangeAt(0);
-        });
-
-        textBlock.on('keypress', function(e){
-            modalHelper.sel = window.getSelection();
-            modalHelper.range = modalHelper.sel.getRangeAt(0);
-            if (e.keyCode === 13) {
-                e.preventDefault();
-                e.stopPropagation();
-                var selection = window.getSelection();
-                range = selection.getRangeAt(0);
-                var newline = document.createElement('br');
-
-                range.deleteContents();
-                range.insertNode(newline);
-                range.setStartAfter(newline);
-                range.setEndAfter(newline);
-                range.collapse(false);
-                selection.removeAllRanges();
-                modalHelper.sel.addRange(range);
-            }
-        });
 
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
                 xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20') ])
@@ -211,10 +235,9 @@ module.exports = Block.extend({
             //Subcribe modals to mediator
             evt.subscribe('modal-gallery-step-1', function(param, channel) {
                 channel.stopPropagation();
+                modalHelper.openModalStep1(modalHelper.modalStep1, slider);
 
-                modalHelper.openModalStep1(modalStep1, slider);
-
-                var $modal = $(modalStep1.$elem.children('.modal-inner-content')[0]);
+                var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
                 var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
                 var filterBar = modalHelper.loadFilterBar(fields, $modal);
 
@@ -244,7 +267,6 @@ module.exports = Block.extend({
                     // reset slides to an empty array
                     slides = [];
 
-                    var size = filtersObj[filterBar.nextSearch.format];
 
                     Object.keys(returnedData).forEach(function(k){
                         modalHelper.filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
@@ -270,7 +292,7 @@ module.exports = Block.extend({
                 if (param.filteredImage !== undefined) {
                     modalTemplateStep2 = param.filteredImage.renderLarge();
                 }
-                modalHelper.openModalStep2(modalStep2);
+                modalHelper.openModalStep2(modalHelper.modalStep2);
                 modalHelper.synchronizeAndCloseStep2(param);
             });
         }).catch(function(){

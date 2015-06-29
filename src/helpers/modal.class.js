@@ -1,5 +1,5 @@
-var _           = require('../lodash.js');
-var xhr         = require('etudiant-mod-xhr');
+var _  = require('../lodash.js');
+var xhr = require('etudiant-mod-xhr');
 var eventablejs = require('eventablejs');
 var zoom = require('etudiant-mod-zoom');
 var evt = require('etudiant-mod-mediator');
@@ -48,8 +48,6 @@ function validateInternalUrl(url) {
 
 
 var prototype = {
-
-
     /**
     * Change the keyword 'original' with another string
     * @param  {string} src  the original value from API
@@ -114,6 +112,42 @@ var prototype = {
             }
         });
     },
+    /**
+    * Show/Hide controls depending on events
+    *
+    */
+    sliderControls: function(slider){
+
+        slider.on('buttons:prev:disable', function() {
+            $('body .modal-footer .before').addClass('disabled');
+        });
+
+        slider.on('buttons:prev:enable', function() {
+            $('body .modal-footer').show();
+            $('body .modal-footer .before').removeClass('disabled');
+        });
+
+        slider.on('buttons:next:disable', function() {
+            $('body .modal-footer .next').addClass('disabled');
+        });
+
+        slider.on('buttons:next:enable', function() {
+            $('body .modal-footer').show();
+            $('body .modal-footer .next').removeClass('disabled');
+        });
+
+        slider.on('buttons:all:disable', function() {
+            $('body .modal-footer').hide();
+        });
+
+        $('body .modal-footer').on('click', '.before', function(){
+            slider.prev();
+        });
+
+        $('body .modal-footer ').on('click', '.next', function(){
+            slider.next();
+        });
+    },
     startStep2: function(block) {
         this.modalStep1.close();
         eventBus.trigger('button:control-0:enable');
@@ -133,6 +167,7 @@ var prototype = {
         picture.name = picture.url;
         return picture;
     },
+
     /**
     * Deliver filterbar fields parameters
     *
@@ -308,7 +343,6 @@ var prototype = {
                 else {
                     $('img.picture-' + rowId).wrap('<a href="'+pictureLink+'"></a>')
                 }
-
             }
         });
 
@@ -322,7 +356,6 @@ var prototype = {
         });
 
         $('.picture-link').on('keyup', function(e) {
-            debugger;
             var internal = validateInternalUrl($('.picture-link').val());
             if (!internal) {
                 $('.external-link').text('Lien externe');
