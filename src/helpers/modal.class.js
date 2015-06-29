@@ -297,7 +297,8 @@ var prototype = {
             else {
                 that.sel.removeAllRanges();
                 that.sel.addRange(that.range);
-                var el = document.createElement('div');
+            }
+            var el = document.createElement('div');
                 el.innerHTML = imageBlock;
                 var frag = document.createDocumentFragment(), node, lastNode;
                 while ((node = el.firstChild)) {
@@ -311,7 +312,6 @@ var prototype = {
                     that.sel.removeAllRanges();
                     that.sel.addRange(that.range);
                 }
-            }
             filteredImage.bindHover(block, filteredImage);
         });
     },
