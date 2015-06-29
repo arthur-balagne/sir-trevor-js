@@ -71,6 +71,100 @@ function textBlockListenners(textBlock){
 }
 
 
+function getModalMedias(block){
+    q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
+            xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20') ])
+    .then(function(data){
+        var modalTemplateFilters = data[0];
+        var modalTemplateStep1 = data[1];
+        eventBus.trigger('button:control-0:enable');
+        var mediasArray = subBlockManager.jsonInit(modalTemplateStep1, modalTemplateFilters);
+        var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
+        var slides = [];
+        Object.keys(modalTemplateStep1.content).forEach(function(k){
+            modalHelper.filteredImagesTab['row-' + modalTemplateStep1.content[k].id] = filteredImages[k];
+            slides.push(filteredImages[k].renderSmall(modalTemplateStep1.content[k]));
+        });
+        var params = {
+            contents: slides,
+            itemsPerSlide: 5,
+            increment: 2
+        };
+        var slider = new Slider(params);
+        slider.eventBus = eventBus;
+
+        //Subcribe modals to mediator
+        evt.subscribe('modal-gallery-step-1', function(param, channel) {
+            channel.stopPropagation();
+            modalHelper.openModalStep1(modalHelper.modalStep1, slider);
+            debugger;
+            var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
+            var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
+            var filterBar = modalHelper.loadFilterBar(fields, $modal);
+
+            slider.alwaysAppendToDOM($modal);
+
+            filterBar.on('search', function(returnedData){
+                var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
+                // Prepare all selects options, then bind them in the object;
+                Object.keys(returnedData).forEach(function(key){
+                    var list = '';
+                    var formats = returnedData[key].format_ids;
+
+                    Object.keys(formats).forEach(function(k){
+                        var optionsTemplate = _.template('<option data-picture="<%= image %>" value="<%= format %>"><%= format %></option>');
+
+                        list = list + optionsTemplate({
+                            image: returnedData[key].file,
+                            format: filtersObj[formats[k]]
+                        });
+
+                    });
+
+                    returnedData[key].format_ids = list;
+                });
+                filteredImages = subBlockManager.build('filteredImage', returnedData, null);
+
+                // reset slides to an empty array
+                slides = [];
+
+
+                Object.keys(returnedData).forEach(function(k){
+                    modalHelper.filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
+                    slides.push(filteredImages[k].renderSmall(returnedData[k], 90));
+                });
+
+                slider.reset(slides);
+                sliderControls(slider);
+                modalHelper.selectUpdater();
+                modalHelper.updateZoom(modalHelper.filteredImagesTab);
+            });
+            block.ready();
+            evt.publish('modal-gallery-step-1', block); //Call the modal event
+            modalHelper.selectUpdater();
+            modalHelper.updateZoom(modalHelper.filteredImagesTab);
+
+            $('body .modal-footer .before').addClass('disabled');
+            modalHelper.sliderControls(slider);
+
+            modalHelper.synchronizeAndOpenStep2(param);
+        });
+
+        evt.subscribe('modal-gallery-step-2', function(param) {
+            if (param.filteredImage !== undefined) {
+                modalHelper.modalTemplateStep2 = param.filteredImage.renderLarge();
+            }
+            modalHelper.openModalStep2(modalHelper.modalStep2);
+            modalHelper.synchronizeAndCloseStep2(param);
+        });
+        block.ready();
+        evt.publish('modal-gallery-step-1', block); //Call the modal event
+    }).catch(function(){
+        console.error('Something went wrong');
+    });
+}
+
+
 module.exports = Block.extend({
     type: 'text',
     controllable: true,
@@ -92,7 +186,8 @@ module.exports = Block.extend({
                 e.preventDefault();
                 e.stopPropagation();
                 var block = this;
-                evt.publish('modal-gallery-step-1', block); //Call the modal event
+                this.loading();
+                getModalMedias(this);
             }
         },
         {
@@ -133,88 +228,88 @@ module.exports = Block.extend({
 
         var textBlock = this.getTextBlock();
         textBlockListenners(textBlock);
-        // Ajax job before rendering modal
-        q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
-                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
-        .then(function(data){
-            var mediasArray = subBlockManager.jsonInit(data[1], data[0]);
+        // // Ajax job before rendering modal
+        // q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
+        //         xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
+        // .then(function(data){
+        //     var mediasArray = subBlockManager.jsonInit(data[1], data[0]);
 
-            var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
-            var slides = [];
-            Object.keys(data[1].content).forEach(function(k){
-                modalHelper.filteredImagesTab['row-' + data[1].content[k].id] = filteredImages[k];
-                slides.push(filteredImages[k].renderSmall(data[1].content[k]));
-            });
+        //     var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
+        //     var slides = [];
+        //     Object.keys(data[1].content).forEach(function(k){
+        //         modalHelper.filteredImagesTab['row-' + data[1].content[k].id] = filteredImages[k];
+        //         slides.push(filteredImages[k].renderSmall(data[1].content[k]));
+        //     });
 
-            var modalTemplateFilters = data[0];
-            var modalTemplateStep1 = data[1];
-            eventBus.trigger('button:control-0:enable');
+        //     var modalTemplateFilters = data[0];
+        //     var modalTemplateStep1 = data[1];
+        //     eventBus.trigger('button:control-0:enable');
 
-            var params = {
-                contents: slides,
-                itemsPerSlide: 5,
-                increment: 2
-            };
-            var slider = new Slider(params);
-            slider.eventBus = eventBus;
+        //     var params = {
+        //         contents: slides,
+        //         itemsPerSlide: 5,
+        //         increment: 2
+        //     };
+        //     var slider = new Slider(params);
+        //     slider.eventBus = eventBus;
 
-            //Subcribe modals to mediator
-            evt.subscribe('modal-gallery-step-1', function(param, channel) {
-                channel.stopPropagation();
-                modalHelper.openModalStep1(modalHelper.modalStep1, slider);
-                var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
-                var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
-                var filterBar = modalHelper.loadFilterBar(fields, $modal);
-                slider.alwaysAppendToDOM($modal);
-                filterBar.on('search', function(returnedData){
-                    var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
-                    Object.keys(returnedData).forEach(function(key){
-                        var list = '';
-                        var formats = returnedData[key].format_ids;
+        //     //Subcribe modals to mediator
+        //     evt.subscribe('modal-gallery-step-1', function(param, channel) {
+        //         channel.stopPropagation();
+        //         modalHelper.openModalStep1(modalHelper.modalStep1, slider);
+        //         var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
+        //         var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
+        //         var filterBar = modalHelper.loadFilterBar(fields, $modal);
+        //         slider.alwaysAppendToDOM($modal);
+        //         filterBar.on('search', function(returnedData){
+        //             var filtersObj = filteredImages[0].parseFilters(modalTemplateFilters);
+        //             Object.keys(returnedData).forEach(function(key){
+        //                 var list = '';
+        //                 var formats = returnedData[key].format_ids;
 
-                        Object.keys(formats).forEach(function(k){
-                            var optionsTemplate = _.template('<option data-picture="<%= image %>" value="<%= format %>"><%= format %></option>');
+        //                 Object.keys(formats).forEach(function(k){
+        //                     var optionsTemplate = _.template('<option data-picture="<%= image %>" value="<%= format %>"><%= format %></option>');
 
-                            list = list + optionsTemplate({
-                                image: returnedData[key].file,
-                                format: filtersObj[formats[k]]
-                            });
+        //                     list = list + optionsTemplate({
+        //                         image: returnedData[key].file,
+        //                         format: filtersObj[formats[k]]
+        //                     });
 
-                        });
+        //                 });
 
-                        returnedData[key].format_ids = list;
-                    });
-                    filteredImages = subBlockManager.build('filteredImage', returnedData, null);
-                    slides = [];
-                    if (filtersObj[filterBar.nextSearch.format] !== undefined) {
-                        var size = filtersObj[filterBar.nextSearch.format];
-                    }
-                    else {
-                        var size = '90';
-                    }
-                    Object.keys(returnedData).forEach(function(k){
-                        modalHelper.filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
-                        slides.push(filteredImages[k].renderSmall(returnedData[k], size));
-                    });
-                    slider.reset(slides);
-                    modalHelper.sliderControls(slider);
-                    modalHelper.selectUpdater();
-                    modalHelper.updateZoom(modalHelper.filteredImagesTab);
-                });
-                modalHelper.selectUpdater();
-                modalHelper.updateZoom(modalHelper.filteredImagesTab);
+        //                 returnedData[key].format_ids = list;
+        //             });
+        //             filteredImages = subBlockManager.build('filteredImage', returnedData, null);
+        //             slides = [];
+        //             if (filtersObj[filterBar.nextSearch.format] !== undefined) {
+        //                 var size = filtersObj[filterBar.nextSearch.format];
+        //             }
+        //             else {
+        //                 var size = '90';
+        //             }
+        //             Object.keys(returnedData).forEach(function(k){
+        //                 modalHelper.filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
+        //                 slides.push(filteredImages[k].renderSmall(returnedData[k], size));
+        //             });
+        //             slider.reset(slides);
+        //             modalHelper.sliderControls(slider);
+        //             modalHelper.selectUpdater();
+        //             modalHelper.updateZoom(modalHelper.filteredImagesTab);
+        //         });
+        //         modalHelper.selectUpdater();
+        //         modalHelper.updateZoom(modalHelper.filteredImagesTab);
 
-                $('body .modal-footer .before').hide();
-                modalHelper.sliderControls(slider);
+        //         $('body .modal-footer .before').hide();
+        //         modalHelper.sliderControls(slider);
 
-                modalHelper.synchronizeAndOpenStep2(param);
-            });
+        //         modalHelper.synchronizeAndOpenStep2(param);
+        //     });
 
-            evt.subscribe('modal-gallery-step-2', function(param) {
-                modalHelper.openModalStep2(modalHelper.modalStep2);
-                modalHelper.synchronizeAndCloseStep2(param);
-            });
-        });
+        //     evt.subscribe('modal-gallery-step-2', function(param) {
+        //         modalHelper.openModalStep2(modalHelper.modalStep2);
+        //         modalHelper.synchronizeAndCloseStep2(param);
+        //     });
+        // });
     },
     _serializeData: function() {
         var data = {};
