@@ -24,27 +24,6 @@ var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
 var range;
 
-/**
- * Helper function to update the all data's image with the selected size value.
- */
-function updateZoom(filteredImages) {
-    $('#modal-gallery-step-1').on('change', '.modal-row-content .sizes', function(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        var zoomedSize = $(this).find(':selected').val();
-        var rowId = $(this).parent().parent().attr('class').split(' ')[1];
-        if (filteredImages !== undefined) {
-            var originalSize = filteredImages[rowId].media.file;
-        }
-        else {
-            return false;
-        }
-        var newSize = modalHelper.changeOriginalPictureSize(originalSize, zoomedSize);
-
-        $('.modal-row-picture.' + rowId).attr('data-image', newSize);
-    });
-}
-
 function getTemplate(params) {
     var template = '<div class="frame"  style="box-sizing:border-box; display:inline-block; width:100%; background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
     template += '</div>';

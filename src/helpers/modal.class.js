@@ -267,8 +267,9 @@ var prototype = {
     * @param  {object} block the sir trevor block object to update
     */
     synchronizeAndOpenStep2: function(block) {
+
         var that = this;
-        $('.modal-gallery-step-1').one('click', '.validate', function(e){
+        $('.modal-gallery-step-1 .validate').one('click', function(e){
             e.preventDefault();
             e.stopPropagation();
             var row = $(this).attr('class').split(' ')[1];
@@ -280,13 +281,14 @@ var prototype = {
             filteredImage.resize(picture.sizes);
             filteredImage.media.custom = filteredImage.resize(picture.sizes);
             filteredImage.media.align = 'f-right';
+
             modalTemplateStep2 = that.filteredImagesTab[row].renderLarge();
             imageBlock = filteredImage.renderBlock();
             block.filteredImage = filteredImage;
             that.startStep2(block);
-            $('.preview').attr('src', that.filteredImagesTab[row].media.imageResized);
-            $('.size').text(picture.sizes);
-            $('.st-text-block').focus();
+            $('.modal-gallery-step-2 .preview').attr('src', that.filteredImagesTab[row].media.imageResized);
+            $('.modal-gallery-step-2 .size').text(picture.sizes);
+            block.$el.focus()
             if (that.sel === undefined) {
                 that.sel = window.getSelection();
                 that.range = that.sel.getRangeAt(0);
