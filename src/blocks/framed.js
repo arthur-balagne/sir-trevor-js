@@ -13,7 +13,6 @@ var Modal = require('etudiant-mod-modal');
 var Slider   = require('../helpers/slider.class.js');
 var eventBus = require('../event-bus.js');
 var subBlockManager = require('../sub_blocks/index.js');
-var FilterBar = require('../helpers/filterbar.class.js');
 var xhr = require('etudiant-mod-xhr');
 var _   = require('../lodash.js');
 var Spinner = require('spin.js');
@@ -24,13 +23,6 @@ var modalHelper = new ModalHelper();
 var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
 var range;
-
-
-// modal templates;
-var modalTemplateFilters;
-var modalTemplateStep1;
-var modalTemplateStep2;
-var filteredImagesTab = [];
 
 /**
  * Helper function to update the all data's image with the selected size value.
@@ -68,7 +60,6 @@ function validateInternalUrl(url) {
         'http://www.editor-poc.lh',
         'http://www.letudiant.fr/trendy'
     ];
-    var internal;
     var internal = false;
     Object.keys(hostNames).forEach(function(k){
         var hostname = hostNames[k];
@@ -162,8 +153,8 @@ function getModalMedias(block){
     q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
             xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20') ])
     .then(function(data){
-        modalTemplateFilters = data[0];
-        modalTemplateStep1 = data[1];
+        var modalTemplateFilters = data[0];
+        var modalTemplateStep1 = data[1];
         eventBus.trigger('button:control-0:enable');
         var mediasArray = subBlockManager.jsonInit(modalTemplateStep1, modalTemplateFilters);
         var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
@@ -226,6 +217,7 @@ function getModalMedias(block){
                 modalHelper.selectUpdater();
                 modalHelper.updateZoom(modalHelper.filteredImagesTab);
             });
+            block.ready();
             evt.publish('modal-gallery-step-1', block); //Call the modal event
             modalHelper.selectUpdater();
             modalHelper.updateZoom(modalHelper.filteredImagesTab);
@@ -238,11 +230,12 @@ function getModalMedias(block){
 
         evt.subscribe('modal-gallery-step-2', function(param) {
             if (param.filteredImage !== undefined) {
-                modalTemplateStep2 = param.filteredImage.renderLarge();
+                modalHelper.modalTemplateStep2 = param.filteredImage.renderLarge();
             }
             modalHelper.openModalStep2(modalHelper.modalStep2);
             modalHelper.synchronizeAndCloseStep2(param);
         });
+        block.ready();
         evt.publish('modal-gallery-step-1', block); //Call the modal event
     }).catch(function(){
         console.error('Something went wrong');
@@ -269,6 +262,7 @@ module.exports = Block.extend({
                 e.preventDefault();
                 e.stopPropagation();
                 var block = this;
+                this.loading();
                 getModalMedias(this);
 
             }
@@ -327,7 +321,7 @@ module.exports = Block.extend({
             if (framedContent.length === 0) {
                 blockData.text = frameText;
             }
-            else{
+            else {
                 blockData.images = {};
                 blockData.text = frameText;
                 framedContent.each(function(){ // replace all found figures with #id
@@ -375,7 +369,6 @@ module.exports = Block.extend({
              */
             var promise = function(urlParam) {
                 xhr.get(urlParam).then(function(result) {
-                    that.loading();
                     result.content.size = data.images['row-' + val].size;
                     result.content.legend = data.images['row-' + val].legend;
                     var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
@@ -385,10 +378,9 @@ module.exports = Block.extend({
                     data.text = data.text.replace('#' + val, tpl);
                     that.getTextBlock().html(data.text);
                     if (data.images['row-' + val].link !== undefined) {
-                        that.getTextBlock().find('img.picture-'+val).wrap('<a href="'+ data.images['row-' + val].link +'"></a>');
+                        that.getTextBlock().find('img.picture-' + val).wrap('<a href="' + data.images['row-' + val].link + '"></a>');
                     }
                     filteredBlock.bindHover(that, filteredBlock);
-                    that.ready();
                 }).catch(function(error){
                     console.error('Something went wrong');
                 });
@@ -397,8 +389,6 @@ module.exports = Block.extend({
 
         });
         this.getTextBlock().html(stToHTML(data.text));
-
-
 
     },
     toMarkdown: function(markdown) {
