@@ -2,7 +2,6 @@
 
 module.exports = {
   Text: require('./text'),
-  Chart: require('./chart'),
   Quote: require('./quote'),
   Jcs: require('./jcs'),
   Image: require('./image'),
@@ -12,5 +11,6 @@ module.exports = {
   Video: require('./video'),
   Table: require('./table'),
   Framed: require('./framed'),
-  Iframe: require('./iframe')
+  Iframe: require('./iframe'),
+  Subhead: require('./subhead')
 };
