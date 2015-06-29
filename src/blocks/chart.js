@@ -6,7 +6,9 @@
 
 var Block = require('../block');
 var stToHTML = require('../to-html');
-var Chart = require('chart.js');
+var Chart = require('d3plus');
+debugger;
+
 var BarChart = require('../helpers/barChart.class.js');
 
 var barChart = new BarChart();
