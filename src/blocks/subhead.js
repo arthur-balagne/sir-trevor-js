@@ -9,12 +9,18 @@ var stToHTML = require('../to-html');
 
 function changeTitle(blockData, level) {
     var block = blockData.getTextBlock();
-    var blockContent = block.children().html();
-    debugger;
-    var content = block.html();
-    if(blockContent.indexOf('<h1>') < 0 && blockContent.indexOf('<h2>') < 0 && blockContent.indexOf('<h3>') < 0) {
-        blockContent = undefined;
+    if(block.children().html() !== undefined){
+        var blockContent = block.html();
+        if(blockContent.indexOf('<h1>') < 0 && blockContent.indexOf('<h2>') < 0 && blockContent.indexOf('<h3>') < 0) {
+            blockContent = undefined;
+        }
+        else {
+            blockContent = block.children().html();
+        }
     }
+
+    var content = block.html();
+
     if (blockContent !== undefined) {
        block.html('<' + level + '>' + blockContent + '</' + level + '>');
     }
