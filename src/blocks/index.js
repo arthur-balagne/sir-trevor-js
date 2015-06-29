@@ -8,8 +8,6 @@ module.exports = {
   Media: require('./media'),
   Heading: require('./heading'),
   List: require('./list'),
-  Tweet: require('./tweet'),
-  Video: require('./video'),
   Table: require('./table'),
   Iframe: require('./iframe')
 };

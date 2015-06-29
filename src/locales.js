@@ -14,7 +14,8 @@ var Locales = {
       'close':    'fermer',
       'position': 'Position',
       'wait':     'Veuillez patienter...',
-      'link':     'Entrez un lien'
+      'link':     'Entrez un lien',
+      'save':     'Le bloc a été sauvegardé'
     },
     errors: {
       'title': "Vous avez l'erreur suivante :",

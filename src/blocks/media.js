@@ -27,22 +27,43 @@ var chooseableConfig = {
     ]
 };
 
+function addBlockMessageTemporarily(block, message) {
+    block.addMessage(message, 'st-block-displaying-message');
+
+    window.setTimeout(function() {
+        block.resetMessages();
+    }, 3000);
+}
+
 function registerSaveMediaSubBlock(block, mediaSubBlock) {
-    mediaSubBlock.on('save', function(data) {
+    mediaSubBlock.on('save', function(saveData) {
+        if (mediaSubBlock.isSaving !== true) {
+            mediaSubBlock.isSaving = true;
 
-        if (mediaSubBlock.isEditable) {
-            var url = block.globalConfig.apiUrl + 'edt/media/' + mediaSubBlock.id;
+            if (mediaSubBlock.isEditable) {
+                var url = block.globalConfig.apiUrl + 'edt/media/' + mediaSubBlock.id;
 
-            xhr.patch(url, data)
-                .then(function(data) {
-                    block.setData({
-                        id: data.content.id,
-                        type: mediaSubBlock.type
+                xhr.patch(url, saveData)
+                    .then(function(returnedData) {
+                        block.setData({
+                            id: returnedData.content.id,
+                            type: mediaSubBlock.type
+                        });
+
+                        addBlockMessageTemporarily(block, i18n.t('general:save'));
+                        mediaSubBlock.isSaving = false;
+                    })
+                    .catch(function(err) {
+                        console.error('Error updating media information', err);
                     });
-                })
-                .catch(function(err) {
-                    console.error('Error updating media information', err);
-                });
+            }
+            else if (!_.isEmpty(saveData)) {
+                block.setData(saveData);
+
+                addBlockMessageTemporarily(block, i18n.t('general:save'));
+
+                mediaSubBlock.isSaving = false;
+            }
         }
     });
 }
