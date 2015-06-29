@@ -33,6 +33,42 @@ function getTemplate(params) {
     template += '</div>';
     return template;
 }
+function textBlockListenners(textBlock){
+    textBlock.on('click', function(){
+        if ($(this).hasClass('st-block-control-ui-btn')) {
+            return;
+        }
+        sel = window.getSelection();
+        range = sel.getRangeAt(0);
+    });
+     textBlock.on('click', function(e){
+        if ($(this).hasClass('st-block-control-ui-btn')) {
+            return;
+        }
+        modalHelper.sel = window.getSelection();
+        modalHelper.range = modalHelper.sel.getRangeAt(0);
+    });
+
+    textBlock.on('keypress', function(e){
+        modalHelper.sel = window.getSelection();
+        modalHelper.range = modalHelper.sel.getRangeAt(0);
+        if (e.keyCode === 13) {
+            e.preventDefault();
+            e.stopPropagation();
+            var selection = window.getSelection();
+            range = selection.getRangeAt(0);
+            var newline = document.createElement('br');
+
+            range.deleteContents();
+            range.insertNode(newline);
+            range.setStartAfter(newline);
+            range.setEndAfter(newline);
+            range.collapse(false);
+            selection.removeAllRanges();
+            modalHelper.sel.addRange(range);
+        }
+    });
+}
 
 
 module.exports = Block.extend({
@@ -96,42 +132,7 @@ module.exports = Block.extend({
         });
 
         var textBlock = this.getTextBlock();
-        textBlock.on('click', function(){
-            if ($(this).hasClass('st-block-control-ui-btn')) {
-                return;
-            }
-
-            sel = window.getSelection();
-            range = sel.getRangeAt(0);
-        });
-        //Log selection and range
-        if (modalHelper.sel !== undefined) {
-            modalHelper.range = modalHelper.sel.getRangeAt(0);
-        }
-        textBlock.on('click', function(e){
-            modalHelper.sel = window.getSelection();
-            modalHelper.range = modalHelper.sel.getRangeAt(0);
-        });
-
-        textBlock.on('keypress', function(e){
-            modalHelper.sel = window.getSelection();
-            modalHelper.range = modalHelper.sel.getRangeAt(0);
-            if (e.keyCode === 13) {
-                e.preventDefault();
-                e.stopPropagation();
-                var selection = window.getSelection();
-                range = selection.getRangeAt(0);
-                var newline = document.createElement('br');
-
-                range.deleteContents();
-                range.insertNode(newline);
-                range.setStartAfter(newline);
-                range.setEndAfter(newline);
-                range.collapse(false);
-                selection.removeAllRanges();
-                modalHelper.sel.addRange(range);
-            }
-        });
+        textBlockListenners(textBlock);
         // Ajax job before rendering modal
         q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
                 xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image') ])
@@ -208,6 +209,7 @@ module.exports = Block.extend({
 
                 modalHelper.synchronizeAndOpenStep2(param);
             });
+
             evt.subscribe('modal-gallery-step-2', function(param) {
                 modalHelper.openModalStep2(modalHelper.modalStep2);
                 modalHelper.synchronizeAndCloseStep2(param);
@@ -293,7 +295,6 @@ module.exports = Block.extend({
                     result.content.size = data.images[val].size;
                     result.content.legend = data.images[val].legend;
                     var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
-
                     result.content.legend = data.images[val].legend;
                     result.content.size = data.images[val].size;
                     result.content.align = data.images[val].align;

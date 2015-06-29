@@ -154,44 +154,45 @@ var prototype = {
             '</div>',
         '</div>'
         ].join('\n'));
-
-        var media = this.media;
+        var media = this.media; //check this line
         media.width = this.media.size.split('x')[0];
         var btnTemplates = buttons(media);
         var that = this;
 
-        $('body .st-text-block').on('click', 'figure', function(e){
+        block.getTextBlock().on('click', 'figure', function(e){
             e.preventDefault();
             e.stopPropagation();
             var imgClass = $(this).find('img').attr('class');
             var figureClasses = $(this).attr('class');
             $(this).wrap('<div class="picture-wrapper wrapper ' + figureClasses +' '+ imgClass + '" style="width: ' + that.media.size.split('x')[0] + 'px; height:' + that.media.size.split('x')[1] + 'px"></div>');
-            $('.wrapper').append(btnTemplates).css('position', 'relative');
-            $('.st-block__control-ui-elements').append(btnTemplates).css('opacity', '1');
-            $('.st-block__control-ui-elements, .st-block__control-ui-elements *').attr('contenteditable', false);
+            block.$el.find('.wrapper').append(btnTemplates).css('position', 'relative');
+            block.$el.find('.st-block__control-ui-elements').append(btnTemplates).css('opacity', '1');
+            block.$el.find('.st-block__control-ui-elements, .st-block__control-ui-elements *').attr('contenteditable', false);
 
             that.bindRemoveEvent(media.id);
-            that.bindTogglEvent(media.id);
+            that.bindTogglEvent(media.id, block);
             that.bindUpdateEvent(media, block, filteredImage);
         });
     },
     bindRemoveEvent: function(elem) {
         $('.st-block-control-ui-btn--delete-picture' + elem).one('click', function() {
             $(this).parent().parent().parent().find('figure').remove();
+            $('.st-block__control-ui-elements').remove();
+
         });
     },
-    bindTogglEvent: function(elem) {
+    bindTogglEvent: function(elem, block) {
         $('.st-block-control-ui-btn--toggle-picture' + elem).one('click', function() {
             $(this).parent().parent().parent().find('figure').toggleClass('f-left').toggleClass('f-right');
-            $('.wrapper').contents().unwrap()
-            $('.wrapper').remove();
+            block.$el.find('.wrapper').contents().unwrap()
+            block.$el.find('.wrapper').remove();
             $('.st-block__control-ui-elements').remove();
         });
     },
     bindUpdateEvent: function(elem, $block, filteredImage) {
         $('.st-block-control-ui-btn--update-picture').one('click', function(e) {
-            $('.wrapper').contents().unwrap()
-            $('.wrapper').remove();
+            $block.$el.find('.wrapper').contents().unwrap()
+            $block.$el.find('.wrapper').remove();
             $('.st-block__control-ui-elements').remove();
             filteredImage.media.custom = filteredImage.resize(filteredImage.media.size);
             $block.filteredImage =  filteredImage;
