@@ -21,7 +21,6 @@ var ModalHelper   = require('../helpers/modal.class.js');
 
 var modalHelper = new ModalHelper();
 
-
 var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
 var range;
@@ -390,6 +389,9 @@ module.exports = Block.extend({
                     }
                     filteredBlock.bindHover(that, filteredBlock);
                     that.ready();
+                }).catch(function(error){
+                    console.log(error);
+                    console.error('Something went wrong');
                 });
             };
             promise(url);
