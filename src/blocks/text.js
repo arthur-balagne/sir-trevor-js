@@ -226,9 +226,6 @@ module.exports = Block.extend({
         return data;
     },
     setData: function(blockData) {
-        debugger;
-        var modal1 = modalHelper.modalStep1;
-        var modal2 = modalHelper.modalStep2;
         var content = this.getTextBlock();
         this.$editor.find('.wrapper').contents().unwrap();
         this.$editor.find('.wrapper').remove();
