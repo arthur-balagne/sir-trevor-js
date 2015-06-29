@@ -45,6 +45,9 @@ var Locales = {
       iframe: {
         'placeholder': "Copie l'URL du site ici"
       },
+      sondage: {
+        'title': 'Sondage'
+      },
       tweet: {
         'title': "Tweet",
         'fetch_error': "Un problème est survenu lors de la récupération de votre tweet"
@@ -56,6 +59,18 @@ var Locales = {
       },
       heading: {
         'title': 'Titre'
+      },
+      table: {
+        'title': 'Table',
+        'default': 'Defaut',
+        'blue-theme': 'Theme bleu',
+        'red-theme': 'Theme rouge',
+        'helper-merge' : 'Cliquez sur une cellule grise pour la fusionner avec la cellule de droite',
+        'helper-unmerge' : 'Cliquez sur une cellule grise pour annuler la fusion'
+      },
+      framed: {
+        'title': 'Encadré',
+        'placeholder': "Glissez votre image ici"
       }
     }
   }
