@@ -27,11 +27,40 @@ var chooseableConfig = {
     ]
 };
 
+function registerSaveMediaSubBlock(block, mediaSubBlock) {
+    mediaSubBlock.on('save', function(data) {
+
+        if (mediaSubBlock.isEditable) {
+            var url = block.globalConfig.apiUrl + 'edt/media/' + mediaSubBlock.id;
+
+            xhr.patch(url, data)
+                .then(function(data) {
+                    block.setData({
+                        id: data.content.id,
+                        type: mediaSubBlock.type
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Error updating media information', err);
+                });
+        }
+    });
+}
+
 function prepareCopyrights(copyrights) {
     return copyrights.map(function(copyright) {
         return {
             value: copyright.id,
             label: copyright.name
+        };
+    });
+}
+
+function prepareCategories(categories) {
+    return categories.map(function(category) {
+        return {
+            value: category.id,
+            label: category.label
         };
     });
 }
@@ -46,13 +75,9 @@ function onChoose(choices) {
     var categoryOptionsPromise = xhr.get(categoryOptionsUrl)
         .then(function(result) {
             block.copyrights = prepareCopyrights(result.content.copyrights);
+            block.categories = prepareCategories(result.content.categories);
 
-            return result.content.categories.map(function(category) {
-                return {
-                    value: category.id,
-                    label: category.label
-                };
-            });
+            return block.categories;
         })
         .catch(function(err) {
             console.error(err);
@@ -106,10 +131,10 @@ function onChoose(choices) {
     }.bind(this));
 
     this.subBlockSearch.on('selected', function(selectedSubBlock) {
-        // this.setData({
-        //     id: selectedSubBlock.contents.id,
-        //     type: block.subBlockType
-        // });
+        this.setData({
+            id: selectedSubBlock.id,
+            type: selectedSubBlock.type
+        });
 
         this.subBlockSearch.destroy();
         this.subBlockSearch = null;
@@ -117,6 +142,8 @@ function onChoose(choices) {
         this.$editor.html(selectedSubBlock.renderLarge());
 
         selectedSubBlock.bindToRenderedHTML();
+
+        registerSaveMediaSubBlock(this, selectedSubBlock);
 
         this.$inputs.hide();
         this.$editor.show();
@@ -154,9 +181,7 @@ module.exports = Block.extend({
 
                     mediaSubBlock.bindToRenderedHTML();
 
-                    mediaSubBlock.on('save', function(data) {
-                        console.log(data);
-                    });
+                    registerSaveMediaSubBlock(this, mediaSubBlock);
 
                     this.ready();
                 }.bind(this))
@@ -179,57 +204,64 @@ module.exports = Block.extend({
     },
 
     onDrop: function(transferData) {
+        var self = this;
+
         var file = transferData.files[0];
         var urlAPI = (typeof window.URL !== 'undefined') ? window.URL : (typeof window.webkitURL !== 'undefined') ? window.webkitURL : null;
 
         if (/image|video/.test(file.type)) {
-            this.loading();
+            self.loading();
 
-            this.$dropzone.html($('<img>', {
+            self.$dropzone.html($('<img>', {
                 'class': 'placeholder-image',
                 src: urlAPI.createObjectURL(file)
             }));
 
-            this.$uploader.hide();
+            self.$uploader.hide();
 
-            this.subBlockSearch.destroy();
-            this.subBlockSearch = null;
+            self.subBlockSearch.destroy();
+            self.subBlockSearch = null;
 
-            // this.uploader(
-                // file,
-                // function(uploadData) {
-                    // var retrieveUrl = this.globalConfig.apiUrl + 'edt' + '/' + this.type + '/' + uploadData.idMedia;
+            // self.uploader.upload(file)
+                // .then(function(uploadData) {
+                    // debugger;
+                    // var retrieveUrl = self.globalConfig.apiUrl + 'edt' + '/' + self.type + '/' + uploadData.idMedia;
                     var retrieveUrl = 'http://api.letudiant.lk/edt/media/281615';
+
+                    self.setData({
+                        // id: uploadData.idMedia
+                    });
 
                     xhr.get(retrieveUrl)
                         .then(function(subBlockData) {
-                            this.$inputs.hide();
+                            self.$inputs.hide();
 
-                            var mediaSubBlock = subBlockManager.buildSingle(this.type, this.subBlockType, subBlockData.content);
+                            var mediaSubBlock = subBlockManager.buildSingle(self.type, self.subBlockType, subBlockData.content);
 
-                            mediaSubBlock.addData({ copyrights: this.copyrights })
+                            mediaSubBlock.addData({
+                                copyrights: self.copyrights,
+                                categories: self.categories
+                            });
 
-                            this.$editor.html(mediaSubBlock.renderEditable());
+                            self.$editor.html(mediaSubBlock.renderEditable());
 
                             mediaSubBlock.bindToRenderedHTML();
 
-                            this.$editor.show();
+                            self.$editor.show();
 
-                            this.ready();
-                        }.bind(this))
+                            registerSaveMediaSubBlock(self, mediaSubBlock);
+
+                            self.ready();
+                        })
                         .catch(function(err) {
                             throw new Error('No block returned for id:' + uploadData.idMedia + ' ' + err);
-                        }.bind(this));
-
-                    // this.setData(uploadedMediaData);
-                    // this.ready();
-                // },
-                // function(error) {
-                    // this.addMessage(i18n.t('blocks:image:upload_error'));
-                    // this.ready();
+                        });
+                // })
+                // .catch(function(error) {
                     // console.error(error);
-                // }
-            // );
+                    // self.addMessage(i18n.t('blocks:image:upload_error'));
+                    // self.ready();
+                // });
         }
     }
 });

@@ -9,26 +9,25 @@ var fileUploader = require('../extensions/file-uploader');
 
 module.exports = {
 
-  mixinName: 'Uploadable',
+    mixinName: 'Uploadable',
 
-  uploadsCount: 0,
+    uploadsCount: 0,
 
-  initializeUploadable: function() {
-    utils.log('Adding uploadable to block ' + this.blockID);
-    this.withMixin(require('./ajaxable'));
+    initializeUploadable: function() {
+        utils.log('Adding uploadable to block ' + this.blockID);
+        this.withMixin(require('./ajaxable'));
 
-    this.upload_options = Object.assign({}, config.defaults.Block.upload_options, this.upload_options);
+        this.upload_options = Object.assign({}, config.defaults.Block.upload_options, this.upload_options);
 
-    this.$uploader = $(_.template(this.upload_options.html, this));
-    this.$inputs.append(this.$uploader);
+        this.$uploader = $(_.template(this.upload_options.html, this));
+        this.$inputs.append(this.$uploader);
 
-    this.$uploader.find('button').bind('click', function(ev) {
-        ev.preventDefault();
-    });
-  },
+        this.$uploader.find('button').bind('click', function(ev) {
+            ev.preventDefault();
+        });
 
-  uploader: function(file, success, failure){
-    return fileUploader(this, file, success, failure);
-  }
+        var fullUrl = this.globalConfig.apiUrl + this.globalConfig.uploadUrl;
 
+        this.uploader = new fileUploader(this, fullUrl);
+    }
 };

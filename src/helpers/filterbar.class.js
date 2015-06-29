@@ -1,67 +1,8 @@
-var _           = require('../lodash.js');
-var xhr         = require('etudiant-mod-xhr');
-var eventablejs = require('eventablejs');
+var _            = require('../lodash.js');
+var xhr          = require('etudiant-mod-xhr');
+var eventablejs  = require('eventablejs');
 
-var renderSelect = function(field) {
-    field.label = field.label || '';
-    field.placeholder = field.placeholder || '';
-
-    var selectTemplate = [
-        '<div class="st-block__filter-field">',
-            '<% if (label) { %>',
-                '<label for="<%= name %>">',
-                    '<%= label %>',
-                '</label>',
-            '<% } %>',
-            '<select id="<%= name %>" name="<%= name %>">',
-                '<option value="" selected disabled><%= placeholder %></option>',
-                '<% _.forEach(options, function(option) { %>',
-                    '<option value="<%= option.value %>"><%= option.label %></option>',
-                '<% }); %>',
-            '</select>',
-        '</div>'
-    ].join('\n');
-
-    return _.template(selectTemplate, field, { imports: { '_': _ }});
-};
-
-var renderStandardField = function(field) {
-    field.label = field.label || '';
-    field.placeholder = field.placeholder || '';
-
-    var fieldTemplate = [
-        '<div class="st-block__filter-field">',
-            '<% if (label) { %>',
-                '<label for="<%= name %>">',
-                    '<%= label %>',
-                '</label>',
-            '<% } %>',
-            '<input type="<%= type %>" name="<%= name %>" placeholder="<%= placeholder %>"/>',
-        '</div>'
-    ].join('\n');
-
-    return _.template(fieldTemplate, {
-        name: field.name,
-        type: field.type,
-        label: field.label,
-        placeholder: field.placeholder
-    });
-};
-
-var renderField = function(field) {
-    var fieldMarkup;
-
-    switch (field.type) {
-        case 'select':
-            fieldMarkup = renderSelect(field);
-            break;
-        default:
-            fieldMarkup = renderStandardField(field);
-            break;
-    }
-
-    return fieldMarkup;
-};
+var renderField = require('./field-builder.js');
 
 var searchBuilder = function($elem) {
     var search = {};

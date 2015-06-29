@@ -29,7 +29,8 @@
     "lodash.uniqueid": "^2.4.1",
     "object.assign": "^1.1.1",
     "spin.js": "^2.1.2",
-    "velocity-commonjs": "^1.0.0"
+    "velocity-commonjs": "^1.0.0",
+    "video.js": "^4.12.10"
   },
   "devDependencies": {
     "browserify-shim": "^3.8.1",

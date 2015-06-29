@@ -95,15 +95,14 @@ var Locales = {
         },
         media: {
             save: 'Sauvegarder',
+            legend: 'Legende',
+            copyright: 'Copyright',
+            category: 'Categorie',
             image: {
-                title: 'Image',
-                legend: 'Legend',
-                copyright: 'Copyright'
+                title: 'Image'
             },
             video: {
-                title: 'Vidéo',
-                legend: 'Legend',
-                copyright: 'Copyright'
+                title: 'Vidéo'
             }
         },
         image: 'Image',

@@ -1,9 +1,11 @@
-"use strict";
+// var xhr = require('etudiant-mod-xhr');
+
+'use strict';
 
 /*
-*   Sir Trevor Uploader
-*   Generic Upload implementation that can be extended for blocks
-*/
+ *   Sir Trevor Uploader
+ *   Generic Upload implementation that can be extended for blocks
+ */
 
 var _ = require('../lodash');
 var $ = require('jquery');
@@ -12,65 +14,65 @@ var utils = require('../utils');
 
 var EventBus = require('../event-bus');
 
-module.exports = function(block, file, success, error) {
-
-  EventBus.trigger('onUploadStart');
-
-  var uid  = [block.blockID, (new Date()).getTime(), 'raw'].join('-');
-  var data = new FormData();
-
-  data.append('attachment[name]', file.name);
-  data.append('qqfiles', file);
-  data.append('attachment[uid]', uid);
-  data.append('application', 'ETU_ETU');
-
-  block.resetMessages();
-
-  var callbackSuccess = function(data) {
-    utils.log('Upload callback called');
-    EventBus.trigger('onUploadStop');
-
-    if (!_.isUndefined(success) && _.isFunction(success)) {
-      success.apply(block, arguments);
-    }
-  };
-
-  var callbackError = function(jqXHR, status, errorThrown) {
-    utils.log('Upload callback error called');
-    EventBus.trigger('onUploadStop');
-
-    if (!_.isUndefined(error) && _.isFunction(error)) {
-      error.call(block, status);
-    }
-  };
-
-  var xhr = $.ajax({
-    url: block.globalConfig.apiUrl + block.globalConfig.uploadUrl,
-    data: data,
-    cache: false,
-    contentType: false,
-    processData: false,
-    dataType: 'json',
-    type: 'POST',
-    xhr: function() {
-        var xhr = new window.XMLHttpRequest();
-
-        xhr.addEventListener('progress', function (evt) {
-            if (evt.lengthComputable) {
-                var percentComplete = evt.loaded / evt.total;
-                console.log(percentComplete);
-            }
-        }, false);
-
-        return xhr;
-    }
-  });
-
-  block.addQueuedItem(uid, xhr);
-
-  xhr.done(callbackSuccess)
-     .fail(callbackError)
-     .always(block.removeQueuedItem.bind(block, uid));
-
-  return xhr;
+var FileUploader = function() {
+    this.init.apply(this, arguments);
 };
+
+FileUploader.prototype = {
+    init: function(block, uploadUrl) {
+        this.blockRef = block;
+        this.uploadUrl = uploadUrl;
+    },
+
+    upload: function(file) {
+        var self = this;
+
+        EventBus.trigger('onUploadStart');
+
+        var uid = [self.blockRef.blockID, (new Date()).getTime(), 'raw'].join('-');
+
+        var data = new FormData();
+
+        data.append('attachment[name]', file.name);
+        data.append('qqfiles', file);
+        data.append('attachment[uid]', uid);
+        data.append('application', 'ETU_ETU');
+
+        self.blockRef.resetMessages();
+
+        var xhr = $.ajax({
+            url: self.uploadUrl,
+            data: data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            type: 'POST'
+        });
+
+        var uploadPromise = function(resolve, reject) {
+            xhr.done(function(uploadData) {
+                    debugger;
+                    utils.log('Upload callback called');
+                    EventBus.trigger('onUploadStop');
+
+                    self.blockRef.removeQueuedItem.bind(self.blockRef, uid);
+
+                    resolve(uploadData);
+                })
+                .fail(function(error) {
+                    debugger;
+                    utils.log('Upload callback error called');
+                    EventBus.trigger('onUploadStop');
+
+                    self.blockRef.removeQueuedItem.bind(self.blockRef, uid);
+
+                    reject(error);
+                });
+        };
+
+        return new Promise(uploadPromise);
+    }
+};
+
+module.exports = FileUploader;
