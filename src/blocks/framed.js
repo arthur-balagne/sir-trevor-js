@@ -25,7 +25,7 @@ var sel;
 var range;
 
 function getTemplate(params) {
-    var template = '<div class="frame"  style="box-sizing:border-box; display:inline-block; width:100%; background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
+    var template = '<div class="frame"  style=" background-color:' + params.frameColor + '; border: 3px solid ' + params.frameBorder + '">';
     template += '</div>';
     return template;
 }
@@ -79,10 +79,6 @@ function sliderControls(slider){
         $('body .modal-footer .next').removeClass('disabled');
     });
 
-    slider.on('buttons:all:disable', function() {
-        $('body .modal-footer').hide();
-    });
-
     $('body .modal-footer').on('click', '.before', function(){
         slider.prev();
     });
@@ -129,8 +125,9 @@ function textBlockListenners(textBlock){
 }
 
 function getModalMedias(block){
-    q.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
-            xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20') ])
+    q.all([ xhr.get(apiUrl + '/filters/ETU_ETU'),
+            xhr.get(apiUrl + '?application=ETU_ETU&type=image&limit=20')
+        ])
     .then(function(data){
         var modalTemplateFilters = data[0];
         var modalTemplateStep1 = data[1];
@@ -185,7 +182,6 @@ function getModalMedias(block){
                 // reset slides to an empty array
                 slides = [];
 
-
                 Object.keys(returnedData).forEach(function(k){
                     modalHelper.filteredImagesTab['row-' + returnedData[k].id] = filteredImages[k];
                     slides.push(filteredImages[k].renderSmall(returnedData[k], 90));
@@ -195,6 +191,7 @@ function getModalMedias(block){
                 sliderControls(slider);
                 modalHelper.selectUpdater();
                 modalHelper.updateZoom(modalHelper.filteredImagesTab);
+
             });
             block.ready();
             evt.publish('modal-gallery-step-1', block); //Call the modal event
@@ -203,7 +200,6 @@ function getModalMedias(block){
 
             $('body .modal-footer .before').addClass('disabled');
             sliderControls(slider);
-
             modalHelper.synchronizeAndOpenStep2(param);
         });
 

@@ -267,7 +267,6 @@ var prototype = {
     * @param  {object} block the sir trevor block object to update
     */
     synchronizeAndOpenStep2: function(block) {
-
         var that = this;
         $('.modal-gallery-step-1 .validate').one('click', function(e){
             e.preventDefault();
