@@ -34,12 +34,20 @@ var checkButtons = function() {
         this.trigger('buttons:prev:enable');
     }
 
-    if (this.currentIndex === this.slides.length - 1 || this.slides.length <= this.config.increment) {
+    if (this.currentIndex === this.slides.length - 1) {
         this.trigger('buttons:next:disable');
     }
     else {
         this.trigger('buttons:next:enable');
     }
+    // @todo - check if still pertinent
+    // var slideRows = 0 ;
+    // this.slides.forEach(function(slide) {
+    //     slideRows += slide.contents.length;
+    // });
+    // if (slideRows < (this.config.itemsPerSlide * this.config.increment)) {
+    //     this.eventBus.trigger('buttons:all:disable');
+    // }
 };
 
 var checkProgress = function() {
@@ -170,6 +178,18 @@ var prototype = {
 
             this.isBoundToDOM = true;
         }
+    },
+
+    // @todo see if it is still pertinent
+    alwaysAppendToDOM: function(container) {
+        this.$elem = container.find('.st-block__slider');
+        this.$slideContainer = this.$elem.find('.st-slider-container');
+        if (this.config.controls) {
+            registerButtons.call(this);
+        }
+        calculateSliderDimensions.call(this, true);
+        checkButtons.call(this);
+
     },
 
     update: function(additionalSlides) {

@@ -6,7 +6,7 @@
 
 var Block = require('../block');
 var stToHTML = require('../to-html');
-var Chart = require('chart.js');
+//var Chart = require('chart.js');
 
 var chartData = {
     Bar: {

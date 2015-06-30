@@ -64,6 +64,9 @@ var Locales = {
       heading: {
         'title': 'Titre'
       },
+      subhead: {
+        'title': 'Sous titre'
+      },
       table: {
         'title': 'Table',
         'default': 'Defaut',
@@ -71,6 +74,10 @@ var Locales = {
         'red-theme': 'Theme rouge',
         'helper-merge' : 'Cliquez sur une cellule grise pour la fusionner avec la cellule de droite',
         'helper-unmerge' : 'Cliquez sur une cellule grise pour annuler la fusion'
+      },
+      framed: {
+        'title': 'Encadré',
+        'placeholder': "Glissez votre image ici"
       }
     },
     slider: {

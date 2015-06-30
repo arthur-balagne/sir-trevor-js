@@ -34,13 +34,21 @@ var prototype = {
         this.app = params.app;
         this.url = params.url;
         this.limit = params.limit;
+        this.type = params.type;
         this.fields = params.fields;
         this.application = params.application;
         this.subType = params.subType;
+        this.template = filterBarTemplate;
 
         if (params.container) {
-            params.container.prepend(this.render(this.fields));
-            this.bindToDOM(params.container);
+            if (params.before === true) {
+                params.container.before(this.render(this.fields));
+                this.bindToDOM(params.container.parent());
+            }
+            else {
+                params.container.append(this.render(this.fields));
+                this.bindToDOM(params.container);
+            }
         }
     },
 
@@ -73,7 +81,9 @@ var prototype = {
         this.trigger(eventName + ':start');
 
         search = Object.assign(search, searchBuilder(this.$elem), {
-            limit: this.limit
+            limit: this.limit,
+            application: this.app,
+            type: this.type
         });
 
         if (this.application) {
