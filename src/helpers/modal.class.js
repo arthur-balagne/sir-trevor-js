@@ -268,7 +268,7 @@ var prototype = {
     */
     synchronizeAndOpenStep2: function(block) {
         var that = this;
-        $('.modal-gallery-step-1').one('click', '.validate', function(e){
+        $('.modal-gallery-step-1 .validate').one('click', function(e){
             e.preventDefault();
             e.stopPropagation();
             var row = $(this).attr('class').split(' ')[1];
