@@ -97,7 +97,6 @@ function getModalMedias(block){
         evt.subscribe('modal-gallery-step-1', function(param, channel) {
             channel.stopPropagation();
             modalHelper.openModalStep1(modalHelper.modalStep1, slider);
-            debugger;
             var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
             var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
             var filterBar = modalHelper.loadFilterBar(fields, $modal);
