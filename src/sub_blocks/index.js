@@ -20,6 +20,9 @@ function buildSingleBlock(type, subType, contents) {
     if (typeof subBlockTypes[type][subType] === 'function') {
         return new subBlockTypes[type][subType](contents);
     }
+    else if (typeof subBlockTypes[type] === 'function') {
+        return new subBlockTypes[type](contents);
+    }
     else {
       throw new Error('No matching type or subtype found for ' + type + ' and/or ' + subType);
     }
