@@ -110,6 +110,8 @@ module.exports = Block.extend({
     },
 
     onBlockRender: function() {
+        var self = this;
+        debugger;
         this.colorPicker = new ColorPicker({
             block: this,
             colors: {
@@ -142,7 +144,7 @@ module.exports = Block.extend({
         }.bind(this));
 
         this.iconPicker = new IconPicker({
-            apiUrl: 'http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=10', // will be  this.globalConfig.apiUrl
+            apiUrl: self.globalConfig.apiUrl + '/media?application=ETU_ETU&type=image&limit=10',//'http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=10', // will be  this.globalConfig.apiUrl
             blockRef: this,
             modalTriggerElement: this.$el.find('figure')
         });
