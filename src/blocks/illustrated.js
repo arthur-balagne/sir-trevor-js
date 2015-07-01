@@ -111,7 +111,6 @@ module.exports = Block.extend({
 
     onBlockRender: function() {
         var self = this;
-        debugger;
         this.colorPicker = new ColorPicker({
             block: this,
             colors: {

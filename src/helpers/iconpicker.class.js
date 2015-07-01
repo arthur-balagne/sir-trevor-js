@@ -13,14 +13,8 @@ var modal = new Modal({
     animation: 'fade',
     theme: 'media'
 });
-var droppableArea = ('<div contenteditable="false" class="droppable">Uploader et associer une nouvelle image</div>');
 
-var IconPicker = function(param) {
-    this.apiUrl = param.apiUrl;
-    this.blockRef = param.blockRef;
-    this.modalTriggerElement = param.modalTriggerElement;
-    this.init();
-};
+var iconPickerHtml = '<div class="icon-picker"><div contenteditable="false" class="droppable">Uploader et associer une nouvelle image</div></div>';
 
 function dropEvent(block){
     $(block).on('dragover dragenter', function(ev){
@@ -30,23 +24,24 @@ function dropEvent(block){
     $(block).on('drop', function(ev){
         ev.preventDefault();
         ev.stopPropagation();
-        var file = ev.originalEvent.dataTransfer.files[0];
-        var urlAPI = (typeof URL !== "undefined") ? URL : (typeof webkitURL !== "undefined") ? webkitURL : null;
-        that.$el.find('figure img').attr('src', urlAPI.createObjectURL(file));
-        /*
-        Need the server to send a 200response or the POST upload will fail
-         */
-        that.uploader(
-            file,
-            function(data) {
-                that.setData(data);
-                that.ready();
-            },
-            function(error) {
-                that.addMessage(i18n.t('blocks:image:upload_error'));
-                that.ready();
-            }
-        );
+        console.log(ev);
+        // var file = ev.originalEvent.dataTransfer.files[0];
+        // var urlAPI = (typeof URL !== "undefined") ? URL : (typeof webkitURL !== "undefined") ? webkitURL : null;
+        // that.$el.find('figure img').attr('src', urlAPI.createObjectURL(file));
+
+        // Need the server to send a 200response or the POST upload will fail
+
+        // that.uploader(
+        //     file,
+        //     function(data) {
+        //         that.setData(data);
+        //         that.ready();
+        //     },
+        //     function(error) {
+        //         that.addMessage(i18n.t('blocks:image:upload_error'));
+        //         that.ready();
+        //     }
+        // );
     });
 }
 
@@ -62,29 +57,19 @@ function generateContainer(icons) {
 function getIcons(url, modal){
     xhr.get(url)
     .then(function(iconData) {
-        dropInit();
-
         var iconsArray = generateContainer(iconData.content);
+
         var slider = new Slider({
             contents: iconsArray,
             itemsPerSlide: 5,
             increment: 2
         });
-
-        var modalContainer = document.createElement('div');
-        $(modalContainer).append(droppableArea);
-
-        modal.render({
-            // @todo i18n the texts - move to locales.js
-            header: '<header>Image</header>',
-
-            content: $(modalContainer).html(),
-
-            footer: {
-                next: 'Ok'
-            }
-        });
-        dropEvent(droppableArea);
+        //modal-icons-modal
+        //slider.appendToDOM($(modalContainer).find('.modal-content'));
+        debugger;
+        var modalInner = modal.$elem.children('.modal-content');
+        modalInner.append(iconPickerHtml);
+        dropEvent(modal.$elem.children('.modal-content .droppable'));
         //debugger;
         //slider.appendToDOM($(modalContainer).find('.modal-content'));
         //slider.render();
@@ -95,13 +80,31 @@ function getIcons(url, modal){
     });
 }
 
+var IconPicker = function(param) {
+    this.apiUrl = param.apiUrl;
+    this.blockRef = param.blockRef;
+    this.modalTriggerElement = param.modalTriggerElement;
+    this.init();
+};
 
 var prototype = {
 
     init: function(){
         var self = this;
+
+        modal.render({
+            // @todo i18n the texts - move to locales.js
+            header: '<header>Image</header>',
+
+            content: '',
+
+            footer: {
+                next: 'Ok'
+            }
+        });
         this.modalTriggerElement.on('click', function() {
             var icons = getIcons(self.apiUrl, modal);
+            // @TODO put waiting animation here
         });
     }
 }
