@@ -18,9 +18,6 @@ var ModalHelper = function() {
     this.range = undefined;
 }
 
-// @todo apiUrl should be rendered obselete
-var apiUrl = 'http://api.letudiant.lk/edt/media';
-
 /**
 * Helper function to validate internal or external url
 */
@@ -252,7 +249,7 @@ var prototype = {
     /**
     * Filterbar launcher
     */
-    loadFilterBar: function(fields, modal) {
+    loadFilterBar: function(apiUrl, fields, modal) {
         var filterBar = new FilterBar({
             url: apiUrl,
             fields: fields,

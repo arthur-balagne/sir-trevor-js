@@ -4,25 +4,19 @@
   Framed
 */
 
-var evt = require('etudiant-mod-mediator');
-var $ = require('jquery');
-var Block = require('../block');
-var stToHTML = require('../to-html');
-var Modal = require('etudiant-mod-modal');
-var Slider   = require('../helpers/slider.class.js');
-var eventBus = require('../event-bus.js');
+var $               = require('jquery');
+var _               = require('../lodash.js');
+var Block           = require('../block');
+var eventBus        = require('../event-bus.js');
+var evt             = require('etudiant-mod-mediator');
+var Modal           = require('etudiant-mod-modal');
+var ModalHelper     = require('../helpers/modal.class.js');
+var Slider          = require('../helpers/slider.class.js');
+var stToHTML        = require('../to-html');
 var subBlockManager = require('../sub_blocks/index.js');
-var xhr = require('etudiant-mod-xhr');
-var _   = require('../lodash.js');
-var Spinner = require('spin.js');
-var ModalHelper   = require('../helpers/modal.class.js');
+var xhr             = require('etudiant-mod-xhr');
 
 var modalHelper = new ModalHelper();
-
-// @todo apiUrl should be rendered obselete
-var apiUrl = 'http://api.letudiant.lk/edt/media';
-var sel;
-var range;
 
 // @todo remove CSS from JS
 function getTemplate(params) {
@@ -116,6 +110,8 @@ function textBlockListeners(textBlock){
     /*
         on ENTER adapt newline behaviour - <br> instead of <p>
      */
+    var range;
+
     textBlock.on('keypress', function(e){
         modalHelper.sel = window.getSelection();
         modalHelper.range = modalHelper.sel.getRangeAt(0);
@@ -139,10 +135,12 @@ function textBlockListeners(textBlock){
 
 // @todo refactor duplicate code - see text.js
 function getModalMedias(block){
-    // @todo use global config for apiUrl
+    var filterUrl = block.globalConfig.apiUrl + 'edt/media/filters/' + block.globalConfig.application;
+    var initialMediaUrl = block.globalConfig.apiUrl + '/edt/media?application=' + block.globalConfig.application + '&type=image&limit=20';
+
     Promise.all([
-        xhr.get(apiUrl + '/filters/ETU_ETU'),
-        xhr.get(apiUrl + '?application=ETU_ETU&type=image&limit=20')
+        xhr.get(filterUrl),
+        xhr.get(initialMediaUrl)
     ])
     .then(function(data){
         var modalTemplateFilters = data[0];
@@ -161,7 +159,7 @@ function getModalMedias(block){
 
          */
         var mediasArray = subBlockManager.jsonInit(modalTemplateStep1, modalTemplateFilters);
-        var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
+        var filteredImages = subBlockManager.build('filteredImage', null, mediasArray[0]);
         var slides = [];
 
         Object.keys(modalTemplateStep1.content).forEach(function(k){
@@ -193,7 +191,7 @@ function getModalMedias(block){
 
             var $modalInnerContent = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
             var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
-            var filterBar = modalHelper.loadFilterBar(fields, $modalInnerContent);
+            var filterBar = modalHelper.loadFilterBar(block.globalConfig.apiUrl, fields, $modal);
 
             // @todo see if slider still needs this function alwaysAppendToDOM?
             slider.alwaysAppendToDOM($modalInnerContent);
@@ -247,9 +245,6 @@ function getModalMedias(block){
                 modalHelper.updateZoom(modalHelper.filteredImagesTab);
             });
 
-            block.ready();
-            evt.publish('modal-gallery-step-1', block); //Call the modal event
-
             // @todo modalHelper.selectUpdater() should be obselete
             // @todo filteredImageSubBlock should know how to update its selects
             modalHelper.selectUpdater();
@@ -276,7 +271,8 @@ function getModalMedias(block){
         block.ready();
 
         evt.publish('modal-gallery-step-1', block); //Call the modal event
-    }).catch(function(){
+    }).catch(function(err){
+        console.error(err);
         console.error('Something went wrong');
     });
 }
@@ -417,7 +413,8 @@ module.exports = Block.extend({
 
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
-            var url = 'http://api.letudiant.lk/edt/media/' + val;
+
+            var url = self.globalConfig.apiUrl + 'edt/media/' + val;
 
             /**
              * Callback function to fetch the blocks data from the API

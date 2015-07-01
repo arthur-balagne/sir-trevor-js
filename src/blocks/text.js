@@ -8,26 +8,21 @@
     ATTENTION - contains a lot of duplicate code - see framed.js
  */
 
-var evt = require('etudiant-mod-mediator');
-var $ = require('jquery');
-var Block = require('../block');
-var stToHTML = require('../to-html');
-var Modal = require('etudiant-mod-modal');
-var Slider   = require('../helpers/slider.class.js');
-var eventBus = require('../event-bus.js');
-var subBlockManager = require('../sub_blocks/index.js');
-var FilterBar = require('../helpers/filterbar.class.js');
-var xhr = require('etudiant-mod-xhr');
-var _   = require('../lodash.js');
-var Spinner = require('spin.js');
-var ModalHelper   = require('../helpers/modal.class.js');
-
+var $                     = require('jquery');
+var _                     = require('../lodash.js');
 var contentEditableHelper = require('../helpers/content-editable-helper.js');
+var Block                 = require('../block');
+var eventBus              = require('../event-bus.js');
+var evt                   = require('etudiant-mod-mediator');
+var Modal                 = require('etudiant-mod-modal');
+var ModalHelper           = require('../helpers/modal.class.js');
+var Slider                = require('../helpers/slider.class.js');
+var stToHTML              = require('../to-html');
+var subBlockManager       = require('../sub_blocks/index.js');
+var xhr                   = require('etudiant-mod-xhr');
 
 var modalHelper = new ModalHelper();
 
-// @todo apiUrl should be rendered obselete
-var apiUrl = 'http://api.letudiant.lk/edt/media';
 var sel;
 var range;
 
@@ -78,16 +73,21 @@ function textBlockListeners(textBlock){
 
 // @todo refactor duplicate code - see text.js
 function getModalMedias(block){
-    Promise.all([ xhr.get('http://api.letudiant.lk/edt/media/filters/ETU_ETU'),
-            xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20') ])
-    .then(function(data){
+    var filterUrl = block.globalConfig.apiUrl + 'edt/media/filters/' + block.globalConfig.application;
+    var initialMediaUrl = block.globalConfig.apiUrl + '/edt/media?application=' + block.globalConfig.application + '&type=image&limit=20';
+
+    Promise.all([
+        xhr.get(filterUrl),
+        xhr.get(initialMediaUrl)
+    ])
+    .then(function(data) {
         var modalTemplateFilters = data[0];
         var modalTemplateStep1 = data[1];
 
         // eventBus.trigger('button:control-0:enable');
 
         var mediasArray = subBlockManager.jsonInit(modalTemplateStep1, modalTemplateFilters);
-        var filteredImages = subBlockManager.build('filteredImage', mediasArray[0], null);
+        var filteredImages = subBlockManager.build('filteredImage', null, mediasArray[0]);
         var slides = [];
 
         Object.keys(modalTemplateStep1.content).forEach(function(k){
@@ -111,7 +111,7 @@ function getModalMedias(block){
             modalHelper.openModalStep1(modalHelper.modalStep1, slider);
             var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
             var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
-            var filterBar = modalHelper.loadFilterBar(fields, $modal);
+            var filterBar = modalHelper.loadFilterBar(block.globalConfig.apiUrl, fields, $modal);
 
             slider.alwaysAppendToDOM($modal);
 
@@ -150,8 +150,7 @@ function getModalMedias(block){
                 modalHelper.selectUpdater();
                 modalHelper.updateZoom(modalHelper.filteredImagesTab);
             });
-            block.ready();
-            evt.publish('modal-gallery-step-1', block); //Call the modal event
+
             modalHelper.selectUpdater();
             modalHelper.updateZoom(modalHelper.filteredImagesTab);
 
@@ -170,7 +169,8 @@ function getModalMedias(block){
         });
         block.ready();
         evt.publish('modal-gallery-step-1', block); //Call the modal event
-    }).catch(function(){
+    }).catch(function(err){
+        console.error(err);
         console.error('Something went wrong');
     });
 }
@@ -298,43 +298,49 @@ module.exports = Block.extend({
     },
 
     loadData: function(data){
-        this.imagesData = data.images;
         var ids = '';
-        var that = this;
+        var self = this;
+
+        this.imagesData = data.images;
+
         if (data.text !== undefined) {
             ids = data.text.match(/#\w+/g);
         }
 
         if (ids === null) {
-            that.getTextBlock().html(data.text);
+            self.getTextBlock().html(data.text);
             return data;
         }
 
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
-            var url = 'http://api.letudiant.lk/edt/media/' + val;
-            var tpl = '';
+
+            var url = self.globalConfig.apiUrl + 'edt/media/' + val;
+
             /**
              * Callback function to fetch the blocks data from the API
              */
-            var promise = function(urlParam) {
-                    xhr.get(urlParam).then(function(result) {
-                    result.content.size = data.images[val].size;
-                    result.content.legend = data.images[val].legend;
+            xhr.get(url)
+                .then(function(result) {
+                    result.content = Object.assign(result.content, {
+                        size: data.images[val].size,
+                        legend: data.images[val].legend,
+                        align: data.images[val].align
+                    });
+
                     var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
-                    result.content.legend = data.images[val].legend;
-                    result.content.size = data.images[val].size;
-                    result.content.align = data.images[val].align;
 
                     filteredBlock.media = result.content;
-                    tpl = filteredBlock.renderBlock();
+
+                    var tpl = filteredBlock.renderBlock();
+
                     data.text = data.text.replace('#' + val, tpl);
 
-                    that.getTextBlock().html(data.text);
+                    self.getTextBlock().html(data.text);
+                })
+                .catch(function(error) {
+                    console.error('Error retrieving image :', error);
                 });
-
-            };
-            promise(url);
         });
         this.getTextBlock().html(stToHTML(data.text));
 
