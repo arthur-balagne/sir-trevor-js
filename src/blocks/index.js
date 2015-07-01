@@ -10,5 +10,6 @@ module.exports = {
   Table: require('./table'),
   Framed: require('./framed'),
   Iframe: require('./iframe'),
+  Illustrated: require('./illustrated'),
   Subhead: require('./subhead')
 };
