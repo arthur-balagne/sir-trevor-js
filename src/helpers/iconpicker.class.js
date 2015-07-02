@@ -1,42 +1,35 @@
 'use strict';
 
-var $ = require('jquery');
+var $           = require('jquery');
 var eventablejs = require('eventablejs');
-var _   = require('../lodash.js');
-var Modal = require('etudiant-mod-modal');
-var xhr = require('etudiant-mod-xhr');
-var Slider    = require('./slider.class.js');
+var _           = require('../lodash.js');
+var Modal       = require('etudiant-mod-modal');
+var xhr         = require('etudiant-mod-xhr');
+var Slider      = require('./slider.class.js');
+var FileUploader = require('../extensions/file-uploader.js');
 
 
-var iconPickerHtml = '<div class="icon-picker"><div class="droppable">Uploader et associer une nouvelle image</div></div>';
 
+var iconPickerHtml = '<div class="icon-picker"><div class="droppable st-block__upload-container">Uploader et associer une nouvelle image</div></div>';
 
-function dropEvent(block){
-    $(block).on('dragover dragenter', function(ev){
+function dropEvent(iconPicker){
+    $(iconPicker.modal.$elem.children('.droppable')[0]).on('dragover dragenter', function(ev){
         ev.preventDefault();
         ev.stopPropagation();
     });
-    $(block).on('drop', function(ev){
+
+    $(iconPicker.modal.$elem.children('.droppable')[0]).on('drop', function(ev){
         ev.preventDefault();
         ev.stopPropagation();
-        console.log(ev);
-        // var file = ev.originalEvent.dataTransfer.files[0];
-        // var urlAPI = (typeof URL !== "undefined") ? URL : (typeof webkitURL !== "undefined") ? webkitURL : null;
-        // that.$el.find('figure img').attr('src', urlAPI.createObjectURL(file));
 
-        // Need the server to send a 200response or the POST upload will fail
+        var file = ev.originalEvent.dataTransfer.files[0];
 
-        // that.uploader(
-        //     file,
-        //     function(data) {
-        //         that.setData(data);
-        //         that.ready();
-        //     },
-        //     function(error) {
-        //         that.addMessage(i18n.t('blocks:image:upload_error'));
-        //         that.ready();
-        //     }
-        // );
+        var urlAPI = (typeof window.URL !== 'undefined') ? window.URL : (typeof window.webkitURL !== 'undefined') ? window.webkitURL : null;
+        if (/image/.test(file.type)) {
+            debugger;
+            var fileUploader = iconPicker.blockRef.uploader;
+            fileUploader.upload(file);
+        }
     });
 }
 
@@ -82,7 +75,7 @@ function getIcons(url, block) {
             block.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
         }
 
-        dropEvent($(block.modal.$elem.children('.droppable')[0]));
+        dropEvent(block);
         block.modal.$elem.children('.icon-picker').toggleClass('is-visible');
 
         bindClickOnIcons(block)
@@ -92,6 +85,7 @@ function getIcons(url, block) {
         console.error('Somehting went wrong');
     });
 }
+
 
 function bindClickOnIcons(block) {
     $.each(block.slider.$elem.find('img'), function(){
@@ -140,6 +134,7 @@ var prototype = {
             var icons = getIcons(self.apiUrl, self);
             // @TODO put waiting animation here
         });
+        return this;
     }
 }
 
