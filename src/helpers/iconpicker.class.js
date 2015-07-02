@@ -26,7 +26,6 @@ function dropEvent(iconPicker){
 
         var urlAPI = (typeof window.URL !== 'undefined') ? window.URL : (typeof window.webkitURL !== 'undefined') ? window.webkitURL : null;
         if (/image/.test(file.type)) {
-            debugger;
             var fileUploader = iconPicker.blockRef.uploader;
             fileUploader.upload(file);
         }
