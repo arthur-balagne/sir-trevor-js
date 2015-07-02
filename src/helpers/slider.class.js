@@ -164,6 +164,9 @@ var prototype = {
     },
 
     appendToDOM: function(container) {
+        // check if container is jQuery object
+
+
         this.$elem = container.find('.st-block__slider');
         this.$slideContainer = this.$elem.find('.st-slider-container');
 

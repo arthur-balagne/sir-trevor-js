@@ -26,59 +26,69 @@ var Locales = {
       'load_fail': "Il y a un problème avec le chargement des données du document"
     },
     blocks: {
-      text: {
-        'title': "Texte"
-      },
-      list: {
-        'title': "Liste"
-      },
-      quote: {
-        'title': "Citation",
-        'credit_field': "Auteur"
-      },
-      medias: {
-        title: 'Medias'
-      },
-      image: {
-        'title': "Image",
-        'upload_error': "Il y a un problème avec votre téléchargement"
-      },
-      video: {
-        'title': "Vidéo"
-      },
-      iframe: {
-        'placeholder': "Copie l'URL du site ici"
-      },
-      embed: {
-        'title': 'Embed'
-      },
-      tweet: {
-        'title': "Tweet",
-        'fetch_error': "Un problème est survenu lors de la récupération de votre tweet"
-      },
-      embedly: {
-        'title': "Embedly",
-        'fetch_error': "Un problème est survenu lors de la récupération de votre embed",
-        'key_missing': "Une clé API pour Embedly doit être présente"
-      },
-      heading: {
-        'title': 'Titre'
-      },
-      subhead: {
-        'title': 'Sous titre'
-      },
-      table: {
-        'title': 'Table',
-        'default': 'Defaut',
-        'blue-theme': 'Theme bleu',
-        'red-theme': 'Theme rouge',
-        'helper-merge' : 'Cliquez sur une cellule grise pour la fusionner avec la cellule de droite',
-        'helper-unmerge' : 'Cliquez sur une cellule grise pour annuler la fusion'
-      },
-      framed: {
-        'title': 'Encadré',
-        'placeholder': "Glissez votre image ici"
-      }
+        text: {
+            'title': "Texte"
+        },
+        list: {
+            'title': "Liste"
+        },
+        quote: {
+            'title': "Citation",
+            'credit_field': "Auteur"
+        },
+        medias: {
+            title: 'Medias'
+        },
+        image: {
+            'title': "Image",
+            'upload_error': "Il y a un problème avec votre téléchargement"
+        },
+        video: {
+            'title': "Vidéo"
+        },
+        iframe: {
+            'placeholder': "Copie l'URL du site ici"
+        },
+        embed: {
+            'title': 'Embed'
+        },
+        tweet: {
+            'title': "Tweet",
+            'fetch_error': "Un problème est survenu lors de la récupération de votre tweet"
+        },
+        embedly: {
+            'title': "Embedly",
+            'fetch_error': "Un problème est survenu lors de la récupération de votre embed",
+            'key_missing': "Une clé API pour Embedly doit être présente"
+        },
+        heading: {
+            'title': 'Titre'
+        },
+        subhead: {
+            'title': 'Sous titre'
+        },
+        table: {
+            'title': 'Table',
+            'default': 'Defaut',
+            'blue-theme': 'Theme bleu',
+            'red-theme': 'Theme rouge',
+            'helper-merge' : 'Cliquez sur une cellule grise pour la fusionner avec la cellule de droite',
+            'helper-unmerge' : 'Cliquez sur une cellule grise pour annuler la fusion'
+        },
+        illustrated: {
+            button: {
+                color: 'Couleur'
+            },
+            placeholder: {
+                text: 'Votre texte',
+                title: 'Votre titre'
+            }
+
+        },
+        framed: {
+            'title': 'Encadré',
+            'placeholder': "Glissez votre image ici"
+        }
     },
     slider: {
         no_results: 'No results'

@@ -12,13 +12,11 @@ var ColorPicker = require('../helpers/colorpicker.class.js');
 var IconPicker  = require('../helpers/iconpicker.class.js');
 
 var blockTemplate = _.template([
-    '<div class="st-text-block" contenteditable="true">',
+    '<div>',
         '<div class="illustrated">',
-        '<figure class="empty" contenteditable="false">',
-            '<img src="<%= imgSrc %>" alt="<%= imgAlt %>">',
-        '</figure>',
-        '<div class="title" style="<%= titleStyle %>"><%= titleText %></div>',
-        '<div class="text"><%= text %></div>',
+            '<figure class="empty"></figure>',
+            '<input type="text" class="title" value="<%= titleText %>" >',
+            '<div contenteditable="true" class="text st-text-block"> <%= text %> </div>',
         '</div>',
     '</div>'].join('\n')
 );
@@ -46,15 +44,12 @@ module.exports = Block.extend({
             fn: function(e) {
                 this.colorPicker.toggleVisible();
             },
-            html: '<span>Couleur</span>'
+            html: '<span>' + i18n.t('blocks:illustrated:button:color') +'</span>' //i18n.t('block:illustrated:button:color')
         }
     ],
     editorHTML: blockTemplate({
-        text: 'Votre texte',
-        titleText: 'Votre titre',
-        titleStyle: '',
-        imgSrc: '',
-        imgAlt: ''
+        text: i18n.t('blocks:illustrated:placeholder:text'),
+        titleText: i18n.t('blocks:illustrated:placeholder:title')
       }),
     icon_name: 'text',
 
@@ -73,40 +68,6 @@ module.exports = Block.extend({
         }
         tpl = blockTemplate(templateObject);
         this.getTextBlock().html(stToHTML(data.text, this.type));
-    },
-    // setData: function(data) {
-    //     var content = this.getTextBlock();
-    //     var img = '';
-    //     var title = '';
-    //     var text = '';
-    //     var obj = {};
-    //     if (content.find('.text').html().length > 0) {
-    //         img = this.$el.find('figure img');
-    //         if (img.attr('src') !== '') {
-    //             data.img = {};
-    //             obj = {
-    //                 src: img.attr('src'),
-    //                 alt: img.attr('alt')
-    //             };
-    //             Object.assign(data.img, obj);
-    //             content.find('figure').removeClass('empty');
-    //         }
-    //         title = this.$el.find('.title');
-    //         data.title = {};
-    //         obj = {
-    //             text: title.val(),
-    //             style: title.attr('style')
-    //         };
-    //         Object.assign(data.title, obj);
-
-    //         text = this.$el.find('.text').html();
-    //         data.text = text;
-    //     }
-    //     Object.assign(this.blockStorage.data, data || {});
-    // },
-
-    toMarkdown: function(markdown) {
-        return markdown.replace(/^(.+)$/mg, '$1');
     },
 
     onBlockRender: function() {
@@ -142,20 +103,21 @@ module.exports = Block.extend({
 
         }.bind(this));
 
+
         this.iconPicker = new IconPicker({
-            apiUrl: self.globalConfig.apiUrl + '/media?application=ETU_ETU&type=image&limit=10',//'http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=10', // will be  this.globalConfig.apiUrl
+            apiUrl: self.globalConfig.apiUrl + '/media?application=ETU_ETU&type=image&limit=10',
             blockRef: this,
             modalTriggerElement: this.$el.find('figure')
         });
 
-        // this.iconPicker.on('iconselect', function(selectedIcon) {
+        this.iconPicker.on('picture:change', function(selectedPicture) {
+            var imagePicturHtml =  _.template('<img src="<%= src %>" alt="<%= copyright %>">', selectedPicture);
+            this.$editor.find('figure').append(imagePicturHtml).removeClass('empty');
 
-        //     appendIcon(self, selectedIcon);
-
-        //     this.setData({
-        //         icon: selectedIcon
-        //     });
-        // });
+            this.setData({
+                img: selectedPicture
+            });
+        }.bind(this));
     }
 
 });

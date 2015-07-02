@@ -8,13 +8,8 @@ var xhr = require('etudiant-mod-xhr');
 var Slider    = require('./slider.class.js');
 
 
-var modal = new Modal({
-    slug: 'icons-modal',
-    animation: 'fade',
-    theme: 'media'
-});
+var iconPickerHtml = '<div class="icon-picker"><div class="droppable">Uploader et associer une nouvelle image</div></div>';
 
-var iconPickerHtml = '<div class="icon-picker"><div contenteditable="false" class="droppable">Uploader et associer une nouvelle image</div></div>';
 
 function dropEvent(block){
     $(block).on('dragover dragenter', function(ev){
@@ -45,45 +40,76 @@ function dropEvent(block){
     });
 }
 
-function generateContainer(icons) {
+function createArrayOfIcons(icons) {
     var iconsArray = [];
-    Object.keys(icons).forEach(function(k){
+
+    Object.keys(icons).forEach(function(k) {
         var file = icons[k].file.replace('original', '90x90');
-        var single = _.template('<img src="<%= icon %>" alt="<%= alt %>">')({ icon: file, alt: icons[k].legend  });
+
+        var single = _.template('<img src="<%= icon %>" alt="<%= alt %>">', { icon: file, alt: icons[k].legend});
+
         iconsArray.push(single);
     });
     return iconsArray;
 }
-function getIcons(url, modal){
+
+function getIcons(url, block) {
+    var block = block;
     xhr.get(url)
     .then(function(iconData) {
-        var iconsArray = generateContainer(iconData.content);
-
-        var slider = new Slider({
+        var iconsArray = createArrayOfIcons(iconData.content);
+        var modalInner = block.modal.$elem.children('.modal-content')[0];
+        $(modalInner).append(iconPickerHtml);
+        block.modal.open();
+        var params = {
             contents: iconsArray,
             itemsPerSlide: 5,
-            increment: 2
-        });
-        //modal-icons-modal
-        //slider.appendToDOM($(modalContainer).find('.modal-content'));
-        debugger;
-        var modalInner = modal.$elem.children('.modal-content');
-        modalInner.append(iconPickerHtml);
-        dropEvent(modal.$elem.children('.modal-content .droppable'));
-        //debugger;
-        //slider.appendToDOM($(modalContainer).find('.modal-content'));
-        //slider.render();
-        modal.open();
+            increment: 1,
+            container: $(modalInner),
+            controls: {
+                next: 'Next',
+                prev: 'Prev'
+            }
+        };
+        block.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
+
+
+        dropEvent($(block.modal.$elem.children('.droppable')[0]));
+        block.modal.$elem.children('.icon-picker').toggleClass('is-visible');
+
+        bindClickOnIcons(block)
     })
     .catch(function(err) {
+        console.log(err);
         console.error('Somehting went wrong');
     });
+}
+
+function bindClickOnIcons(block) {
+    $.each(block.slider.$elem.find('img'), function(){
+        $(this).on('click', function(){
+            triggerChangeIllustratedPicture(block, {
+                src: $(this).attr('src'),
+                copyright: $(this).attr('alt')
+            });
+        });
+    });
+}
+
+function triggerChangeIllustratedPicture(block, pictureInformations){
+    block.trigger('picture:change', pictureInformations);
+    block.modal.close();
 }
 
 var IconPicker = function(param) {
     this.apiUrl = param.apiUrl;
     this.blockRef = param.blockRef;
     this.modalTriggerElement = param.modalTriggerElement;
+    this.modal = new Modal({
+        slug: 'icons-modal',
+        animation: 'fade',
+        theme: 'media'
+    });
     this.init();
 };
 
@@ -92,7 +118,7 @@ var prototype = {
     init: function(){
         var self = this;
 
-        modal.render({
+        this.modal.render({
             // @todo i18n the texts - move to locales.js
             header: '<header>Image</header>',
 
@@ -103,7 +129,7 @@ var prototype = {
             }
         });
         this.modalTriggerElement.on('click', function() {
-            var icons = getIcons(self.apiUrl, modal);
+            var icons = getIcons(self.apiUrl, self);
             // @TODO put waiting animation here
         });
     }
