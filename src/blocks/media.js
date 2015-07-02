@@ -36,6 +36,7 @@ function addBlockMessageTemporarily(block, message) {
 }
 
 function registerSaveMediaSubBlock(block, mediaSubBlock) {
+    debugger;
     mediaSubBlock.on('save', function(saveData) {
         if (mediaSubBlock.isSaving !== true) {
             mediaSubBlock.isSaving = true;

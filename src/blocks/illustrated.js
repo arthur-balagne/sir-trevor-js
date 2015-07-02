@@ -12,14 +12,14 @@ var ColorPicker = require('../helpers/colorpicker.class.js');
 var IconPicker  = require('../helpers/iconpicker.class.js');
 
 var blockTemplate = _.template([
-    '<div>',
-        '<div class="illustrated">',
-            '<figure class="empty"></figure>',
-            '<input type="text" class="title" value="<%= titleText %>" >',
-            '<div contenteditable="true" class="text st-text-block"> <%= text %> </div>',
-        '</div>',
+    '<div class="st-text-illustrated illustrated">',
+        '<figure class="empty"></figure>',
+        '<input type="text" class="title" value="<%= titleText %>" >',
+        '<div contenteditable="true" class="text st-text-block"> <%= text %> </div>',
     '</div>'].join('\n')
 );
+
+var imgTemplate = '<img src="<%= src %>" alt="<%= copyright %>">';
 
 function changePictureOnClick($selected, $block) {
     var selectedSrc =  $selected.attr('src');
@@ -33,6 +33,7 @@ module.exports = Block.extend({
         return 'Valeur illustrée';
     },
     controllable: true,
+    droppable: true,
     uploadable: true,
     controls_position: 'top',
     controls_visible: true,
@@ -44,7 +45,7 @@ module.exports = Block.extend({
             fn: function(e) {
                 this.colorPicker.toggleVisible();
             },
-            html: '<span>' + i18n.t('blocks:illustrated:button:color') +'</span>' //i18n.t('block:illustrated:button:color')
+            html: '<span>' + i18n.t('blocks:illustrated:button:color') +'</span>'
         }
     ],
     editorHTML: blockTemplate({
@@ -54,19 +55,18 @@ module.exports = Block.extend({
     icon_name: 'text',
 
     loadData: function(data) {
-        var templateObject = {
-            text: data.text,
-            titleText: data.title.text
-            // titleColor:
-        };
-        var tpl = '';
 
-        templateObject.titleStyle = data.title.style !== undefined ? data.title.style : '';
-        if (data.img !== undefined) {
-            templateObject.imgSrc = data.img.src;
-            templateObject.imgAlt = data.img.alt;
+        if (data.title !== undefined) {
+            this.$el.find('.title').val(data.title);
         }
-        tpl = blockTemplate(templateObject);
+        if (data.titleColor !== undefined) {
+            this.$el.find('.title').css('color', data.titleColor);
+        }
+        if (data.img !== undefined) {
+            var imgHtml = _.template(imgTemplate,(data.img));
+            this.$el.find('figure').append(imgHtml).removeClass('empty');
+        }
+
         this.getTextBlock().html(stToHTML(data.text, this.type));
     },
 
@@ -96,22 +96,30 @@ module.exports = Block.extend({
 
         this.colorPicker.on('color:change', function(selectedColor) {
             this.$editor.find('.title').css('color', selectedColor);
-
             this.setData({
                 titleColor: selectedColor
             });
 
         }.bind(this));
 
+        this.$editor.find('.title').on('keyup', function(){
+            var title = $(this).val();
+            self.setData({
+                title: title
+            });
+        })
 
-        this.iconPicker = new IconPicker({
+        this.iconPicker = new IconPicker ({
             apiUrl: self.globalConfig.apiUrl + '/media?application=ETU_ETU&type=image&limit=10',
             blockRef: this,
             modalTriggerElement: this.$el.find('figure')
         });
 
         this.iconPicker.on('picture:change', function(selectedPicture) {
-            var imagePicturHtml =  _.template('<img src="<%= src %>" alt="<%= copyright %>">', selectedPicture);
+            var imagePicturHtml =  _.template(imgTemplate, selectedPicture);
+            if(this.$editor.find('figure').children() !== undefined){
+                this.$editor.find('figure').children().remove();
+            }
             this.$editor.find('figure').append(imagePicturHtml).removeClass('empty');
 
             this.setData({

@@ -46,8 +46,7 @@ function createArrayOfIcons(icons) {
     Object.keys(icons).forEach(function(k) {
         var file = icons[k].file.replace('original', '90x90');
 
-        var single = _.template('<img src="<%= icon %>" alt="<%= alt %>">', { icon: file, alt: icons[k].legend});
-
+        var single = _.template('<img src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icons[k].legend});
         iconsArray.push(single);
     });
     return iconsArray;
@@ -58,21 +57,30 @@ function getIcons(url, block) {
     xhr.get(url)
     .then(function(iconData) {
         var iconsArray = createArrayOfIcons(iconData.content);
-        var modalInner = block.modal.$elem.children('.modal-content')[0];
-        $(modalInner).append(iconPickerHtml);
-        block.modal.open();
-        var params = {
-            contents: iconsArray,
-            itemsPerSlide: 5,
-            increment: 1,
-            container: $(modalInner),
-            controls: {
-                next: 'Next',
-                prev: 'Prev'
-            }
-        };
-        block.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
 
+        var modalInner = block.modal.$elem.children('.modal-content')[0];
+
+        if (block.modal.$elem.children('.icon-picker') === false) {
+             block.iconPicker = iconPickerHtml;
+             $(modalInner).append(block.iconPicker);
+        }
+
+
+        block.modal.open();
+
+        if(!block.slider) {
+            var params = {
+                contents: iconsArray,
+                itemsPerSlide: 5,
+                increment: 1,
+                container: $(modalInner),
+                controls: {
+                    next: 'Next',
+                    prev: 'Prev'
+                }
+            };
+            block.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
+        }
 
         dropEvent($(block.modal.$elem.children('.droppable')[0]));
         block.modal.$elem.children('.icon-picker').toggleClass('is-visible');
