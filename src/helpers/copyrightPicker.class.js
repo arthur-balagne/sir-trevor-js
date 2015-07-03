@@ -5,7 +5,7 @@ var eventablejs = require('eventablejs');
 var _   = require('../lodash.js');
 var xhr         = require('etudiant-mod-xhr');
 
-var copyrightTemplate =  '<figcaption><input class="copyright" list="copyrights" type="text" placeholder="Copyright"><button class="validate">Ok</button>'
+var copyrightTemplate =  '<figcaption><select multiple class="copyright"></select><button class="validate">Ok</button>'
 
 function prepareCopyrights(copyrights) {
     return copyrights.map(function(copyright) {
@@ -29,10 +29,9 @@ function bindEventToCopyright(block) {
 
         var url = block.globalConfig.apiUrl + 'edt/media/' + block.imageId;
         var saveData = {};
-
-        saveData['copyright'] = block.$el.find('figure figcaption .copyright').val();
+        saveData['copyright'] = block.$el.find('figure figcaption .copyright option:selected').text();
         saveData['id_categorie'] = 2;
-        saveData['legende'] = block.$el.find('figure figcaption .copyright').val();
+        saveData['legende'] = block.$el.find('figure figcaption .copyright option:selected').text();
 
         xhr.patch(url, saveData)
             .then(function(returnedData) {
@@ -58,16 +57,19 @@ var prototype = {
         var categoryOptionsPromise = xhr.get(categoryOptionsUrl)
             .then(function(result) {
                 var copyrights = prepareCopyrights(result.content.copyrights);
-                var optionsHtml = '<datalist id="copyrights">';
+
+                var optionsHtml = '';
+
                 Object.keys(copyrights).forEach(function(key){
-                    var optionTpl = _.template('<option value="<%= value %>">');
+                    var optionTpl = _.template('<option value="<%= value %>"><%= value %></option>');
                     optionsHtml =  optionsHtml + optionTpl({
                         'value': copyrights[key].label
                     });
                 });
-                optionsHtml = optionsHtml + '</datalist>'
-                var $figcaption = block.$el.find('figure figcaption');
-                $figcaption.append(optionsHtml);
+
+                var $select = block.$el.find('figure figcaption .copyright');
+
+                $select.append(optionsHtml);
 
             })
             .catch(function(err) {

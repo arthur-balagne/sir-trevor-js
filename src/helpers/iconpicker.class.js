@@ -63,7 +63,7 @@ function createArrayOfIcons(icons) {
     var iconsArray = [];
     Object.keys(icons).forEach(function(k) {
         var file = icons[k].file.replace('original', '90x90');
-        var single = _.template('<img src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icons[k].legend });
+        var single = _.template('<img data-id=<%= id %> src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icons[k].legend , id: icons[k].id });
         iconsArray.push(single);
     });
     return iconsArray;
@@ -156,15 +156,17 @@ var prototype = {
             }
         });
 
-        if (this.modalTriggerElement.children().length === 0){
-            this.modalTriggerElement.on('click', function() {
+        if (this.modalTriggerElement.children().length !== 0){
+            this.modalTriggerElement.on('click', 'img', function() {
                 var icons = getIcons(self.apiUrl , self);
             })
         }
         else {
-            this.modalTriggerElement.on('click', 'img', function() {
+            this.modalTriggerElement.on('click', function() {
                 var icons = getIcons(self.apiUrl , self);
+                $(this).off('click');
             });
+
         }
     }
 }

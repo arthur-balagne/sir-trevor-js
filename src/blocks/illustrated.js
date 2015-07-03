@@ -116,9 +116,11 @@ module.exports = Block.extend({
 
         this.iconPicker.on('picture:change', function(selectedPicture) {
             var imagePicturHtml =  _.template(imgTemplate, selectedPicture);
+
             if(this.$editor.find('figure').children() !== undefined){
                 this.$editor.find('figure').children().remove();
             }
+
             this.$editor.find('figure').append(imagePicturHtml).removeClass('empty');
 
             this.setData({
