@@ -17,15 +17,11 @@ var blockTemplate = _.template([
         '<figure class="empty"></figure>',
         '<input type="text" class="title" value="<%= titleText %>" >',
         '<div contenteditable="true" class="text st-text-block"> <%= text %> </div>',
-    '</div>'].join('\n')
+    '</div>'
+    ].join('\n')
 );
 
 var imgTemplate = '<img src="<%= src %>" alt="<%= copyright %>"></figcaption>';
-
-function changePictureOnClick($selected, $block) {
-    var selectedSrc =  $selected.attr('src');
-    $block.find('figure img').attr('src', selectedSrc);
-}
 
 
 module.exports = Block.extend({
@@ -41,10 +37,10 @@ module.exports = Block.extend({
         {
             slug: 'change-color',
             eventTrigger: 'click',
-            fn: function(e) {
+            fn: function() {
                 this.colorPicker.toggleVisible();
             },
-            html: '<span>' + i18n.t('blocks:illustrated:button:color') +'</span>'
+            html: '<span>' + i18n.t('blocks:illustrated:button:color') + '</span>'
         }
     ],
     editorHTML: blockTemplate({
@@ -62,7 +58,7 @@ module.exports = Block.extend({
             this.$el.find('.title').css('color', data.titleColor);
         }
         if (data.img !== undefined) {
-            var imgHtml = _.template(imgTemplate,(data.img));
+            var imgHtml = _.template(imgTemplate, (data.img));
             this.$el.find('figure').append(imgHtml).removeClass('empty');
         }
 
@@ -106,9 +102,9 @@ module.exports = Block.extend({
             self.setData({
                 title: title
             });
-        })
+        });
 
-        this.iconPicker = new IconPicker ({
+        this.iconPicker = new IconPicker({
             apiUrl: self.globalConfig.apiUrl + 'edt/media?application=ETU_ETU&type=image&limit=10',
             blockRef: this,
             modalTriggerElement: this.$el.find('figure')
@@ -117,7 +113,7 @@ module.exports = Block.extend({
         this.iconPicker.on('picture:change', function(selectedPicture) {
             var imagePicturHtml =  _.template(imgTemplate, selectedPicture);
 
-            if(this.$editor.find('figure').children() !== undefined){
+            if (this.$editor.find('figure').children() !== undefined) {
                 this.$editor.find('figure').children().remove();
             }
 
@@ -127,20 +123,11 @@ module.exports = Block.extend({
                 img: selectedPicture
             });
 
-            //Picture changed we check for copyright
-            var figure = this.$el.find('figure');
-
-            if (this.$el.find('figure').find('img').attr('alt').length == 0) {
+            if (this.$el.find('figure').find('img').attr('alt').length === 0) {
                 self.copyrightPicker = new CopyrightPicker(self);
             }
 
         }.bind(this));
-
-        var self = this;
-
-
     }
 
 });
-
-

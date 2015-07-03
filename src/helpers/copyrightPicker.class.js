@@ -5,7 +5,7 @@ var eventablejs = require('eventablejs');
 var _   = require('../lodash.js');
 var xhr         = require('etudiant-mod-xhr');
 
-var copyrightTemplate =  '<figcaption><select multiple class="copyright"></select><button class="validate">Ok</button>'
+var copyrightTemplate =  '<figcaption><select multiple class="copyright"></select><button class="validate">Ok</button>';
 
 function prepareCopyrights(copyrights) {
     return copyrights.map(function(copyright) {
@@ -15,10 +15,6 @@ function prepareCopyrights(copyrights) {
         };
     });
 }
-function appendCopyrightSelector(block) {
-    block.$el.find('figure').append(copyrightTemplate);
-    bindEventToCopyright(block);
-}
 
 function bindEventToCopyright(block) {
 
@@ -27,7 +23,8 @@ function bindEventToCopyright(block) {
     $validate.on('click', function(ev){
         ev.preventDefault();
 
-        var selecteds = '' ;
+        var selecteds = '';
+
         $.each(block.$el.find('figure figcaption .copyright option:selected'), function(){
             selecteds = selecteds + ' ' + $(this).val();
         });
@@ -35,18 +32,23 @@ function bindEventToCopyright(block) {
         var url = block.globalConfig.apiUrl + 'edt/media/' + block.imageId;
         var saveData = {};
 
-        saveData['copyright'] = selecteds;
-        saveData['id_categorie'] = 2;
-        saveData['legende'] = selecteds;
+        saveData.copyright = selecteds;
+        saveData.id_categorie = 2;
+        saveData.legende = selecteds;
 
         xhr.patch(url, saveData)
-            .then(function(returnedData) {
+            .then(function() {
                console.log('Block informations updated');
             })
             .catch(function(err) {
                 console.error('Error updating copyright informations', err);
             });
-    })
+    });
+}
+
+function appendCopyrightSelector(block) {
+    block.$el.find('figure').append(copyrightTemplate);
+    bindEventToCopyright(block);
 }
 
 var CopyrightPicker = function(block) {
@@ -57,10 +59,9 @@ var CopyrightPicker = function(block) {
 
 var prototype = {
     init: function(block) {
-        var self = this;
         var categoryOptionsUrl = block.globalConfig.apiUrl + 'edt/media/filters/' + block.globalConfig.application;
 
-        var categoryOptionsPromise = xhr.get(categoryOptionsUrl)
+        xhr.get(categoryOptionsUrl)
             .then(function(result) {
                 var copyrights = prepareCopyrights(result.content.copyrights);
 
@@ -68,7 +69,7 @@ var prototype = {
 
                 Object.keys(copyrights).forEach(function(key){
                     var optionTpl = _.template('<option value="<%= value %>"><%= value %></option>');
-                    optionsHtml =  optionsHtml + optionTpl({
+                    optionsHtml = optionsHtml + optionTpl({
                         'value': copyrights[key].label
                     });
                 });

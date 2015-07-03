@@ -10,6 +10,26 @@ var FileUploader = require('../extensions/file-uploader.js');
 
 var iconPickerHtml = '<div class="icon-picker"><div class="droppable st-block__upload-container">' + i18n.t('blocks:illustrated:placeholder:drop') + '</div></div>';
 
+function triggerChangeIllustratedPicture(block, pictureInformations){
+    block.blockRef.imageId = pictureInformations.id;
+    block.trigger('picture:change', pictureInformations);
+
+    block.modal.close();
+
+}
+
+function bindClickOnIcons(block) {
+    $.each(block.slider.$elem.find('img'), function(){
+        $(this).on('click', function(){
+            triggerChangeIllustratedPicture(block, {
+                src: $(this).attr('src'),
+                copyright: $(this).attr('alt'),
+                id: $(this).data('id')
+            });
+        });
+    });
+}
+
 function dropEvent(iconPicker){
     $(iconPicker.modal.$elem.children('.droppable')[0]).off();
     $(iconPicker.modal.$elem.children('.droppable')[0]).on('dragover dragenter', function(ev){
@@ -26,7 +46,6 @@ function dropEvent(iconPicker){
 
         var file = ev.originalEvent.dataTransfer.files[0];
 
-        var urlAPI = (typeof window.URL !== 'undefined') ? window.URL : (typeof window.webkitURL !== 'undefined') ? window.webkitURL : null;
         if (/image/.test(file.type)) {
 
             var fileUploader = new FileUploader(iconPicker.blockRef, iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/upload');
@@ -63,14 +82,13 @@ function createArrayOfIcons(icons) {
     var iconsArray = [];
     Object.keys(icons).forEach(function(k) {
         var file = icons[k].file.replace('original', '90x90');
-        var single = _.template('<img data-id=<%= id %> src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icons[k].legend , id: icons[k].id });
+        var single = _.template('<img data-id=<%= id %> src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icons[k].legend, id: icons[k].id });
         iconsArray.push(single);
     });
     return iconsArray;
 }
 
 function getIcons(url, block) {
-    var block = block;
     xhr.get(url)
     .then(function(iconData) {
         var iconsArray = createArrayOfIcons(iconData.content);
@@ -86,7 +104,7 @@ function getIcons(url, block) {
 
         block.modal.open();
 
-        if(block.slider === undefined) {
+        if (block.slider === undefined) {
             var params = {
                 contents: iconsArray,
                 itemsPerSlide: 5,
@@ -97,6 +115,7 @@ function getIcons(url, block) {
                     prev: 'Prev'
                 }
             };
+
             block.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
         }
 
@@ -106,27 +125,6 @@ function getIcons(url, block) {
         console.log(err);
         console.error('Somehting went wrong');
     });
-}
-
-
-function bindClickOnIcons(block) {
-    $.each(block.slider.$elem.find('img'), function(){
-        $(this).on('click', function(){
-            triggerChangeIllustratedPicture(block, {
-                src: $(this).attr('src'),
-                copyright: $(this).attr('alt'),
-                id: $(this).data('id')
-            });
-        });
-    });
-}
-
-function triggerChangeIllustratedPicture(block, pictureInformations){
-    block.blockRef.imageId =  pictureInformations.id;
-    block.trigger('picture:change', pictureInformations);
-
-    block.modal.close();
-
 }
 
 var IconPicker = function(param) {
@@ -158,18 +156,17 @@ var prototype = {
 
         if (this.modalTriggerElement.children().length !== 0){
             this.modalTriggerElement.on('click', 'img', function() {
-                var icons = getIcons(self.apiUrl , self);
-            })
+                getIcons(self.apiUrl, self);
+            });
         }
         else {
             this.modalTriggerElement.on('click', function() {
-                var icons = getIcons(self.apiUrl , self);
+                getIcons(self.apiUrl, self);
                 $(this).off('click');
             });
-
         }
     }
-}
+};
 
 IconPicker.prototype = Object.assign({}, prototype, eventablejs);
 
