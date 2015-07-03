@@ -8,37 +8,62 @@ var xhr         = require('etudiant-mod-xhr');
 var Slider      = require('./slider.class.js');
 var FileUploader = require('../extensions/file-uploader.js');
 
-
-
-var iconPickerHtml = '<div class="icon-picker"><div class="droppable st-block__upload-container">Uploader et associer une nouvelle image</div></div>';
+var iconPickerHtml = '<div class="icon-picker"><div class="droppable st-block__upload-container">' + i18n.t('blocks:illustrated:placeholder:drop') + '</div></div>';
 
 function dropEvent(iconPicker){
+    $(iconPicker.modal.$elem.children('.droppable')[0]).off();
     $(iconPicker.modal.$elem.children('.droppable')[0]).on('dragover dragenter', function(ev){
         ev.preventDefault();
         ev.stopPropagation();
     });
 
+
     $(iconPicker.modal.$elem.children('.droppable')[0]).on('drop', function(ev){
         ev.preventDefault();
         ev.stopPropagation();
+
+        iconPicker.blockRef.loading();
 
         var file = ev.originalEvent.dataTransfer.files[0];
 
         var urlAPI = (typeof window.URL !== 'undefined') ? window.URL : (typeof window.webkitURL !== 'undefined') ? window.webkitURL : null;
         if (/image/.test(file.type)) {
-            var fileUploader = iconPicker.blockRef.uploader;
-            fileUploader.upload(file);
+
+            var fileUploader = new FileUploader(iconPicker.blockRef, iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/upload');
+
+            var uploadedMedia;
+
+            var uploadPromise = fileUploader.upload(file)
+            .then(function(returnedData){
+                uploadedMedia = iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/' + returnedData.idMedia;
+            });
+
+            uploadPromise.then(function(){
+                iconPicker.blockRef.ready();
+                iconPicker.modal.close();
+                xhr.get(uploadedMedia)
+
+                .then(function(imageData) {
+                   triggerChangeIllustratedPicture(iconPicker, {
+                        src: imageData.content.thumbnail,
+                        copyright: imageData.content.copyright,
+                        id: imageData.content.id
+                    });
+                });
+            });
+
+            uploadPromise.catch(function(err){
+                console.log(err);
+            });
         }
     });
 }
 
 function createArrayOfIcons(icons) {
     var iconsArray = [];
-
     Object.keys(icons).forEach(function(k) {
         var file = icons[k].file.replace('original', '90x90');
-
-        var single = _.template('<img src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icons[k].legend});
+        var single = _.template('<img src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icons[k].legend });
         iconsArray.push(single);
     });
     return iconsArray;
@@ -53,14 +78,15 @@ function getIcons(url, block) {
         var modalInner = block.modal.$elem.children('.modal-content')[0];
 
         if (block.modal.$elem.children('.icon-picker') === false) {
-             block.iconPicker = iconPickerHtml;
-             $(modalInner).append(block.iconPicker);
+            block.iconPicker = iconPickerHtml;
+            $(modalInner).append(block.iconPicker);
+            block.modal.$elem.children('.icon-picker').addClass('is-visible');
         }
-
+        dropEvent(block);
 
         block.modal.open();
 
-        if(!block.slider) {
+        if(block.slider === undefined) {
             var params = {
                 contents: iconsArray,
                 itemsPerSlide: 5,
@@ -74,10 +100,7 @@ function getIcons(url, block) {
             block.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
         }
 
-        dropEvent(block);
-        block.modal.$elem.children('.icon-picker').toggleClass('is-visible');
-
-        bindClickOnIcons(block)
+        bindClickOnIcons(block);
     })
     .catch(function(err) {
         console.log(err);
@@ -91,15 +114,19 @@ function bindClickOnIcons(block) {
         $(this).on('click', function(){
             triggerChangeIllustratedPicture(block, {
                 src: $(this).attr('src'),
-                copyright: $(this).attr('alt')
+                copyright: $(this).attr('alt'),
+                id: $(this).data('id')
             });
         });
     });
 }
 
 function triggerChangeIllustratedPicture(block, pictureInformations){
+    block.blockRef.imageId =  pictureInformations.id;
     block.trigger('picture:change', pictureInformations);
+
     block.modal.close();
+
 }
 
 var IconPicker = function(param) {
@@ -120,20 +147,25 @@ var prototype = {
         var self = this;
 
         this.modal.render({
-            // @todo i18n the texts - move to locales.js
-            header: '<header>Image</header>',
+            header: '<header>' + i18n.t('blocks:illustrated:modal:header') + '</header>',
 
             content: '',
 
             footer: {
-                next: 'Ok'
+                ok: i18n.t('blocks:illustrated:modal:close')
             }
         });
-        this.modalTriggerElement.on('click', function() {
-            var icons = getIcons(self.apiUrl, self);
-            // @TODO put waiting animation here
-        });
-        return this;
+
+        if (this.modalTriggerElement.children().length === 0){
+            this.modalTriggerElement.on('click', function() {
+                var icons = getIcons(self.apiUrl , self);
+            })
+        }
+        else {
+            this.modalTriggerElement.on('click', 'img', function() {
+                var icons = getIcons(self.apiUrl , self);
+            });
+        }
     }
 }
 

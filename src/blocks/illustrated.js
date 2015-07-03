@@ -4,12 +4,13 @@
   Illustrated Block
 */
 
-var Block       = require('../block');
-var stToHTML    = require('../to-html');
-var _           = require('../lodash.js');
-var $           = require('jquery');
-var ColorPicker = require('../helpers/colorpicker.class.js');
-var IconPicker  = require('../helpers/iconpicker.class.js');
+var Block            = require('../block');
+var stToHTML         = require('../to-html');
+var _                = require('../lodash.js');
+var $                = require('jquery');
+var ColorPicker      = require('../helpers/colorpicker.class.js');
+var IconPicker       = require('../helpers/iconpicker.class.js');
+var CopyrightPicker  = require('../helpers/copyrightPicker.class.js');
 
 var blockTemplate = _.template([
     '<div class="st-text-illustrated illustrated">',
@@ -19,7 +20,7 @@ var blockTemplate = _.template([
     '</div>'].join('\n')
 );
 
-var imgTemplate = '<img src="<%= src %>" alt="<%= copyright %>">';
+var imgTemplate = '<img src="<%= src %>" alt="<%= copyright %>"></figcaption>';
 
 function changePictureOnClick($selected, $block) {
     var selectedSrc =  $selected.attr('src');
@@ -33,8 +34,6 @@ module.exports = Block.extend({
         return 'Valeur illustrée';
     },
     controllable: true,
-    droppable: true,
-    uploadable: true,
     controls_position: 'top',
     controls_visible: true,
     controls:
@@ -110,7 +109,7 @@ module.exports = Block.extend({
         })
 
         this.iconPicker = new IconPicker ({
-            apiUrl: self.globalConfig.apiUrl + '/media?application=ETU_ETU&type=image&limit=10',
+            apiUrl: self.globalConfig.apiUrl + 'edt/media?application=ETU_ETU&type=image&limit=10',
             blockRef: this,
             modalTriggerElement: this.$el.find('figure')
         });
@@ -125,7 +124,19 @@ module.exports = Block.extend({
             this.setData({
                 img: selectedPicture
             });
+
+            //Picture changed we check for copyright
+            var figure = this.$el.find('figure');
+
+            if (this.$el.find('figure').find('img').attr('alt').length == 0) {
+                self.copyrightPicker = new CopyrightPicker(self);
+            }
+
         }.bind(this));
+
+        var self = this;
+
+
     }
 
 });

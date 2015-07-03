@@ -81,7 +81,12 @@ var Locales = {
             },
             placeholder: {
                 text: 'Votre texte',
-                title: 'Votre titre'
+                title: 'Votre titre',
+                drop : 'Uploader et associer une nouvelle image'
+            },
+            modal: {
+                close: 'Fermer',
+                header: 'Image'
             }
 
         },
