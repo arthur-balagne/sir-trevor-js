@@ -27,11 +27,17 @@ function bindEventToCopyright(block) {
     $validate.on('click', function(ev){
         ev.preventDefault();
 
+        var selecteds = '' ;
+        $.each(block.$el.find('figure figcaption .copyright option:selected'), function(){
+            selecteds = selecteds + ' ' + $(this).val();
+        });
+
         var url = block.globalConfig.apiUrl + 'edt/media/' + block.imageId;
         var saveData = {};
-        saveData['copyright'] = block.$el.find('figure figcaption .copyright option:selected').text();
+
+        saveData['copyright'] = selecteds;
         saveData['id_categorie'] = 2;
-        saveData['legende'] = block.$el.find('figure figcaption .copyright option:selected').text();
+        saveData['legende'] = selecteds;
 
         xhr.patch(url, saveData)
             .then(function(returnedData) {
