@@ -82,7 +82,6 @@ function onDrop(transferData, iconPicker) {
             iconPicker.modal.close();
 
             return getMedia(uploadedMedia, iconPicker);
-
         }).catch(function(err) {
             console.log(err);
         });

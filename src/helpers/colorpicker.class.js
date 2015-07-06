@@ -1,8 +1,8 @@
 'use strict';
 
-var $ = require('jquery');
+var $           = require('jquery');
 var eventablejs = require('eventablejs');
-var _   = require('../lodash.js');
+var _           = require('../lodash.js');
 
 var tableTemplate = '<table class="color-picker"><%= content %></table>';
 
