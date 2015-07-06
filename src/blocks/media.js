@@ -39,10 +39,8 @@ function registerSaveMediaSubBlock(block, mediaSubBlock) {
     mediaSubBlock.on('save', function(saveData) {
         if (mediaSubBlock.isSaving !== true) {
             mediaSubBlock.isSaving = true;
-
             if (mediaSubBlock.isEditable) {
                 var url = block.globalConfig.apiUrl + 'edt/media/' + mediaSubBlock.id;
-                debugger;
                 xhr.patch(url, saveData)
                     .then(function(returnedData) {
                         block.setData({
@@ -249,7 +247,7 @@ module.exports = Block.extend({
                     var retrieveUrl = 'http://api.letudiant.lk/edt/media/281615';
 
                     self.setData({
-                        // id: uploadData.idMedia
+                        id: uploadData.idMedia
                     });
 
                     xhr.get(retrieveUrl)

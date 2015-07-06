@@ -1,8 +1,8 @@
 'use strict';
 
-var $ = require('jquery');
+var $           = require('jquery');
 var eventablejs = require('eventablejs');
-var _   = require('../lodash.js');
+var _           = require('../lodash.js');
 var xhr         = require('etudiant-mod-xhr');
 
 var copyrightTemplate =  '<figcaption class="illustrated-figcaption"><select multiple class="copyright"></select><button class="validate">Ok</button>';
@@ -17,7 +17,6 @@ function prepareCopyrights(copyrights) {
 }
 
 function bindEventToCopyright(block) {
-    console.log(this);
     var $save = block.$el.find('.illustrated-figure .validate');
 
     $save.on('click', function(ev){
@@ -27,14 +26,15 @@ function bindEventToCopyright(block) {
 
         var url = block.globalConfig.apiUrl + 'edt/media/' + block.imageId;
         var saveData = {};
-        saveData.copyright = selecteds;
+        saveData.copyrights = selecteds;
         saveData.id_categorie = 2;
         saveData.legende = block.imageId;
 
         xhr.patch(url, saveData)
             .then(function() {
                console.log('Block informations updated');
-               block.copyrightPicker.trigger('copyright:changed', saveData);
+
+               block.iconPicker.copyrightPicker.trigger('copyright:changed', saveData);
             })
             .catch(function(err) {
                 console.error('Error updating copyright informations', err);
@@ -61,11 +61,11 @@ var prototype = {
                 var copyrights = prepareCopyrights(result.content.copyrights);
 
                 var optionsHtml = '';
-
                 copyrights.forEach(function(copyright){
-                    var optionTpl = _.template('<option value="<%= value %>"><%= value %></option>');
+                    var optionTpl = _.template('<option value="<%= value %>"><%= label %></option>');
                     optionsHtml = optionsHtml + optionTpl({
-                        'value': copyright.label
+                        'label': copyright.label,
+                        'value': copyright.value
                     });
                 });
 

@@ -123,7 +123,6 @@ module.exports = Block.extend({
                 img: selectedPicture
             });
 
-
         }.bind(this));
     }
 
