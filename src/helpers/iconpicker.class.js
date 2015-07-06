@@ -24,7 +24,7 @@ function triggerChangeIllustratedPicture(iconPicker, pictureInformations){
         iconPicker.copyrightPicker = new CopyrightPicker(iconPicker.blockRef);
         iconPicker.copyrightPicker.on('copyright:changed', function() {
 
-            iconPicker.blockRef.addMessage('Copyright mis à jour', 'st-block-displaying-message');
+            iconPicker.blockRef.addMessage(i18n.t('blocks:illustrated:placeholder:updated'), 'st-block-displaying-message');
 
             window.setTimeout(function() {
                 iconPicker.blockRef.resetMessages();
@@ -133,8 +133,8 @@ function getIcons(iconPicker) {
                 increment: 1,
                 container: $(modalInner),
                 controls: {
-                    next: 'Next',
-                    prev: 'Prev'
+                    next: i18n.t('blocks:illustrated:modal:next'),
+                    prev: i18n.t('blocks:illustrated:modal:prev')
                 }
             };
 
