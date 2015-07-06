@@ -5,7 +5,7 @@ var eventablejs = require('eventablejs');
 var _   = require('../lodash.js');
 var xhr         = require('etudiant-mod-xhr');
 
-var copyrightTemplate =  '<figcaption><select multiple class="copyright"></select><button class="validate">Ok</button>';
+var copyrightTemplate =  '<figcaption class="illustrated-figcaption"><select multiple class="copyright"></select><button class="validate">Ok</button>';
 
 function prepareCopyrights(copyrights) {
     return copyrights.map(function(copyright) {
@@ -17,28 +17,24 @@ function prepareCopyrights(copyrights) {
 }
 
 function bindEventToCopyright(block) {
+    console.log(this);
+    var $save = block.$el.find('.illustrated-figure .validate');
 
-    var $validate = block.$el.find('figure figcaption .validate');
-
-    $validate.on('click', function(ev){
+    $save.on('click', function(ev){
         ev.preventDefault();
 
-        var selecteds = '';
-
-        $.each(block.$el.find('figure figcaption .copyright option:selected'), function(){
-            selecteds = selecteds + ' ' + $(this).val();
-        });
+        var selecteds = block.$el.find('.illustrated-figure .copyright').val();
 
         var url = block.globalConfig.apiUrl + 'edt/media/' + block.imageId;
         var saveData = {};
-
         saveData.copyright = selecteds;
         saveData.id_categorie = 2;
-        saveData.legende = selecteds;
+        saveData.legende = block.imageId;
 
         xhr.patch(url, saveData)
             .then(function() {
                console.log('Block informations updated');
+               block.copyrightPicker.trigger('copyright:changed', saveData);
             })
             .catch(function(err) {
                 console.error('Error updating copyright informations', err);
@@ -46,15 +42,14 @@ function bindEventToCopyright(block) {
     });
 }
 
-function appendCopyrightSelector(block) {
-    block.$el.find('figure').append(copyrightTemplate);
+function appendCopyrightSelector(copyrightPicker, block) {
+    block.$el.find('.illustrated-figure').append(copyrightTemplate);
     bindEventToCopyright(block);
 }
 
 var CopyrightPicker = function(block) {
-    appendCopyrightSelector(block);
+    appendCopyrightSelector(this, block);
     this.init(block);
-
 };
 
 var prototype = {
@@ -67,10 +62,10 @@ var prototype = {
 
                 var optionsHtml = '';
 
-                Object.keys(copyrights).forEach(function(key){
+                copyrights.forEach(function(copyright){
                     var optionTpl = _.template('<option value="<%= value %>"><%= value %></option>');
                     optionsHtml = optionsHtml + optionTpl({
-                        'value': copyrights[key].label
+                        'value': copyright.label
                     });
                 });
 

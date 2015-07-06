@@ -36,14 +36,13 @@ function addBlockMessageTemporarily(block, message) {
 }
 
 function registerSaveMediaSubBlock(block, mediaSubBlock) {
-    debugger;
     mediaSubBlock.on('save', function(saveData) {
         if (mediaSubBlock.isSaving !== true) {
             mediaSubBlock.isSaving = true;
 
             if (mediaSubBlock.isEditable) {
                 var url = block.globalConfig.apiUrl + 'edt/media/' + mediaSubBlock.id;
-
+                debugger;
                 xhr.patch(url, saveData)
                     .then(function(returnedData) {
                         block.setData({
@@ -244,10 +243,9 @@ module.exports = Block.extend({
             self.subBlockSearch.destroy();
             self.subBlockSearch = null;
 
-            // self.uploader.upload(file)
-                // .then(function(uploadData) {
-                    // debugger;
-                    // var retrieveUrl = self.globalConfig.apiUrl + 'edt' + '/' + self.type + '/' + uploadData.idMedia;
+             self.uploader.upload(file)
+                 .then(function(uploadData) {
+                    var retrieveUrl = self.globalConfig.apiUrl + 'edt' + '/' + self.type + '/' + uploadData.idMedia;
                     var retrieveUrl = 'http://api.letudiant.lk/edt/media/281615';
 
                     self.setData({
@@ -278,12 +276,12 @@ module.exports = Block.extend({
                         .catch(function(err) {
                             throw new Error('No block returned for id:' + uploadData.idMedia + ' ' + err);
                         });
-                // })
-                // .catch(function(error) {
-                    // console.error(error);
-                    // self.addMessage(i18n.t('blocks:image:upload_error'));
-                    // self.ready();
-                // });
+                 })
+                 .catch(function(error) {
+                     console.error(error);
+                     self.addMessage(i18n.t('blocks:image:upload_error'));
+                     self.ready();
+                 });
         }
     }
 });

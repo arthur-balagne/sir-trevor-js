@@ -1,110 +1,170 @@
 'use strict';
 
-var $           = require('jquery');
-var eventablejs = require('eventablejs');
-var _           = require('../lodash.js');
-var Modal       = require('etudiant-mod-modal');
-var xhr         = require('etudiant-mod-xhr');
-var Slider      = require('./slider.class.js');
-var FileUploader = require('../extensions/file-uploader.js');
+var $                = require('jquery');
+var eventablejs      = require('eventablejs');
+var _                = require('../lodash.js');
+var Modal            = require('etudiant-mod-modal');
+var xhr              = require('etudiant-mod-xhr');
+var Slider           = require('./slider.class.js');
+var FileUploader     = require('../extensions/file-uploader.js');
+var CopyrightPicker  = require('./copyrightPicker.class.js');
 
-var iconPickerHtml = '<div class="icon-picker"><div class="droppable st-block__upload-container">' + i18n.t('blocks:illustrated:placeholder:drop') + '</div></div>';
+var iconPickerHtml = [
+'<div class="icon-picker"><div class="droppable st-block__upload-container">',
+    i18n.t('blocks:illustrated:placeholder:drop'),
+'</div></div>'
+].join('\n');
 
-function triggerChangeIllustratedPicture(block, pictureInformations){
-    block.blockRef.imageId = pictureInformations.id;
-    block.trigger('picture:change', pictureInformations);
 
-    block.modal.close();
+function triggerChangeIllustratedPicture(iconPicker, pictureInformations){
+    iconPicker.blockRef.imageId = pictureInformations.id;
+    iconPicker.trigger('picture:change', pictureInformations);
+
+    if (iconPicker.blockRef.$el.find('figure').find('img').attr('alt').length === 0) {
+        iconPicker.copyrightPicker = new CopyrightPicker(iconPicker.blockRef);
+
+        iconPicker.copyrightPicker.on('copyright:changed', function() {
+            console.log('Put confirmation message here !');
+        });
+    }
+
+    iconPicker.modal.close();
 
 }
 
 function bindClickOnIcons(block) {
-    $.each(block.slider.$elem.find('img'), function(){
-        $(this).on('click', function(){
-            triggerChangeIllustratedPicture(block, {
-                src: $(this).attr('src'),
-                copyright: $(this).attr('alt'),
-                id: $(this).data('id')
-            });
+    block.slider.$elem.on('click', 'img', function(){
+        triggerChangeIllustratedPicture(block, {
+            src: $(this).attr('src'),
+            copyright: $(this).attr('alt'),
+            id: $(this).data('id')
         });
     });
 }
 
-function dropEvent(iconPicker){
-    $(iconPicker.modal.$elem.children('.droppable')[0]).off();
-    $(iconPicker.modal.$elem.children('.droppable')[0]).on('dragover dragenter', function(ev){
+function createDropzone(iconPicker) {
+    iconPicker.blockRef.$editor.$dropzone = $(iconPicker.modal.$elem.children('.droppable')[0]); // assign dropzone to an area
+    iconPicker.blockRef.$editor.$dropzone.dropArea().bind('drop', function(ev){
         ev.preventDefault();
-        ev.stopPropagation();
+        ev = ev.originalEvent;
+        onDrop(ev.dataTransfer, iconPicker);
     });
 
-
-    $(iconPicker.modal.$elem.children('.droppable')[0]).on('drop', function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-
-        iconPicker.blockRef.loading();
-
-        var file = ev.originalEvent.dataTransfer.files[0];
-
-        if (/image/.test(file.type)) {
-
-            var fileUploader = new FileUploader(iconPicker.blockRef, iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/upload');
-
-            var uploadedMedia;
-
-            var uploadPromise = fileUploader.upload(file)
-            .then(function(returnedData){
-                uploadedMedia = iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/' + returnedData.idMedia;
-            });
-
-            uploadPromise.then(function(){
-                iconPicker.blockRef.ready();
-                iconPicker.modal.close();
-                xhr.get(uploadedMedia)
-
-                .then(function(imageData) {
-                   triggerChangeIllustratedPicture(iconPicker, {
-                        src: imageData.content.thumbnail,
-                        copyright: imageData.content.copyright,
-                        id: imageData.content.id
-                    });
-                });
-            });
-
-            uploadPromise.catch(function(err){
-                console.log(err);
-            });
-        }
-    });
 }
+
+function onDrop(transferData, iconPicker) {
+
+
+    var file = transferData.files[0];
+
+    if (/image|video/.test(file.type)) {
+
+        var fileUploader = new FileUploader(iconPicker.blockRef, iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/upload');
+        var uploadedMedia;
+        iconPicker.blockRef.loading()
+        var uploadPromise = fileUploader.upload(file)
+        .then(function(returnedData){
+            uploadedMedia = iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/' + returnedData.idMedia;
+        }).catch(function(err){
+            console.log(err);
+        });
+
+        uploadPromise.then(function(){
+            iconPicker.blockRef.ready();
+            iconPicker.modal.close();
+             return xhr.get(uploadedMedia)
+
+        }).catch(function(err){
+            console.log(err);
+        });
+
+        uploadPromise.then(function(imageData) {
+            iconPicker.blockRef.ready()
+            triggerChangeIllustratedPicture(iconPicker, {
+                src: imageData.content.thumbnail,
+                copyright: imageData.content.copyright,
+                id: imageData.content.id
+            });
+        }).catch(function(err){
+            console.log(err);
+        });
+    }
+}
+
+// function dropEvent(iconPicker){
+//     $(iconPicker.modal.$elem.children('.droppable')[0]).off();
+//     $(iconPicker.modal.$elem.children('.droppable')[0]).on('dragover dragenter', function(ev){
+//         ev.preventDefault();
+//         ev.stopPropagation();
+//     });
+
+
+//     $(iconPicker.modal.$elem.children('.droppable')[0]).on('drop', function(ev){
+//         ev.preventDefault();
+//         ev.stopPropagation();
+
+//         iconPicker.blockRef.loading();
+
+//         var file = ev.originalEvent.dataTransfer.files[0];
+
+//         if (/image/.test(file.type)) {
+
+//             var fileUploader = new FileUploader(iconPicker.blockRef, iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/upload');
+
+//             var uploadedMedia;
+
+//             var uploadPromise = fileUploader.upload(file)
+//             .then(function(returnedData){
+//                 uploadedMedia = iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/' + returnedData.idMedia;
+//             });
+
+//             uploadPromise.then(function(){
+//                 iconPicker.blockRef.ready();
+//                 iconPicker.modal.close();
+//                 xhr.get(uploadedMedia)
+
+//                 .then(function(imageData) {
+//                    triggerChangeIllustratedPicture(iconPicker, {
+//                         src: imageData.content.thumbnail,
+//                         copyright: imageData.content.copyright,
+//                         id: imageData.content.id
+//                     });
+//                 });
+//             });
+
+//             uploadPromise.catch(function(err){
+//                 console.log(err);
+//             });
+//         }
+//     });
+// }
 
 function createArrayOfIcons(icons) {
     var iconsArray = [];
-    Object.keys(icons).forEach(function(k) {
-        var file = icons[k].file.replace('original', '90x90');
-        var single = _.template('<img data-id=<%= id %> src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icons[k].legend, id: icons[k].id });
+    icons.forEach(function(icon) {
+        var file = icon.file.replace('original', '90x90');
+        var single = _.template('<img data-id=<%= id %> src="<%= icon %>" alt="<%= alt %>" >', { icon: file, alt: icon.legend, id: icon.id });
         iconsArray.push(single);
     });
     return iconsArray;
 }
 
-function getIcons(url, block) {
-    xhr.get(url)
+function getIcons(iconPicker) {
+
+    xhr.get(iconPicker.apiUrl)
     .then(function(iconData) {
         var iconsArray = createArrayOfIcons(iconData.content);
 
-        var modalInner = block.modal.$elem.children('.modal-content')[0];
+        var modalInner = iconPicker.modal.$elem.children('.modal-content')[0];
 
-        if (block.modal.$elem.children('.icon-picker') === false) {
-            block.iconPicker = iconPickerHtml;
-            $(modalInner).append(block.iconPicker);
-            block.modal.$elem.children('.icon-picker').addClass('is-visible');
+        if (iconPicker.modal.$elem.children('.icon-picker') === false) {
+            $(modalInner).append(iconPickerHtml);
         }
-        dropEvent(block);
+        createDropzone(iconPicker);
 
-        block.modal.open();
+        iconPicker.modal.open();
 
-        if (block.slider === undefined) {
+        if (iconPicker.slider === undefined) {
             var params = {
                 contents: iconsArray,
                 itemsPerSlide: 5,
@@ -116,10 +176,22 @@ function getIcons(url, block) {
                 }
             };
 
-            block.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
+            iconPicker.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
+            iconPicker.slider.on('progress', function() {
+                var offset = iconPicker.slider.currentIndex * iconPicker.slider.config.itemsPerSlide;
+                //http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20&offset=40
+                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20&offset=' + offset)
+                .then(function(updatedIconData) {
+                    iconsArray = createArrayOfIcons(updatedIconData.content);
+                    iconPicker.slider.update(iconsArray)
+                })
+                .catch(function(err){
+                    console.log(err);
+                })
+            })
         }
 
-        bindClickOnIcons(block);
+        bindClickOnIcons(iconPicker);
     })
     .catch(function(err) {
         console.log(err);
@@ -136,12 +208,13 @@ var IconPicker = function(param) {
         animation: 'fade',
         theme: 'media'
     });
+
     this.init();
 };
 
 var prototype = {
 
-    init: function(){
+    init: function() {
         var self = this;
 
         this.modal.render({
@@ -154,18 +227,20 @@ var prototype = {
             }
         });
 
-        if (this.modalTriggerElement.children().length !== 0){
-            this.modalTriggerElement.on('click', 'img', function() {
-                getIcons(self.apiUrl, self);
-            });
-        }
-        else {
-            this.modalTriggerElement.on('click', function() {
-                getIcons(self.apiUrl, self);
-                $(this).off('click');
-            });
-        }
+        this.modalTriggerElement.on('click', function(ev) {
+            ev.stopPropagation();
+            if ($(this).children().length < 2) {
+                getIcons(self);
+            }
+
+        });
+    },
+
+    destroy: function() {
+        this.modal.destroy();
+
     }
+
 };
 
 IconPicker.prototype = Object.assign({}, prototype, eventablejs);

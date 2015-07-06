@@ -10,11 +10,10 @@ var _                = require('../lodash.js');
 var $                = require('jquery');
 var ColorPicker      = require('../helpers/colorpicker.class.js');
 var IconPicker       = require('../helpers/iconpicker.class.js');
-var CopyrightPicker  = require('../helpers/copyrightPicker.class.js');
 
 var blockTemplate = _.template([
     '<div class="st-text-illustrated illustrated">',
-        '<figure class="empty"></figure>',
+        '<figure class="empty illustrated-figure"></figure>',
         '<input type="text" class="title" value="<%= titleText %>" >',
         '<div contenteditable="true" class="text st-text-block"> <%= text %> </div>',
     '</div>'
@@ -29,6 +28,7 @@ module.exports = Block.extend({
     title: function() {
         return 'Valeur illustrée';
     },
+    ajaxable: true,
     controllable: true,
     controls_position: 'top',
     controls_visible: true,
@@ -105,7 +105,7 @@ module.exports = Block.extend({
         });
 
         this.iconPicker = new IconPicker({
-            apiUrl: self.globalConfig.apiUrl + 'edt/media?application=ETU_ETU&type=image&limit=10',
+            apiUrl: self.globalConfig.apiUrl + 'edt/media?application=ETU_ETU&type=image&limit=20',
             blockRef: this,
             modalTriggerElement: this.$el.find('figure')
         });
@@ -123,9 +123,6 @@ module.exports = Block.extend({
                 img: selectedPicture
             });
 
-            if (this.$el.find('figure').find('img').attr('alt').length === 0) {
-                self.copyrightPicker = new CopyrightPicker(self);
-            }
 
         }.bind(this));
     }
