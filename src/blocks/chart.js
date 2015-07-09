@@ -5,12 +5,8 @@
 */
 
 var Block        = require('../block');
-var stToHTML     = require('../to-html');
 var TableBuilder = require('../helpers/tableBuilder.class.js');
 var ChartBuilder = require('../helpers/chartBuilder.class.js');
-
-
-
 
 var chooseableConfig = {
     'name': 'chartType',
@@ -28,20 +24,9 @@ var chooseableConfig = {
     ]
 };
 
-function onChoose(choices) {
-    var block = this;
-    var chartType = choices.chartType;
+function tableUpdated(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
-    var $table = block.$inner.find('.st__chart-table');
-    var tableBuilder = new TableBuilder({
-        chartType: chartType,
-        block: block,
-        data: [],
-        $elem: $table
-    });
-
     var chartBuilder;
-
     tableBuilder.on('table:updated', function() {
         chartBuilder = new ChartBuilder({
             data: this.data,
@@ -50,13 +35,33 @@ function onChoose(choices) {
             id: 'name',
             x: 'column',
             y: 'value',
-            $elem: $chart,
-            title: '',
-            width: '',
-            height: ''
+            $elem: $chart
         });
+
+        var toSave = {
+            dataList: this.data,
+            type: this.chartType,
+            columns: this.columnsCount,
+            categories: this.categoriesCount
+        };
+        Object.assign(this.block.blockStorage.data, toSave);
         chartBuilder.render();
+
     });
+}
+
+function onChoose(choices) {
+    var chartType = choices.chartType;
+    var $table = this.$inner.find('.st__chart-table');
+
+    var tableBuilder = new TableBuilder({
+        chartType: chartType,
+        block: this,
+        data: [],
+        $elem: $table
+    });
+
+    tableUpdated(tableBuilder, this);
 }
 
 module.exports = Block.extend({
@@ -69,18 +74,32 @@ module.exports = Block.extend({
         return 'Chart';
     },
 
-    editorHTML: '<div class="st__chart"></div><div class="st__chart-table"></div>',
+    editorHTML: '<div class="st__chart-informations"></div><div class="st__chart"></div><div class="st__chart-table"></div>',
 
     icon_name: 'chartpie',
 
     loadData: function(data) {
-        this.getTextBlock().html(stToHTML(data.text, this.type));
-    },
+        var $table = this.$inner.find('.st__chart-table');
 
-    beforeBlockRender: function() {
+        var tableBuilder = new TableBuilder({
+            chartType: data.type,
+            block: this,
+            data: data.dataList,
+            $elem: $table
+        });
+        tableBuilder.columnsCount = data.columns;
+        tableBuilder.categoriesCount = data.categories;
+        this.tableBuilder = tableBuilder;
     },
 
     onBlockRender: function() {
-        this.createChoices(chooseableConfig, onChoose.bind(this));
+        if (this.tableBuilder) {
+
+            this.tableBuilder.render();
+            tableUpdated(this.tableBuilder, this);
+        }
+        else {
+            this.createChoices(chooseableConfig, onChoose.bind(this));
+        }
     }
 });

@@ -73,7 +73,7 @@ function buildTable(params, tableBuilder){
     unique.forEach(function(uniqueName, key){
         var tds = '';
 
-        params.forEach(function(paramElement, paramKey) {
+        params.forEach(function(paramElement) {
 
             if (uniqueName === paramElement.column) {
 
@@ -88,10 +88,8 @@ function buildTable(params, tableBuilder){
 
     });
 
-
     var table = _.template(tableTemplate, {
         content: row
-
     });
     return table;
 }
@@ -123,7 +121,6 @@ function addControls(tableBuilder) {
 function addControlsListenners(tableBuilder) {
     tableBuilder.$elem.find('.add-col').on('click', function(ev) {
         ev.stopPropagation();
-
         tableBuilder.addColumn();
     });
 
@@ -162,6 +159,7 @@ function stopWatchChanges(tableBuilder) {
     tableBuilder.$scope.off('keyup', 'td');
 }
 
+
 function watchChanges(tableBuilder) {
     tableBuilder.$scope.on('keyup', 'td', function(ev) {
         ev.preventDefault();
@@ -189,7 +187,6 @@ var prototype = {
 
     },
 
-
     validate: function() {
         var valid = true;
         return valid;
@@ -200,9 +197,9 @@ var prototype = {
         var $catArray = this.$scope.find('[data-type="cell"]');
         $.each($catArray, function(){
             var obj = {
-                "name": $(this).data('name'),
-                "column": $(this).data('column'),
-                "value": parseInt($(this).html())
+                'name': $(this).data('name'),
+                'column': $(this).data('column'),
+                'value': parseInt($(this).html())
             };
             params.push(obj);
         });
@@ -222,7 +219,7 @@ var prototype = {
             });
         }
 
-        this.columnsCount++
+        this.columnsCount++;
 
         if (this.data.length === 0) {
             this.data = this.getDatas();
@@ -269,8 +266,9 @@ var prototype = {
             return elem.column !== colId;
         });
 
-        this.columnsCount--;
+        this.categoriesCount--;
         this.render();
+        this.trigger('table:updated', this.data);
         stopWatchChanges(this);
         watchChanges(this);
 
@@ -284,7 +282,8 @@ var prototype = {
             return elem.name !== dataName;
         });
 
-        this.categoriesCount--;
+        this.columnsCount--;
+        this.trigger('table:updated', this.data);
         this.render();
         stopWatchChanges(this);
         watchChanges(this);
@@ -292,7 +291,6 @@ var prototype = {
     },
     prepare: function() {
         var tableHtml;
-
         if (this.chartType === 'bar') {
             if (this.data.length === 0) {
 
@@ -330,7 +328,7 @@ var prototype = {
             this.$elem.empty();
         }
 
-         addControls(this);
+        addControls(this);
 
         return tableHtml;
     },
@@ -340,11 +338,10 @@ var prototype = {
 
         this.$elem.append(tableHtml);
         this.$scope = this.$elem.find('.chart-table');
-
         addControlsListenners(this);
         watchChanges(this);
-
     },
+
     destroy: function(){
         removeControlsListenners(this);
     }
