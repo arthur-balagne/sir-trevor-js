@@ -26,15 +26,16 @@ var chooseableConfig = {
 
 function tableUpdated(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
-    var chartBuilder;
+
     tableBuilder.on('table:updated', function() {
-        chartBuilder = new ChartBuilder({
+        var chartBuilder = new ChartBuilder({
             data: this.data,
             type: this.chartType,
             block: block,
             id: 'name',
             x: 'column',
             y: 'value',
+
             $elem: $chart
         });
 
@@ -42,13 +43,33 @@ function tableUpdated(tableBuilder, block) {
             dataList: this.data,
             type: this.chartType,
             columns: this.columnsCount,
-            categories: this.categoriesCount
+            categories: this.categoriesCount,
+            columnsHeaderValues: this.columnsHeaderValues,
+            rowsHeaderValues: this.rowsHeaderValues
         };
         Object.assign(this.block.blockStorage.data, toSave);
         chartBuilder.render();
 
     });
 }
+
+function tableReady(tableBuilder, block) {
+    var $chart = block.$inner.find('.st__chart');
+    tableBuilder.data = tableBuilder.getDatas();
+
+    var chartBuilder = new ChartBuilder({
+        data: tableBuilder.data,
+        type: tableBuilder.chartType,
+        block: block,
+        id: 'name',
+        x: 'column',
+        y: 'value',
+        $elem: $chart
+    });
+
+    chartBuilder.render();
+}
+
 
 function onChoose(choices) {
     var chartType = choices.chartType;
@@ -61,6 +82,7 @@ function onChoose(choices) {
         $elem: $table
     });
 
+    tableReady(tableBuilder, this);
     tableUpdated(tableBuilder, this);
 }
 
@@ -85,18 +107,24 @@ module.exports = Block.extend({
             chartType: data.type,
             block: this,
             data: data.dataList,
-            $elem: $table
+            $elem: $table,
+            columnsHeaderValues: data.columnsHeaderValues,
+            rowsHeaderValues: data.rowsHeaderValues
+
         });
         tableBuilder.columnsCount = data.columns;
         tableBuilder.categoriesCount = data.categories;
+
         this.tableBuilder = tableBuilder;
     },
 
     onBlockRender: function() {
-        if (this.tableBuilder) {
 
+        if (this.tableBuilder) {
             this.tableBuilder.render();
+            tableReady(this.tableBuilder, this);
             tableUpdated(this.tableBuilder, this);
+
         }
         else {
             this.createChoices(chooseableConfig, onChoose.bind(this));

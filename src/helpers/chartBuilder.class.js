@@ -1,4 +1,3 @@
-var _      = require('../lodash');
 var d3     = require('d3');
 var d3plus = require('d3plus');
 
@@ -8,12 +7,12 @@ var Chart = function(params) {
 
 var informationsTemplate = [
     '<div class="title">',
-        '<input type="texte" value="Votre titre" name="chart-name">',
+        '<input type="texte" placeholder="Votre titre" name="chart-name">',
     '</div>',
 
     '<div class="size">',
-        '<label for="chart-width">Largeur</label> <input type="number" value="876" name="chart-width">',
-        '<label for="chart-height">Hauteur</label> <input type="number" value="243" name="chart-height">',
+        '<label for="chart-width">Largeur</label> <input type="number" value="960" name="chart-width">',
+        '<label for="chart-height">Hauteur</label> <input type="number" value="320" name="chart-height">',
     '</div>'
     ].join('\n');
 
@@ -39,7 +38,6 @@ function getChartValues(chartBuilder) {
 
     Object.assign(chartBuilder.block.blockStorage.data, values);
     return values;
-
 }
 
 function updateValues(chartBuilder) {
@@ -63,11 +61,8 @@ function saveTitle(chartBuilder) {
     var fields = getChartInformationsFields(chartBuilder);
     var values = getChartInformationsFieldsValues(fields);
 
-    chartBuilder.block.blockStorage.data.title, values.title;
-    console.log(chartBuilder.block.blockStorage.data);
+    chartBuilder.block.blockStorage.data.title = values.title;
 }
-
-
 
 function bindListenersToFields(chartBuilder) {
     var fields = getChartInformationsFields(chartBuilder);
@@ -87,26 +82,37 @@ function bindListenersToFields(chartBuilder) {
 }
 
 Chart.prototype = {
-    init: function(params) {
-        this.block = params.block;
-        this.$inner = params.block.$inner;
+    init: function(parameters) {
+        this.block = parameters.block;
+        this.$inner = parameters.block.$inner;
 
         this.shape = d3plus.viz()
-        .container('#' + params.block.blockID + ' .' + params.$elem.attr('class'))
-        .data(params.data)
-        .type(params.type)
-        .x(params.x)
-        .y(params.y)
-        .id(params.id)
+        .container('#' + parameters.block.blockID + ' .' + parameters.$elem.attr('class'))
+        .data(parameters.data)
+        .type(parameters.type)
+        .x({
+            value: parameters.x
+        })
+        .y({
+            value: parameters.y
+        })
+        .dev(false);
 
-        if (params.type === 'pie') {
-            this.shape.size(params.y);
+        if (parameters.type === 'bar') {
+            this.shape.id(parameters.id);
+        }
+
+        if (parameters.type === 'pie') {
+            this.shape.id(parameters.y);
+            this.shape.size(parameters.y);
         }
     },
+
     resizeX: function(size) {
         this.shape.width(size.width);
         this.shape.draw();
     },
+
     resizeY: function(size) {
         this.shape.height(size.height);
         this.shape.draw();
@@ -120,7 +126,6 @@ Chart.prototype = {
             this.$informations.append(informationsTemplate);
             updateValues(this);
             bindListenersToFields(this);
-
         }
 
         this.shape.draw();

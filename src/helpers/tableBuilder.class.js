@@ -3,32 +3,40 @@ var $            = require('jquery');
 var eventablejs  = require('eventablejs');
 
 
-var tableTemplate = '<table class="chart-table"><%= content %> </table>';
+var tableTemplate = '<table class="chart-table"><%= headers %><%= content %> </table>';
 
-var rowTemplate = '<tr><%= th %><%= cells %></tr>';
-var cellTemplate = '<td data-name="<%= name %>" data-type="cell" data-column="<%= column %>" contenteditable><%= value %></td>';
+var rowTemplate = '<tr><%= th %><%= tr %></tr>';
+var cellTemplate = '<td data-xaxis="<%= xAxis %>" data-type="cell" data-yaxis="<%= yAxis %>" contenteditable><%= value %></td>';
 
 var barParams = [
     {
         name: 'column-1',
         column: 'category1',
-        value: 8
+        value: 8,
+        xAxis: 1,
+        yAxis: 1
     },
     {
         name: 'column-1',
         column: 'category2',
-        value: 9
+        value: 9,
+        xAxis: 1,
+        yAxis: 2
     },
 
     {
         name: 'column-2',
         column: 'category1',
-        value: 10
+        value: 10,
+        xAxis: 2,
+        yAxis: 1
     },
     {
         name: 'column-2',
         column: 'category2',
-        value: 3
+        value: 3,
+        xAxis: 2,
+        yAxis: 2
     }
 ];
 
@@ -36,12 +44,16 @@ var pieParams = [
     {
         name: 'column-1',
         column: 'category1',
-        value: 8
+        value: 8,
+        xAxis: 1,
+        yAxis: 1
     },
     {
         name: 'column-2',
         column: 'category1',
-        value: 9
+        value: 9,
+        xAxis: 2,
+        yAxis: 1
     }
 ];
 
@@ -49,47 +61,44 @@ function createTableCell(element){
     return _.template(cellTemplate, element);
 }
 
-function buildTable(params, tableBuilder){
-    var columnsArray = [];
-
-    params.forEach(function(value){
-        columnsArray.push(value.column);
+function createTableXaxisHeader(headersTable) {
+    var headers = '<tr><th></th>';
+    headersTable.forEach(function(element, key) {
+        headers += '<th><input type="text" class="xaxis" data-xaxis="' + (key + 1) + '" value="' + element + '"><span data-xaxis="' + (key + 1) + '" class="remove-col"> - </span></th>';
     });
+    headers += '</tr>';
+    return headers;
+}
 
-    var theads = '';
-    for (var i = 1; i <= tableBuilder.columnsCount; i++) {
-        theads += '<th>Colone ' + i + '<span class="remove-col" data-column="column-' + i + '">Col -</span></th>';
+
+function buildTable(params, tableBuilder) {
+    var header = createTableXaxisHeader(tableBuilder.columnsHeaderValues);
+    var rows = '';
+
+    for (var i = 1; i <= tableBuilder.categoriesCount; i++) {
+        var tr = '';
+
+        for (var j = 1; j <= tableBuilder.columnsCount; j++) {
+            params.forEach(function(paramElement) {
+                if (j === paramElement.xAxis && i === paramElement.yAxis) {
+                    tr += createTableCell(paramElement);
+                }
+            });
+        }
+
+        var th = _.template('<th> <input class="yaxis" data-yaxis="<%= id %>" value="serie<%= id %>" > <span data-yaxis="<%= id %>" class="remove-row">-</span></th>', {
+            id: i
+        });
+
+        rows += _.template(rowTemplate, {
+            tr: tr,
+            th: th
+        });
     }
 
-    var unique = columnsArray.reduce(function(a, b) {
-        if (a.indexOf(b) < 0) {
-            a.push(b);
-        }
-        return a;
-    }, []);
-
-    var row = '<tr><th class="row-title"></th>' + theads + '</tr>';
-
-    unique.forEach(function(uniqueName, key){
-        var tds = '';
-
-        params.forEach(function(paramElement) {
-
-            if (uniqueName === paramElement.column) {
-
-                tds += createTableCell(paramElement);
-            }
-        });
-
-        row += _.template(rowTemplate, {
-            cells: tds,
-            th: '<th class="row-title">categorie ' + (key + 1) + ' <span class="remove-row" data-name="category' + (key + 1) + '" >row -</span></th>'
-        });
-
-    });
-
     var table = _.template(tableTemplate, {
-        content: row
+        content: rows,
+        headers: header
     });
     return table;
 }
@@ -109,7 +118,6 @@ function addControls(tableBuilder) {
         addRow = ' ';
     }
 
-
     var controls = _.template('<div class="table-controls"><%= row %><%= cell %></div>', {
         row: addRow,
         cell: addCol
@@ -117,6 +125,7 @@ function addControls(tableBuilder) {
 
     tableBuilder.$elem.append(controls);
 }
+
 
 function addControlsListenners(tableBuilder) {
     tableBuilder.$elem.find('.add-col').on('click', function(ev) {
@@ -133,18 +142,48 @@ function addControlsListenners(tableBuilder) {
     tableBuilder.$elem.find('.remove-col').on('click', function(ev) {
         ev.stopPropagation();
 
-        var dataName = $(this).data('column');
-        tableBuilder.deleteColumn(dataName); // column-1
+        var dataName = $(this).data('xaxis');
+        tableBuilder.deleteColumn(dataName);
     });
 
     tableBuilder.$elem.find('.remove-row').on('click', function(ev) {
         ev.stopPropagation();
 
-        var column = $(this).data('name');
-        tableBuilder.deleteRow(column); // category1
+        var column = $(this).data('yaxis');
+        tableBuilder.deleteRow(column);
     });
 
 }
+function updateLabel(labelPosition, labelValue, arrayOflabels) {
+    arrayOflabels[labelPosition] = labelValue;
+    return arrayOflabels;
+}
+
+function addLabelsListenners(tableBuilder) {
+    $.each(tableBuilder.$elem.find('.xaxis'), function(key) {
+        $(this).on('keyup', function() {
+            var inputValue = $(this).val();
+            tableBuilder.columnsHeaderValues = updateLabel(key, inputValue, tableBuilder.columnsHeaderValues);
+        });
+
+        $(this).on('blur', function() {
+            tableBuilder.data = tableBuilder.getDatas();
+            tableBuilder.trigger('table:updated');
+        });
+    });
+
+    $.each(tableBuilder.$elem.find('.yaxis'), function(key) {
+        $(this).on('keyup', function() {
+            var inputValue = $(this).val();
+            tableBuilder.rowsHeaderValues = updateLabel(key, inputValue, tableBuilder.rowsHeaderValues);
+        });
+        $(this).on('blur', function() {
+            tableBuilder.data = tableBuilder.getDatas();
+            tableBuilder.trigger('table:updated');
+        });
+    });
+}
+
 function removeControlsListenners(tableBuilder) {
     tableBuilder.$elem.find('.add-col').off('click');
     tableBuilder.$elem.find('.add-row').off('click');
@@ -161,6 +200,7 @@ function stopWatchChanges(tableBuilder) {
 
 
 function watchChanges(tableBuilder) {
+
     tableBuilder.$scope.on('keyup', 'td', function(ev) {
         ev.preventDefault();
 
@@ -180,27 +220,27 @@ var prototype = {
         this.data = params.data;
         this.$elem = params.$elem;
         this.block = params.block;
+        this.columnsHeaderValues = params.columnsHeaderValues !== undefined ? params.columnsHeaderValues : [ 'colonne 1', 'colonne 2' ];
+        this.rowsHeaderValues = params.rowsHeaderValues !== undefined ? params.rowsHeaderValues : [ 'serie 1', 'serie 2' ];
 
         this.prepare();
 
         this.render();
-
-    },
-
-    validate: function() {
-        var valid = true;
-        return valid;
     },
 
     getDatas: function() {
         var params = [];
+        addLabelsListenners(this);
         var $catArray = this.$scope.find('[data-type="cell"]');
-        $.each($catArray, function(){
+        var that = this;
+        $.each($catArray, function() {
             var obj = {
-                'name': $(this).data('name'),
-                'column': $(this).data('column'),
-                'value': parseInt($(this).html())
+                value: parseInt($(this).html()),
+                xAxis: parseInt($(this).data('xaxis')),
+                yAxis: parseInt($(this).data('yaxis'))
             };
+            obj.name = that.rowsHeaderValues[obj.yAxis - 1];
+            obj.column = that.columnsHeaderValues[obj.xAxis - 1];
             params.push(obj);
         });
 
@@ -210,12 +250,15 @@ var prototype = {
     addColumn: function() {
         var datas = [];
 
-        for (var i = 1; i <= this.categoriesCount; i++) {
+        this.columnsHeaderValues.push('colonne' + (this.columnsCount + 1));
 
-            datas.push({
-                name: 'column-' + parseInt(this.columnsCount + 1),
-                column: 'category' + i,
-                value: 0
+        for (var i = 1; i <= this.categoriesCount; i++) {
+                datas.push({
+                name: this.columnsHeaderValues[this.columnsCount - 1],
+                column: this.rowsHeaderValues[i - 1],
+                value: 0,
+                xAxis: this.columnsCount + 1,
+                yAxis: i
             });
         }
 
@@ -229,19 +272,21 @@ var prototype = {
         this.render();
         stopWatchChanges(this);
         watchChanges(this);
-
     },
+
     addRow: function() {
         var datas = [];
 
+        this.rowsHeaderValues.push('serie ' + (this.categoriesCount + 1));
         for (var i = 1; i <= this.columnsCount; i++) {
-            datas.push({
-                name: 'column-' + i,
-                column: 'category' + (this.categoriesCount + 1),
-                value: 0
+                datas.push({
+                name: this.rowsHeaderValues[this.categoriesCount - 1],
+                column: this.rowsHeaderValues[i - 1],
+                value: 0,
+                xAxis: i,
+                yAxis: this.categoriesCount + 1
             });
         }
-
         this.categoriesCount++;
 
         if (this.data.length === 0) {
@@ -256,17 +301,32 @@ var prototype = {
 
     },
 
-    deleteRow: function(column) {
-        if (this.data.length === 0) {
-            this.data = this.getDatas();
+    deleteRow: function(rowNumber) {
+        if (this.categoriesCount - 1 < this.minCategoriesCount) {
+            this.block.addMessage('Imposible de supprimer cette ligne', 'st-block-displaying-message');
+            var that = this;
+            window.setTimeout(function() {
+                that.block.resetMessages();
+                }, 3000
+            );
+            return;
         }
 
-        var colId = column;
         this.data = this.data.filter(function(elem) {
-            return elem.column !== colId;
+            if (elem.yAxis > rowNumber) {
+                elem.yAxis--;
+                return true;
+            }
+            return elem.yAxis !== rowNumber;
+        });
+
+        this.rowsHeaderValues = this.rowsHeaderValues.filter(function(elem, key) {
+
+            return key !== (rowNumber - 1);
         });
 
         this.categoriesCount--;
+
         this.render();
         this.trigger('table:updated', this.data);
         stopWatchChanges(this);
@@ -274,17 +334,37 @@ var prototype = {
 
     },
 
-    deleteColumn: function(dataName) {
-        if (this.data.length === 0) {
-            this.data = this.getDatas();
+    deleteColumn: function(colNumber) {
+
+        if (this.columnsCount - 1 < this.minColumnsCount) {
+            this.block.addMessage('Imposible de supprimer cette colonne', 'st-block-displaying-message');
+            var that = this;
+            window.setTimeout(function() {
+                that.block.resetMessages();
+                }, 3000
+            );
+            return;
         }
+        this.datas = this.getDatas();
+
+
         this.data = this.data.filter(function(elem) {
-            return elem.name !== dataName;
+            if (elem.xAxis > colNumber) {
+                elem.xAxis--;
+                return true;
+            }
+            return elem.xAxis !== colNumber;
+        });
+
+        this.columnsHeaderValues = this.columnsHeaderValues.filter(function(elem, key) {
+            return (key + 1) !== colNumber;
         });
 
         this.columnsCount--;
+
         this.trigger('table:updated', this.data);
         this.render();
+
         stopWatchChanges(this);
         watchChanges(this);
 
@@ -292,10 +372,12 @@ var prototype = {
     prepare: function() {
         var tableHtml;
         if (this.chartType === 'bar') {
+            this.minColumnsCount = 2;
+            this.minCategoriesCount = 2;
             if (this.data.length === 0) {
 
-                this.columnsCount = 2;
-                this.categoriesCount = 2;
+                this.columnsCount = this.minColumnsCount;
+                this.categoriesCount = this.minCategoriesCount;
 
                 tableHtml = buildTable(barParams, this);
 
@@ -306,13 +388,16 @@ var prototype = {
 
             this.columnModifiable = true;
             this.rowModifiable = true;
+
         }
 
         if (this.chartType === 'pie') {
-            if (this.data.length === 0) {
+            this.minColumnsCount = 2;
+            this.minCategoriesCount = 1;
 
-                this.columnsCount = 2;
-                this.categoriesCount = 1;
+            if (this.data.length === 0) {
+                this.columnsCount = this.minColumnsCount;
+                this.categoriesCount = this.minCategoriesCount;
 
                 tableHtml = buildTable(pieParams, this);
             }
@@ -320,8 +405,10 @@ var prototype = {
                 tableHtml = buildTable(this.data, this);
             }
 
+
             this.columnModifiable = true;
             this.rowModifiable = false;
+
         }
 
         if (this.$elem.length !== 0) {
