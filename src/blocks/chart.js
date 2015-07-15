@@ -26,7 +26,7 @@ var chooseableConfig = {
 
 function tableUpdated(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
-
+    tableBuilder.data = tableBuilder.getDatas();
     tableBuilder.on('table:updated', function() {
         var chartBuilder = new ChartBuilder({
             data: this.data,
@@ -56,7 +56,6 @@ function tableUpdated(tableBuilder, block) {
 function tableReady(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
     tableBuilder.data = tableBuilder.getDatas();
-
     var chartBuilder = new ChartBuilder({
         data: tableBuilder.data,
         type: tableBuilder.chartType,
@@ -66,7 +65,15 @@ function tableReady(tableBuilder, block) {
         y: 'value',
         $elem: $chart
     });
-
+    var toSave = {
+        dataList: tableBuilder.data,
+        type: tableBuilder.chartType,
+        columns: tableBuilder.columnsCount,
+        categories: tableBuilder.categoriesCount,
+        columnsHeaderValues: tableBuilder.columnsHeaderValues,
+        rowsHeaderValues: tableBuilder.rowsHeaderValues
+    };
+    Object.assign(tableBuilder.block.blockStorage.data, toSave);
     chartBuilder.render();
 }
 

@@ -121,13 +121,11 @@ Chart.prototype = {
     render: function() {
         this.$informations = this.$inner.find('.st__chart-informations');
 
-
         if (this.$informations.children().length === 0) {
             this.$informations.append(informationsTemplate);
             updateValues(this);
             bindListenersToFields(this);
         }
-
         this.shape.draw();
 
     },
