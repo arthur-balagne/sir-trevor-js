@@ -97,11 +97,9 @@ Chart.prototype = {
         .format({
             'text': function(text, params) {
                 if (text === 'value') {
-                  return i18n.t('blocks:chart:value') ;
+                  return i18n.t('blocks:chart:value');
                 }
-                else {
-                  return d3plus.string.title(text, params);
-                }
+                return d3plus.string.title(text, params);
             }
         })
         .y({
