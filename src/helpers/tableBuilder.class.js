@@ -161,23 +161,21 @@ function updateLabel(labelPosition, labelValue, arrayOflabels) {
 
 function addLabelsListenners(tableBuilder) {
     $.each(tableBuilder.$elem.find('.xaxis'), function(key) {
-        $(this).on('keyup', function() {
+        $(this).on('keyup', '.xaxis', function() {
             var inputValue = $(this).val();
             tableBuilder.columnsHeaderValues = updateLabel(key, inputValue, tableBuilder.columnsHeaderValues);
-        });
-
-        $(this).on('blur', function() {
+        }).on('blur', function() {
             tableBuilder.data = tableBuilder.getDatas();
             tableBuilder.trigger('table:updated');
         });
     });
 
+
     $.each(tableBuilder.$elem.find('.yaxis'), function(key) {
         $(this).on('keyup', function() {
             var inputValue = $(this).val();
             tableBuilder.rowsHeaderValues = updateLabel(key, inputValue, tableBuilder.rowsHeaderValues);
-        });
-        $(this).on('blur', function() {
+        }).on('blur', function() {
             tableBuilder.data = tableBuilder.getDatas();
             tableBuilder.trigger('table:updated');
         });
@@ -224,13 +222,12 @@ var prototype = {
         this.rowsHeaderValues = params.rowsHeaderValues !== undefined ? params.rowsHeaderValues : [ 'serie 1', 'serie 2' ];
 
         this.prepare();
-
         this.render();
+        addLabelsListenners(this);
     },
 
     getDatas: function() {
         var params = [];
-        addLabelsListenners(this);
         var $catArray = this.$scope.find('[data-type="cell"]');
         var that = this;
         $.each($catArray, function() {
@@ -243,7 +240,6 @@ var prototype = {
             obj.column = that.columnsHeaderValues[obj.xAxis - 1];
             params.push(obj);
         });
-
         return params;
     },
 
