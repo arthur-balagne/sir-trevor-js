@@ -94,6 +94,16 @@ Chart.prototype = {
             value: parameters.x,
             label: 'Colonnes'
         })
+        .format({
+            'text': function(text, params) {
+                if (text === 'value') {
+                  return i18n.t('blocks:chart:value') ;
+                }
+                else {
+                  return d3plus.string.title(text, params);
+                }
+            }
+        })
         .y({
             value: parameters.y,
             label: 'Valeurs'
