@@ -105,14 +105,14 @@ function buildTable(params, tableBuilder) {
 
 function addControls(tableBuilder) {
     if (tableBuilder.columnModifiable === true) {
-        var addCol = '<span class="control add-col"> +col </span>';
+        var addCol = '<span class="control add-col"> ' + i18n.t('blocks:chart:col+') + ' </span>';
     }
     else {
         addCol = ' ';
     }
 
     if (tableBuilder.rowModifiable === true) {
-        var addRow = '<span class="control add-row"> +row </span>';
+        var addRow = '<span class="control add-row"> ' + i18n.t('blocks:chart:row+') + ' </span>';
     }
     else {
         addRow = ' ';

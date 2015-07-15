@@ -25,6 +25,14 @@ var Locales = {
       'load_fail': "Il y a un problème avec le chargement des données du document"
     },
     blocks: {
+
+      chart: {
+        'title': 'Votre Titre',
+        'width': 'Largeur',
+        'height': 'Hauteur',
+        'col+': 'Ajouter une ligne',
+        'row+': 'Ajouter une colonne',
+      },
       text: {
         'title': "Texte"
       },

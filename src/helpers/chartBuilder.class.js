@@ -7,12 +7,12 @@ var Chart = function(params) {
 
 var informationsTemplate = [
     '<div class="title">',
-        '<input type="texte" placeholder="Votre titre" name="chart-name">',
+        '<input type="texte" placeholder="' + i18n.t('blocks:chart:title') + '" name="chart-name">',
     '</div>',
 
     '<div class="size">',
-        '<label for="chart-width">Largeur</label> <input type="number" value="960" name="chart-width">',
-        '<label for="chart-height">Hauteur</label> <input type="number" value="320" name="chart-height">',
+        '<label for="chart-width">' + i18n.t('blocks:chart:width') + '</label> <input type="number" value="960" name="chart-width">',
+        '<label for="chart-height">' + i18n.t('blocks:chart:height') + '</label> <input type="number" value="320" name="chart-height">',
     '</div>'
     ].join('\n');
 
@@ -91,10 +91,12 @@ Chart.prototype = {
         .data(parameters.data)
         .type(parameters.type)
         .x({
-            value: parameters.x
+            value: parameters.x,
+            label: 'Colonnes'
         })
         .y({
-            value: parameters.y
+            value: parameters.y,
+            label: 'Valeurs'
         })
         .dev(false);
 
