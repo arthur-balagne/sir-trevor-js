@@ -31,8 +31,8 @@ var Locales = {
         'width': 'Largeur',
         'height': 'Hauteur',
         'value': 'Valeur',
-        'col+': 'Ajouter une ligne',
-        'row+': 'Ajouter une colonne',
+        'col+': 'Ajouter une colone',
+        'row+': 'Ajouter une ligne',
       },
       text: {
         'title': "Texte"
