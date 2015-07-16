@@ -300,7 +300,7 @@ var prototype = {
 
     deleteRow: function(rowNumber) {
         if (this.categoriesCount - 1 < this.minCategoriesCount) {
-            this.block.addMessage('Imposible de supprimer cette ligne', 'st-block-displaying-message');
+            this.block.addMessage(i18n.t('blocks:chart:no-deletion-col'), 'st-block-displaying-message');
             var that = this;
             window.setTimeout(function() {
                 that.block.resetMessages();
@@ -334,7 +334,7 @@ var prototype = {
     deleteColumn: function(colNumber) {
 
         if (this.columnsCount - 1 < this.minColumnsCount) {
-            this.block.addMessage('Imposible de supprimer cette colonne', 'st-block-displaying-message');
+            this.block.addMessage(i18n.t('blocks:chart:no-deletion-line'), 'st-block-displaying-message');
             var that = this;
             window.setTimeout(function() {
                 that.block.resetMessages();
