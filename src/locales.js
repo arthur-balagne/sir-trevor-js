@@ -33,7 +33,7 @@ var Locales = {
         'value': 'Valeur',
         'col+': 'Ajouter une colonne',
         'row+': 'Ajouter une ligne',
-        'no-deletion-col': 'Impossible de supprimer cette colonne',
+        'no-deletion-col': 'Impossible de supprimer cette ligne',
         'no-deletion-line': 'Impossible de supprimer cette colonne'
       },
       text: {

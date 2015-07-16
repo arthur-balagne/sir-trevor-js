@@ -267,6 +267,7 @@ var prototype = {
 
         this.data = this.data.concat(datas);
         this.render();
+        addLabelsListenners(this);
         stopWatchChanges(this);
         watchChanges(this);
     },
@@ -294,6 +295,7 @@ var prototype = {
 
         this.render();
         stopWatchChanges(this);
+        addLabelsListenners(this);
         watchChanges(this);
 
     },
@@ -326,6 +328,8 @@ var prototype = {
 
         this.render();
         this.trigger('table:updated', this.data);
+
+        addLabelsListenners(this);
         stopWatchChanges(this);
         watchChanges(this);
 
@@ -362,6 +366,7 @@ var prototype = {
         this.trigger('table:updated', this.data);
         this.render();
 
+        addLabelsListenners(this);
         stopWatchChanges(this);
         watchChanges(this);
 
