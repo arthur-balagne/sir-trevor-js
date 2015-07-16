@@ -161,7 +161,7 @@ function updateLabel(labelPosition, labelValue, arrayOflabels) {
 
 function addLabelsListenners(tableBuilder) {
     $.each(tableBuilder.$elem.find('.xaxis'), function(key) {
-        $(this).on('keyup', '.xaxis', function() {
+        $(this).on('keyup', function() {
             var inputValue = $(this).val();
             tableBuilder.columnsHeaderValues = updateLabel(key, inputValue, tableBuilder.columnsHeaderValues);
         }).on('blur', function() {
@@ -175,7 +175,8 @@ function addLabelsListenners(tableBuilder) {
         $(this).on('keyup', function() {
             var inputValue = $(this).val();
             tableBuilder.rowsHeaderValues = updateLabel(key, inputValue, tableBuilder.rowsHeaderValues);
-        }).on('blur', function() {
+        })
+        .on('blur', function() {
             tableBuilder.data = tableBuilder.getDatas();
             tableBuilder.trigger('table:updated');
         });
