@@ -99,7 +99,7 @@ Chart.prototype = {
         this.block = parameters.block;
         this.$inner = parameters.block.$inner;
         this.blockType = parameters.type;
-        this.display = parameters.display;
+        this.display = parameters.block.blockStorage.data.display;
 
         this.shape = d3plus.viz()
         .container('#' + parameters.block.blockID + ' .' + parameters.$elem.attr('class'))
@@ -129,8 +129,7 @@ Chart.prototype = {
 
         if (parameters.type === 'pie') {
             this.shape.size(parameters.y);
-
-            if (parameters.display === 'number') {
+            if (this.display === 'number') {
                 this.shape.id([ 'column', 'value' ]);
                 this.shape.text('value');
                 this.shape.tooltip(false);
@@ -173,11 +172,13 @@ Chart.prototype = {
                 var that = this;
                 if (this.display !== undefined) {
                     this.$informations.find('.numbered-select').val(this.display);
+                    this.redraw(this.display);
                 }
 
                 this.$informations.find('.numbered-select').on('change', function() {
                     var display = this.value;
                     that.redraw(display);
+                    that.display = display;
                     that.block.blockStorage.data.display = display;
                 });
             }

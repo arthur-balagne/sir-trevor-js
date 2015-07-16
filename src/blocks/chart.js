@@ -8,6 +8,8 @@ var Block        = require('../block');
 var TableBuilder = require('../helpers/tableBuilder.class.js');
 var ChartBuilder = require('../helpers/chartBuilder.class.js');
 var chartBuilder;
+var chartBuilderDisplay;
+
 var chooseableConfig = {
     'name': 'chartType',
     'options': [
@@ -28,7 +30,7 @@ function tableUpdated(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
     tableBuilder.data = tableBuilder.getDatas();
     tableBuilder.on('table:updated', function() {
-        this.data.display;
+        chartBuilderDisplay = this.display;
         chartBuilder = new ChartBuilder({
             data: this.data,
             type: this.chartType,
@@ -36,7 +38,7 @@ function tableUpdated(tableBuilder, block) {
             id: 'name',
             x: 'column',
             y: 'value',
-            display: this.display,
+            display: chartBuilderDisplay,
             $elem: $chart
         });
 
@@ -56,6 +58,8 @@ function tableUpdated(tableBuilder, block) {
 function tableReady(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
     tableBuilder.data = tableBuilder.getDatas();
+    chartBuilderDisplay = tableBuilder.display;
+
     chartBuilder = new ChartBuilder({
         data: tableBuilder.data,
         type: tableBuilder.chartType,
@@ -64,7 +68,7 @@ function tableReady(tableBuilder, block) {
         x: 'column',
         y: 'value',
         $elem: $chart,
-        display: tableBuilder.display
+        display: chartBuilderDisplay
 
     });
     var toSave = {
