@@ -172,7 +172,7 @@ Chart.prototype = {
                 this.$informations.append(pieFormat);
 
                 var that = this;
-                this.block.$el.find('.numbered-select').on('change', function() {
+                this.$informations.find('.numbered-select').on('change', function() {
                     display = this.value;
                     that.redraw(display);
                     that.block.blockStorage.data.display = display;
