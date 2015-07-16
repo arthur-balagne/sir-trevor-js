@@ -99,6 +99,7 @@ Chart.prototype = {
         this.block = parameters.block;
         this.$inner = parameters.block.$inner;
         this.blockType = parameters.type;
+        this.display = parameters.display;
 
         this.shape = d3plus.viz()
         .container('#' + parameters.block.blockID + ' .' + parameters.$elem.attr('class'))
@@ -129,22 +130,20 @@ Chart.prototype = {
         if (parameters.type === 'pie') {
             this.shape.size(parameters.y);
 
-            if (parameters.display !== undefined) {
-                if (parameters.display === 'number') {
-                    this.shape.id('value');
-                }
-                else {
-                    this.shape.id('column');
-                }
+            if (parameters.display === 'number') {
+                this.shape.id([ 'column', 'value' ]);
+                this.shape.text('value');
+                this.shape.tooltip(false);
             }
             else {
-                this.shape.id(parameters.x);
+                this.shape.id('value');
+                this.shape.text('column');
+                this.shape.tooltip(false);
             }
-
         }
         var that = this;
         this.block.$el.find('.numbered-select').on('change', function() {
-            display = this.value;
+            var display = this.value;
             that.redraw(display);
             that.block.blockStorage.data.display = display;
         });
@@ -172,22 +171,29 @@ Chart.prototype = {
                 this.$informations.append(pieFormat);
 
                 var that = this;
+                if (this.display !== undefined) {
+                    this.$informations.find('.numbered-select').val(this.display);
+                }
+
                 this.$informations.find('.numbered-select').on('change', function() {
-                    display = this.value;
+                    var display = this.value;
                     that.redraw(display);
                     that.block.blockStorage.data.display = display;
                 });
             }
         }
         this.shape.draw();
-
     },
     redraw: function(display){
         if (display === 'number') {
-            this.shape.id('value');
+            this.shape.id([ 'column', 'value' ]);
+            this.shape.text('value');
+            this.shape.tooltip(false);
         }
         else {
             this.shape.id('column');
+            this.shape.text('column');
+            this.shape.tooltip(false);
         }
         this.shape.draw();
     },
