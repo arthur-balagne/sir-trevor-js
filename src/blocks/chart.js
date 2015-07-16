@@ -28,7 +28,7 @@ function tableUpdated(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
     tableBuilder.data = tableBuilder.getDatas();
     tableBuilder.on('table:updated', function() {
-
+        this.data.display;
         chartBuilder = new ChartBuilder({
             data: this.data,
             type: this.chartType,
@@ -36,7 +36,7 @@ function tableUpdated(tableBuilder, block) {
             id: 'name',
             x: 'column',
             y: 'value',
-
+            display: this.display,
             $elem: $chart
         });
 
@@ -50,7 +50,6 @@ function tableUpdated(tableBuilder, block) {
         };
         Object.assign(this.block.blockStorage.data, toSave);
         chartBuilder.render();
-
     });
 }
 
@@ -64,7 +63,9 @@ function tableReady(tableBuilder, block) {
         id: 'name',
         x: 'column',
         y: 'value',
-        $elem: $chart
+        $elem: $chart,
+        display: tableBuilder.display
+
     });
     var toSave = {
         dataList: tableBuilder.data,
@@ -122,6 +123,7 @@ module.exports = Block.extend({
         });
         tableBuilder.columnsCount = data.columns;
         tableBuilder.categoriesCount = data.categories;
+        tableBuilder.display = data.display;
 
         this.tableBuilder = tableBuilder;
     },

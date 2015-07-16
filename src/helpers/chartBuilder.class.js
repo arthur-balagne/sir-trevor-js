@@ -1,9 +1,6 @@
 var d3     = require('d3');
 var d3plus = require('d3plus');
 
-var Chart = function(params) {
-    this.init(params);
-};
 
 var informationsTemplate = [
     '<div class="title">',
@@ -14,7 +11,19 @@ var informationsTemplate = [
         '<label for="chart-width">' + i18n.t('blocks:chart:width') + '</label> <input type="number" value="960" name="chart-width">',
         '<label for="chart-height">' + i18n.t('blocks:chart:height') + '</label> <input type="number" value="320" name="chart-height">',
     '</div>'
-    ].join('\n');
+
+].join('\n');
+
+var pieFormat = [
+    '<div class="numbered">',
+        '<label for="numbered-select">' + i18n.t('blocks:chart:width') + '</label> ', // type d'affichage
+        '<select class="numbered-select" name="numbered-select">',
+            '<option value="text">Texte</option>',
+            '<option value="number">Chiffre</option>',
+        '</select>',
+    '</div>'
+
+].join('\n');
 
 function getChartInformationsFields(chartBuilder) {
     return {
@@ -81,10 +90,15 @@ function bindListenersToFields(chartBuilder) {
     });
 }
 
+var Chart = function(params) {
+    this.init(params);
+};
+
 Chart.prototype = {
     init: function(parameters) {
         this.block = parameters.block;
         this.$inner = parameters.block.$inner;
+        this.blockType = parameters.type;
 
         this.shape = d3plus.viz()
         .container('#' + parameters.block.blockID + ' .' + parameters.$elem.attr('class'))
@@ -113,9 +127,27 @@ Chart.prototype = {
         }
 
         if (parameters.type === 'pie') {
-            this.shape.id(parameters.y);
             this.shape.size(parameters.y);
+
+            if (parameters.display !== undefined) {
+                if (parameters.display === 'number') {
+                    this.shape.id('value');
+                }
+                else {
+                    this.shape.id('column');
+                }
+            }
+            else {
+                this.shape.id(parameters.x);
+            }
+
         }
+        var that = this;
+        this.block.$el.find('.numbered-select').on('change', function() {
+            display = this.value;
+            that.redraw(display);
+            that.block.blockStorage.data.display = display;
+        });
     },
 
     resizeX: function(size) {
@@ -135,9 +167,29 @@ Chart.prototype = {
             this.$informations.append(informationsTemplate);
             updateValues(this);
             bindListenersToFields(this);
+
+            if (this.blockType === 'pie') {
+                this.$informations.append(pieFormat);
+
+                var that = this;
+                this.block.$el.find('.numbered-select').on('change', function() {
+                    display = this.value;
+                    that.redraw(display);
+                    that.block.blockStorage.data.display = display;
+                });
+            }
         }
         this.shape.draw();
 
+    },
+    redraw: function(display){
+        if (display === 'number') {
+            this.shape.id('value');
+        }
+        else {
+            this.shape.id('column');
+        }
+        this.shape.draw();
     },
     destroy: function() {
         this.shape = undefined;
