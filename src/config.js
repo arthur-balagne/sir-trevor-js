@@ -26,9 +26,6 @@ module.exports = {
     blockLimit: 0,
     blockTypeLimits: {},
     required: [],
-    uploadUrl: 'http://api.letudiant.lk/edt/media/upload',
-    apiUrl: 'http://api.letudiant.lk/edt',
-    baseImageUrl: '/sir-trevor-uploads/',
-    errorsContainer: undefined,
+    errorsContainer: undefined
   }
 };

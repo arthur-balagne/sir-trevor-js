@@ -15,7 +15,6 @@ var iconPickerHtml = [
 '</div></div>'
 ].join('\n');
 
-
 function triggerChangeIllustratedPicture(iconPicker, pictureInformations){
     iconPicker.blockRef.imageId = pictureInformations.id;
     iconPicker.trigger('picture:change', pictureInformations);
@@ -33,7 +32,6 @@ function triggerChangeIllustratedPicture(iconPicker, pictureInformations){
             }
 
     iconPicker.modal.close();
-
 }
 
 function bindClickOnIcons(block) {
@@ -68,6 +66,7 @@ function onDrop(transferData, iconPicker) {
         var fileUploader = new FileUploader(iconPicker.blockRef, iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/upload');
         var uploadedMedia;
         iconPicker.blockRef.loading();
+
         var uploadPromise = fileUploader.upload(file);
 
         uploadPromise.then(function(returnedData) {

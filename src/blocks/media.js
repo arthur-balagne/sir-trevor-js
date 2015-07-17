@@ -37,8 +37,10 @@ function addBlockMessageTemporarily(block, message) {
 
 function registerSaveMediaSubBlock(block, mediaSubBlock) {
     mediaSubBlock.on('save', function(saveData) {
+
         if (mediaSubBlock.isSaving !== true) {
             mediaSubBlock.isSaving = true;
+
             if (mediaSubBlock.isEditable) {
                 var url = block.globalConfig.apiUrl + 'edt/media/' + mediaSubBlock.id;
                 xhr.patch(url, saveData)
