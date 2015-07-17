@@ -52,7 +52,6 @@ FileUploader.prototype = {
 
         var uploadPromise = function(resolve, reject) {
             xhr.done(function(uploadData) {
-                    debugger;
                     utils.log('Upload callback called');
                     EventBus.trigger('onUploadStop');
 
@@ -61,7 +60,6 @@ FileUploader.prototype = {
                     resolve(uploadData);
                 })
                 .fail(function(error) {
-                    debugger;
                     utils.log('Upload callback error called');
                     EventBus.trigger('onUploadStop');
 
