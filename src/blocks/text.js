@@ -73,12 +73,20 @@ function textBlockListeners(textBlock){
 
 // @todo refactor duplicate code - see text.js
 function getModalMedias(block){
-    var filterUrl = block.globalConfig.apiUrl + 'edt/media/filters/' + block.globalConfig.application;
+    var filterUrl = block.globalConfig.apiUrl + '/edt/media/filters/' + block.globalConfig.application;
     var initialMediaUrl = block.globalConfig.apiUrl + '/edt/media?application=' + block.globalConfig.application + '&type=image&limit=20';
 
     Promise.all([
-        xhr.get(filterUrl),
-        xhr.get(initialMediaUrl)
+        xhr.get(filterUrl, {
+            data: {
+                access_token: block.globalConfig.accessToken
+            }
+        }),
+        xhr.get(initialMediaUrl, {
+            data: {
+                access_token: block.globalConfig.accessToken
+            }
+        })
     ])
     .then(function(data) {
         var modalTemplateFilters = data[0];
@@ -111,7 +119,7 @@ function getModalMedias(block){
             modalHelper.openModalStep1(modalHelper.modalStep1, slider);
             var $modal = $(modalHelper.modalStep1.$elem.children('.modal-inner-content')[0]);
             var fields = modalHelper.filterBarFormatter(modalTemplateFilters);
-            var filterBar = modalHelper.loadFilterBar(block.globalConfig.apiUrl, fields, $modal);
+            var filterBar = modalHelper.loadFilterBar(block.globalConfig.apiUrl, block.globalConfig.accessToken, fields, $modal);
 
             slider.alwaysAppendToDOM($modal);
 
@@ -315,32 +323,36 @@ module.exports = Block.extend({
         Object.keys(ids).forEach(function(value) {
             var val = ids[value].split('#')[1];
 
-            var url = self.globalConfig.apiUrl + 'edt/media/' + val;
+            var url = self.globalConfig.apiUrl + '/edt/media/' + val;
 
             /**
              * Callback function to fetch the blocks data from the API
              */
-            xhr.get(url)
-                .then(function(result) {
-                    result.content = Object.assign(result.content, {
-                        size: data.images[val].size,
-                        legend: data.images[val].legend,
-                        align: data.images[val].align
-                    });
-
-                    var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
-
-                    filteredBlock.media = result.content;
-
-                    var tpl = filteredBlock.renderBlock();
-
-                    data.text = data.text.replace('#' + val, tpl);
-
-                    self.getTextBlock().html(data.text);
-                })
-                .catch(function(error) {
-                    console.error('Error retrieving image :', error);
+            xhr.get(url, {
+                data: {
+                    access_token: self.globalConfig.accessToken
+                }
+            })
+            .then(function(result) {
+                result.content = Object.assign(result.content, {
+                    size: data.images[val].size,
+                    legend: data.images[val].legend,
+                    align: data.images[val].align
                 });
+
+                var filteredBlock = subBlockManager.buildOne('filteredImage', null, null);
+
+                filteredBlock.media = result.content;
+
+                var tpl = filteredBlock.renderBlock();
+
+                data.text = data.text.replace('#' + val, tpl);
+
+                self.getTextBlock().html(data.text);
+            })
+            .catch(function(error) {
+                console.error('Error retrieving image :', error);
+            });
         });
         this.getTextBlock().html(stToHTML(data.text));
 

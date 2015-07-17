@@ -24,11 +24,13 @@ function bindEventToCopyright(block) {
 
         var selecteds = block.$el.find('.illustrated-figure .copyright').val();
 
-        var url = block.globalConfig.apiUrl + 'edt/media/' + block.imageId;
-        var saveData = {};
-        saveData.copyrights = selecteds;
-        saveData.id_categorie = 2;
-        saveData.legende = block.imageId;
+        var url = block.globalConfig.apiUrl + '/edt/media/' + block.imageId + '?access_token=' + block.globalConfig.accessToken;
+
+        var saveData = {
+            copyrights: selecteds,
+            id_categorie: 2,
+            legende: block.imageId
+        };
 
         xhr.patch(url, saveData)
             .then(function() {
@@ -54,30 +56,34 @@ var CopyrightPicker = function(block) {
 
 var prototype = {
     init: function(block) {
-        var categoryOptionsUrl = block.globalConfig.apiUrl + 'edt/media/filters/' + block.globalConfig.application;
+        var categoryOptionsUrl = block.globalConfig.apiUrl + '/edt/media/filters/' + block.globalConfig.application;
 
-        xhr.get(categoryOptionsUrl)
-            .then(function(result) {
-                var copyrights = prepareCopyrights(result.content.copyrights);
+        xhr.get(categoryOptionsUrl, {
+            data: {
+                access_token: block.globalConfig.accessToken
+            }
+        })
+        .then(function(result) {
+            var copyrights = prepareCopyrights(result.content.copyrights);
 
-                var optionsHtml = '';
-                copyrights.forEach(function(copyright){
-                    var optionTpl = _.template('<option value="<%= value %>"><%= label %></option>');
-                    optionsHtml = optionsHtml + optionTpl({
-                        'label': copyright.label,
-                        'value': copyright.value
-                    });
+            var optionsHtml = '';
+            copyrights.forEach(function(copyright){
+                var optionTpl = _.template('<option value="<%= value %>"><%= label %></option>');
+                optionsHtml = optionsHtml + optionTpl({
+                    'label': copyright.label,
+                    'value': copyright.value
                 });
-
-                var $select = block.$el.find('figure figcaption .copyright');
-
-                $select.append(optionsHtml);
-
-            })
-            .catch(function(err) {
-                console.error(err);
             });
-        }
+
+            var $select = block.$el.find('figure figcaption .copyright');
+
+            $select.append(optionsHtml);
+
+        })
+        .catch(function(err) {
+            console.error(err);
+        });
+    }
 };
 
 CopyrightPicker.prototype = Object.assign({}, prototype, eventablejs);

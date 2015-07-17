@@ -31,14 +31,15 @@ var FilterBar = function() {
 
 var prototype = {
     init: function(params) {
+        this.accessToken = params.accessToken;
         this.app = params.app;
-        this.url = params.url;
-        this.limit = params.limit;
-        this.type = params.type;
-        this.fields = params.fields;
         this.application = params.application;
+        this.fields = params.fields;
+        this.limit = params.limit;
         this.subType = params.subType;
         this.template = filterBarTemplate;
+        this.type = params.type;
+        this.url = params.url;
 
         if (params.container) {
             if (params.before === true) {
@@ -81,35 +82,39 @@ var prototype = {
         this.trigger(eventName + ':start');
 
         search = Object.assign(search, searchBuilder(this.$elem), {
+            access_token: this.accessToken,
             limit: this.limit,
-            application: this.app,
-            type: this.type
+            application: this.app
         });
+
+        if (this.type) {
+            search.type = this.type;
+        }
+        else if (this.subType) {
+            search.type = this.subType;
+        }
 
         if (this.application) {
             search.application = this.application;
         }
 
-        if (this.subType) {
-            search.type = this.subType;
-        }
 
         this.nextSearch = search;
 
-        var searchUrl = xhr.paramizeUrl(this.url, search);
-
-        xhr.get(searchUrl)
-            .then(function(searchResult) {
-                if (searchResult.content) {
-                    this.trigger(eventName + ':result', searchResult.content);
-                    this.nextSearch.offset = this.nextSearch.offset ? this.nextSearch.offset += searchResult.content.length : searchResult.content.length;
-                }
-                else {
-                    this.trigger(eventName + ':no-result');
-                }
-            }.bind(this), function(err) {
-                this.trigger(eventName + ':error', err);
-            }.bind(this));
+        xhr.get(this.url, {
+            data: search
+        })
+        .then(function(searchResult) {
+            if (searchResult.content) {
+                this.trigger(eventName + ':result', searchResult.content);
+                this.nextSearch.offset = this.nextSearch.offset ? this.nextSearch.offset += searchResult.content.length : searchResult.content.length;
+            }
+            else {
+                this.trigger(eventName + ':no-result');
+            }
+        }.bind(this), function(err) {
+            this.trigger(eventName + ':error', err);
+        }.bind(this));
     },
 
     moreResults: function() {

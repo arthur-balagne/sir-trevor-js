@@ -28,8 +28,8 @@ function triggerChangeIllustratedPicture(iconPicker, pictureInformations){
             window.setTimeout(function() {
                 iconPicker.blockRef.resetMessages();
             }, 3000);
-                });
-            }
+        });
+    }
 
     iconPicker.modal.close();
 }
@@ -45,7 +45,11 @@ function bindClickOnIcons(block) {
 }
 
 function getMedia(uploadedMediaUrl, iconPicker) {
-    xhr.get(uploadedMediaUrl)
+    xhr.get(uploadedMediaUrl, {
+        data: {
+            access_token: iconPicker.accessToken
+        }
+    })
     .then(function(imageData){
         triggerChangeIllustratedPicture(iconPicker, {
             src: imageData.content.thumbnail,
@@ -63,14 +67,18 @@ function onDrop(transferData, iconPicker) {
     var file = transferData.files[0];
 
     if (/image|video/.test(file.type)) {
-        var fileUploader = new FileUploader(iconPicker.blockRef, iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/upload');
+        var uploadUrl = iconPicker.blockRef.globalConfig.apiUrl + '/' + iconPicker.blockRef.globalConfig.uploadUrl + '?' + 'access_token=' + this.globalConfig.accessToken;
+
+        var fileUploader = new FileUploader(iconPicker.blockRef, uploadUrl);
         var uploadedMedia;
         iconPicker.blockRef.loading();
+
+        //@todo fix this promise chain
 
         var uploadPromise = fileUploader.upload(file);
 
         uploadPromise.then(function(returnedData) {
-            uploadedMedia = iconPicker.blockRef.globalConfig.apiUrl + 'edt/media/' + returnedData.idMedia;
+            uploadedMedia = iconPicker.blockRef.globalConfig.apiUrl + '/edt/media/' + returnedData.idMedia;
         })
         .catch(function(err) {
             console.log(err);
@@ -112,7 +120,15 @@ function createArrayOfIcons(icons) {
 
 function getIcons(iconPicker) {
 
-    xhr.get(iconPicker.apiUrl)
+    // @todo how does this retrieve just icons (and not the whole mediatheque) ?
+    xhr.get(iconPicker.apiUrl + '/edt/media', {
+        data: {
+            access_token: iconPicker.accessToken,
+            application: iconPicker.application,
+            type: 'image',
+            limit: 20
+        }
+    })
     .then(function(iconData) {
         var iconsArray = createArrayOfIcons(iconData.content);
 
@@ -138,9 +154,19 @@ function getIcons(iconPicker) {
             };
 
             iconPicker.slider = new Slider(params); //@TODO  Teach the slider how to handle native element & jquery elements;
+
             iconPicker.slider.on('progress', function() {
                 var offset = iconPicker.slider.currentIndex * iconPicker.slider.config.itemsPerSlide;
-                xhr.get('http://api.letudiant.lk/edt/media?application=ETU_ETU&type=image&limit=20&offset=' + offset)
+
+                xhr.get(iconPicker.apiUrl + '/edt/media', {
+                    data: {
+                        application: iconPicker.application,
+                        type: 'image',
+                        limit: 20,
+                        offset: offset,
+                        access_token: iconPicker.accessToken
+                    }
+                })
                 .then(function(updatedIconData) {
                     iconsArray = createArrayOfIcons(updatedIconData.content);
                     iconPicker.slider.update(iconsArray);
@@ -155,7 +181,7 @@ function getIcons(iconPicker) {
     })
     .catch(function(err) {
         console.log(err);
-        console.error('Somehting went wrong');
+        console.error('Somehting went wrong'); // what a helpful error message...
     });
 }
 
@@ -167,9 +193,13 @@ var prototype = {
 
     init: function(param) {
         var self = this;
+
         this.apiUrl = param.apiUrl;
+        this.application = param.application;
+        this.accessToken = param.accessToken;
         this.blockRef = param.blockRef;
         this.modalTriggerElement = param.modalTriggerElement;
+
         this.modal = new Modal({
             slug: 'icons-modal',
             animation: 'fade',
@@ -188,23 +218,21 @@ var prototype = {
 
         this.modalTriggerElement.on('click', function(ev) {
             ev.stopPropagation();
+
             if ($(this).children().length < 2) {
                 getIcons(self);
             }
-
         });
 
         this.modalTriggerElement.on('click', 'img', function(ev) {
             ev.stopPropagation();
             getIcons(self);
-
         });
     },
 
     destroy: function() {
         this.modal.destroy();
         this.prototype = null;
-
     }
 
 };

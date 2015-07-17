@@ -5,7 +5,7 @@ var _ = require('../lodash');
 var config = require('../config');
 var utils = require('../utils');
 
-var fileUploader = require('../extensions/file-uploader');
+var FileUploader = require('../extensions/file-uploader');
 
 module.exports = {
 
@@ -26,8 +26,8 @@ module.exports = {
             ev.preventDefault();
         });
 
-        var fullUrl = this.globalConfig.apiUrl + this.globalConfig.uploadUrl;
+        var fullUrl = this.globalConfig.apiUrl + '/' + this.globalConfig.uploadUrl + '?' + 'access_token=' + this.globalConfig.accessToken;
 
-        this.uploader = new fileUploader(this, fullUrl);
+        this.uploader = new FileUploader(this, fullUrl);
     }
 };

@@ -77,29 +77,34 @@ function onChoose(choices) {
         bindEventsOnScriptSubBlock(this, scriptSubBlock);
     }
     else {
-        var thematicOptionsUrl = block.globalConfig.apiUrl + 'jcs/thematics/list/' + getPath(choices.contentType);
+        var thematicOptionsUrl = block.globalConfig.apiUrl + '/jcs/thematics/list/' + getPath(choices.contentType);
 
-        var thematicOptionsPromise = xhr.get(thematicOptionsUrl)
-            .then(function(result) {
-                return result.content.map(function(filterOption) {
-                    return {
-                        value: filterOption.id,
-                        label: filterOption.label
-                    };
-                });
-            })
-            .catch(function(err) {
-                console.error(err);
-            })
-            .then(function(formatedFilterOptions) {
+        var thematicOptionsPromise = xhr.get(thematicOptionsUrl, {
+            data: {
+                access_token: block.globalConfig.accessToken
+            }
+        })
+        .then(function(result) {
+            return result.content.map(function(filterOption) {
                 return {
-                    name: 'thematic',
-                    options: formatedFilterOptions
+                    value: filterOption.id,
+                    label: filterOption.label
                 };
             });
+        })
+        .catch(function(err) {
+            console.error(err);
+        })
+        .then(function(formatedFilterOptions) {
+            return {
+                name: 'thematic',
+                options: formatedFilterOptions
+            };
+        });
 
         var filterConfig = {
-            url: block.globalConfig.apiUrl + 'jcs/' + getPath(choices.contentType) + '/search',
+            url: block.globalConfig.apiUrl + '/jcs/' + getPath(choices.contentType) + '/search',
+            accessToken: block.globalConfig.accessToken,
             fields: [
                 {
                     type: 'search',
@@ -175,20 +180,24 @@ module.exports = Block.extend({
             else {
                 this.loading();
 
-                var retrieveUrl = this.globalConfig.apiUrl + 'jcs/' + getPath(data.type) + '/' + data.id + '/' + data.application;
+                var retrieveUrl = this.globalConfig.apiUrl + '/jcs/' + getPath(data.type) + '/' + data.id + '/' + data.application;
 
-                xhr.get(retrieveUrl)
-                    .then(function(subBlockData) {
-                        var subBlock = subBlockManager.buildSingle(this.type, data.type, subBlockData.content);
+                xhr.get(retrieveUrl, {
+                    data: {
+                        access_token: this.globalConfig.accessToken
+                    }
+                })
+                .then(function(subBlockData) {
+                    var subBlock = subBlockManager.buildSingle(this.type, data.type, subBlockData.content);
 
-                        this.$editor.html(subBlock.renderLarge());
+                    this.$editor.html(subBlock.renderLarge());
 
-                        this.ready();
-                    }.bind(this))
-                    .catch(function(err) {
-                        throw new Error('No block returned for id:' + this.subBlockData.id + ' on app:' + this.subBlockData.application + ' ' + err);
-                    }.bind(this));
-            }
+                    this.ready();
+                }.bind(this))
+                .catch(function(err) {
+                    throw new Error('No block returned for id:' + this.subBlockData.id + ' on app:' + this.subBlockData.application + ' ' + err);
+                }.bind(this));
+        }
         }
     },
 

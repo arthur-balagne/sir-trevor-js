@@ -52,21 +52,21 @@ FileUploader.prototype = {
 
         var uploadPromise = function(resolve, reject) {
             xhr.done(function(uploadData) {
-                    utils.log('Upload callback called');
-                    EventBus.trigger('onUploadStop');
+                utils.log('Upload callback called');
+                EventBus.trigger('onUploadStop');
 
-                    self.blockRef.removeQueuedItem.bind(self.blockRef, uid);
+                self.blockRef.removeQueuedItem.bind(self.blockRef, uid);
 
-                    resolve(uploadData);
-                })
-                .fail(function(error) {
-                    utils.log('Upload callback error called');
-                    EventBus.trigger('onUploadStop');
+                resolve(uploadData);
+            })
+            .fail(function(error) {
+                utils.log('Upload callback error called');
+                EventBus.trigger('onUploadStop');
 
-                    self.blockRef.removeQueuedItem.bind(self.blockRef, uid);
+                self.blockRef.removeQueuedItem.bind(self.blockRef, uid);
 
-                    reject(error);
-                });
+                reject(error);
+            });
         };
 
         return new Promise(uploadPromise);

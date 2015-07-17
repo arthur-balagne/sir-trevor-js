@@ -67,6 +67,7 @@ module.exports = Block.extend({
 
     onBlockRender: function() {
         var self = this;
+
         this.colorPicker = new ColorPicker({
             block: this,
             colors: {
@@ -105,7 +106,11 @@ module.exports = Block.extend({
         });
 
         this.iconPicker = new IconPicker({
-            apiUrl: self.globalConfig.apiUrl + 'edt/media?application=ETU_ETU&type=image&limit=20',
+            // @todo: why was this in TWO places!?
+            // apiUrl: self.globalConfig.apiUrl + 'edt/media?application=ETU_ETU&type=image&limit=20',
+            apiUrl: self.globalConfig.apiUrl,
+            application: self.globalConfig.application,
+            accessToken: self.globalConfig.accessToken,
             blockRef: this,
             modalTriggerElement: this.$el.find('figure')
         });

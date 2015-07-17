@@ -42,7 +42,8 @@ function registerSaveMediaSubBlock(block, mediaSubBlock) {
             mediaSubBlock.isSaving = true;
 
             if (mediaSubBlock.isEditable) {
-                var url = block.globalConfig.apiUrl + 'edt/media/' + mediaSubBlock.id;
+                var url = block.globalConfig.apiUrl + '/edt/media/' + mediaSubBlock.id + '?access_token=' + block.globalConfig.accessToken;
+
                 xhr.patch(url, saveData)
                     .then(function(returnedData) {
                         block.setData({
@@ -91,27 +92,32 @@ function onChoose(choices) {
 
     block.subBlockType = choices.contentType;
 
-    var categoryOptionsUrl = block.globalConfig.apiUrl + 'edt/' + block.type + '/filters/' + block.globalConfig.application;
+    var categoryOptionsUrl = block.globalConfig.apiUrl + '/edt/' + block.type + '/filters/' + block.globalConfig.application;
 
-    var categoryOptionsPromise = xhr.get(categoryOptionsUrl)
-        .then(function(result) {
-            block.copyrights = prepareCopyrights(result.content.copyrights);
-            block.categories = prepareCategories(result.content.categories);
+    var categoryOptionsPromise = xhr.get(categoryOptionsUrl, {
+        data: {
+            access_token: block.globalConfig.accessToken
+        }
+    })
+    .then(function(result) {
+        block.copyrights = prepareCopyrights(result.content.copyrights);
+        block.categories = prepareCategories(result.content.categories);
 
-            return block.categories;
-        })
-        .catch(function(err) {
-            console.error(err);
-        })
-        .then(function(formattedCategories) {
-            return {
-                name: 'category',
-                options: formattedCategories
-            };
-        });
+        return block.categories;
+    })
+    .catch(function(err) {
+        console.error(err);
+    })
+    .then(function(formattedCategories) {
+        return {
+            name: 'category',
+            options: formattedCategories
+        };
+    });
 
     var filterConfig = {
-        url: block.globalConfig.apiUrl + 'edt/' + block.type,
+        url: block.globalConfig.apiUrl + '/edt/' + block.type,
+        accessToken: block.globalConfig.accessToken,
         fields: [
             {
                 type: 'search',
@@ -190,9 +196,13 @@ module.exports = Block.extend({
         if (!_.isEmpty(data)) {
             this.loading();
 
-            var retrieveUrl = this.globalConfig.apiUrl + 'edt/' + this.type + '/' + data.id;
+            var retrieveUrl = this.globalConfig.apiUrl + '/edt/' + this.type + '/' + data.id;
 
-            xhr.get(retrieveUrl)
+            xhr.get(retrieveUrl, {
+                data: {
+                    access_token: this.globalConfig.accessToken
+                }
+            })
                 .then(function(rawSubBlockData) {
                     var subBlockData = Object.assign({}, rawSubBlockData.content, data);
 
@@ -245,37 +255,40 @@ module.exports = Block.extend({
 
              self.uploader.upload(file)
                  .then(function(uploadData) {
-                    var retrieveUrl = self.globalConfig.apiUrl + 'edt' + '/' + self.type + '/' + uploadData.idMedia;
-                    var retrieveUrl = 'http://api.letudiant.lk/edt/media/281615';
+                    var retrieveUrl = self.globalConfig.apiUrl + '/edt/' + self.type + '/' + uploadData.idMedia;
 
                     self.setData({
                         id: uploadData.idMedia
                     });
 
-                    xhr.get(retrieveUrl)
-                        .then(function(subBlockData) {
-                            self.$inputs.hide();
+                    xhr.get(retrieveUrl, {
+                        data: {
+                            access_token: self.globalConfig.accessToken
+                        }
+                    })
+                    .then(function(subBlockData) {
+                        self.$inputs.hide();
 
-                            var mediaSubBlock = subBlockManager.buildSingle(self.type, self.subBlockType, subBlockData.content);
+                        var mediaSubBlock = subBlockManager.buildSingle(self.type, self.subBlockType, subBlockData.content);
 
-                            mediaSubBlock.addData({
-                                copyrights: self.copyrights,
-                                categories: self.categories
-                            });
-
-                            self.$editor.html(mediaSubBlock.renderEditable());
-
-                            mediaSubBlock.bindToRenderedHTML();
-
-                            self.$editor.show();
-
-                            registerSaveMediaSubBlock(self, mediaSubBlock);
-
-                            self.ready();
-                        })
-                        .catch(function(err) {
-                            throw new Error('No block returned for id:' + uploadData.idMedia + ' ' + err);
+                        mediaSubBlock.addData({
+                            copyrights: self.copyrights,
+                            categories: self.categories
                         });
+
+                        self.$editor.html(mediaSubBlock.renderEditable());
+
+                        mediaSubBlock.bindToRenderedHTML();
+
+                        self.$editor.show();
+
+                        registerSaveMediaSubBlock(self, mediaSubBlock);
+
+                        self.ready();
+                    })
+                    .catch(function(err) {
+                        throw new Error('No block returned for id:' + uploadData.idMedia + ' ' + err);
+                    });
                  })
                  .catch(function(error) {
                      console.error(error);

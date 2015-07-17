@@ -249,9 +249,10 @@ var prototype = {
     /**
     * Filterbar launcher
     */
-    loadFilterBar: function(apiUrl, fields, modal) {
+    loadFilterBar: function(apiUrl, accessToken, fields, modal) {
         var filterBar = new FilterBar({
             url: apiUrl,
+            accessToken: accessToken,
             fields: fields,
             application: 'etu_etu',
             app: 'etu_etu',
