@@ -61,11 +61,10 @@ function buildTable(params, tableBuilder) {
     var header = createTableXaxisHeader(tableBuilder.columnsHeaderValues);
     var rows = '';
     var td = [];
-
     tableBuilder.rowsHeaderValues.forEach(function(rowValue, key) {
         var row = '';
         row += '<tr>';
-        row += '<th><input class="yaxis" data-yaxis="' + rowValue + '" value="serie ' + (key + 1) + ' " > <span data-yaxis="' + rowValue + '" class="remove-row">-</span></th>';
+        row += '<th><input class="yaxis" data-yaxis="' + rowValue + '" value="' + rowValue + ' " > <span data-yaxis="' + rowValue + '" class="remove-row">-</span></th>';
         tableBuilder.columnsHeaderValues.forEach(function(colValue) {
              params.forEach(function(paramElement) {
                 if (rowValue === paramElement.column && colValue === paramElement.name) {
@@ -120,16 +119,16 @@ function addControlsListenners(tableBuilder) {
         tableBuilder.addRow();
     });
 
-    tableBuilder.$elem.find('.remove-col').on('click', function(ev) {
+    tableBuilder.$elem.on('click','.remove-col', function(ev) {
         ev.stopPropagation();
-
+        debugger;
         var dataName = $(this).data('xaxis');
         tableBuilder.deleteColumn(dataName);
     });
 
-    tableBuilder.$elem.find('.remove-row').on('click', function(ev) {
+    tableBuilder.$elem.on('click', '.remove-row' , function(ev) {
         ev.stopPropagation();
-
+        debugger;
         var column = $(this).data('yaxis');
         tableBuilder.deleteRow(column);
     });
@@ -139,28 +138,36 @@ function updateLabel(labelPosition, labelValue, arrayOflabels) {
     arrayOflabels[labelPosition] = labelValue;
     return arrayOflabels;
 }
-
+function updateValues(label, oldValue, toFind, tableBuilder) {
+    tableBuilder.data.forEach(function(value){
+        if (value[toFind] === oldValue) {
+            value[toFind] = label;
+        }
+    });
+}
 function addLabelsListenners(tableBuilder) {
-    $.each(tableBuilder.$elem.find('.xaxis'), function(key) {
-        $(this).on('keyup', function() {
+
+    $.each(tableBuilder.$elem.find('input.xaxis'), function(key) {
+        $(this).on('blur', function() {
             var inputValue = $(this).val();
+            var oldValue = tableBuilder.columnsHeaderValues[key];
             tableBuilder.columnsHeaderValues = updateLabel(key, inputValue, tableBuilder.columnsHeaderValues);
-        }).on('blur', function() {
-            tableBuilder.data = tableBuilder.getDatas();
+            updateValues(inputValue, oldValue, 'name', tableBuilder);
+            tableBuilder.render();
             tableBuilder.trigger('table:updated');
         });
     });
 
-
-    $.each(tableBuilder.$elem.find('.yaxis'), function(key) {
-        $(this).on('keyup', function() {
+    $.each(tableBuilder.$elem.find('input.yaxis'), function(key) {
+        $(this).on('blur', function() {
             var inputValue = $(this).val();
+            var oldValue = tableBuilder.rowsHeaderValues[key];
             tableBuilder.rowsHeaderValues = updateLabel(key, inputValue, tableBuilder.rowsHeaderValues);
-        })
-        .on('blur', function() {
-            tableBuilder.data = tableBuilder.getDatas();
+            updateValues(inputValue, oldValue, 'column', tableBuilder);
+            tableBuilder.render();
             tableBuilder.trigger('table:updated');
         });
+
     });
 }
 
@@ -223,7 +230,6 @@ var prototype = {
         }
         this.prepare();
         this.render();
-        addLabelsListenners(this);
     },
 
     getDatas: function() {
@@ -288,12 +294,14 @@ var prototype = {
         this.data = this.data.concat(datas);
 
         this.render();
-        stopWatchChanges(this);
+
         addLabelsListenners(this);
+        stopWatchChanges(this);
         watchChanges(this);
     },
 
     deleteRow: function(rowName) {
+        debugger;
         if (this.categoriesCount - 1 < this.minCategoriesCount) {
             this.block.addMessage(i18n.t('blocks:chart:no-deletion-col'), 'st-block-displaying-message');
             var that = this;
@@ -395,6 +403,7 @@ var prototype = {
         }
 
         addControls(this);
+        addControlsListenners(this)
 
         return tableHtml;
     },
@@ -404,8 +413,8 @@ var prototype = {
 
         this.$elem.append(tableHtml);
         this.$scope = this.$elem.find('.chart-table');
-        addControlsListenners(this);
         watchChanges(this);
+        addLabelsListenners(this);
     },
 
     destroy: function(){

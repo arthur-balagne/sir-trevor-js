@@ -30,14 +30,12 @@ function tableUpdated(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
     tableBuilder.data = tableBuilder.getDatas();
     tableBuilder.on('table:updated', function() {
+        console.log(this.data);
         chartBuilderDisplay = this.display;
         chartBuilder = new ChartBuilder({
             data: this.data,
             type: this.chartType,
             block: block,
-            id: 'name',
-            x: 'column',
-            y: 'value',
             display: chartBuilderDisplay,
             $elem: $chart
         });
@@ -59,17 +57,14 @@ function tableReady(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
     tableBuilder.data = tableBuilder.getDatas();
     chartBuilderDisplay = tableBuilder.display;
-
     chartBuilder = new ChartBuilder({
         data: tableBuilder.data,
         type: tableBuilder.chartType,
         block: block,
-        id: 'name',
-        x: 'column',
-        y: 'value',
         $elem: $chart,
         display: chartBuilderDisplay
     });
+
     var toSave = {
         dataList: tableBuilder.data,
         type: tableBuilder.chartType,
@@ -123,6 +118,7 @@ module.exports = Block.extend({
             columnsHeaderValues: data.columnsHeaderValues,
             rowsHeaderValues: data.rowsHeaderValues
         });
+
         tableBuilder.columnsCount = data.columns;
         tableBuilder.categoriesCount = data.categories;
         tableBuilder.display = data.display;

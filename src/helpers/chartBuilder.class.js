@@ -1,7 +1,7 @@
 var d3     = require('d3');
 var d3plus = require('d3plus');
 
-
+var maxWidth;
 var informationsTemplate = [
     '<div class="title">',
         '<input type="texte" placeholder="' + i18n.t('blocks:chart:title') + '" name="chart-name">',
@@ -68,6 +68,13 @@ function updateValues(chartBuilder) {
     if (storedDatas.height) {
         fields.$height.val(storedDatas.height);
     }
+    if (storedDatas.xBar) {
+        fields.$xBar.val(storedDatas.xBar);
+    }
+    if (storedDatas.yBar) {
+        fields.$yBar.val(storedDatas.yBar);
+    }
+
 }
 
 function saveValue(chartBuilder, valueName) {
@@ -113,53 +120,48 @@ Chart.prototype = {
     init: function(parameters) {
         this.block = parameters.block;
         this.$inner = parameters.block.$inner;
+
         this.blockType = parameters.type;
         this.display = parameters.block.blockStorage.data.display;
         this.parameters = parameters;
-
         this.shape = d3plus.viz()
         .container('#' + parameters.block.blockID + ' .' + parameters.$elem.attr('class'))
         .data(parameters.data)
         .type(parameters.type)
-        .format({
-            'text': function(text, params) {
-                if (text === 'value') {
-                  return i18n.t('blocks:chart:value');
-                }
-                return d3plus.string.title(text, params);
-            }
-        })
+
         .dev(false);
 
-        if (this.block.blockStorage.data.yBar === undefined) {
-            this.shape.y({
-                value: parameters.y,
-                label: 'Ordonée'
-            });
-        }
-        else {
-            this.changeYaxis();
-            this.changeXaxis();
-        }
-
-        if (this.block.blockStorage.data.xBar === undefined) {
-            this.shape.x({
-                value: parameters.x,
+        if (parameters.type === 'bar') {
+            this.shape.id({
+                    value: 'name',
+                });
+            if (this.block.blockStorage.data.xBar === undefined ) {
+                 this.shape.x({
+                value: 'column',
                 label: 'Abscisse'
             });
-        }
-        else {
-            this.changeYaxis();
-            this.changeXaxis();
+            }
+            else {
+                this.changeXaxis();
 
-        }
+            }
 
-        if (parameters.type === 'bar') {
-            this.shape.id(parameters.id);
+            if(this.block.blockStorage.data.yBar === undefined ) {
+                this.shape.y({
+                    value: 'value',
+                    label: 'ordonée'
+                });
+            }
+            else {
+                this.changeYaxis();
+            }
+
+
         }
 
         if (parameters.type === 'pie') {
-            this.shape.size(parameters.y);
+            this.shape.size('value');
+
             if (this.display === 'number') {
                 this.shape.id({
                     value: [ 'name', 'value' ],
@@ -231,14 +233,14 @@ Chart.prototype = {
 
     changeXaxis: function() {
         this.shape.x({
-            value: this.parameters.x,
+            value: 'column',
             label: this.block.blockStorage.data.xBar
         });
     },
 
     changeYaxis: function() {
         this.shape.y({
-            value: this.parameters.y,
+            value: 'value',
             label: this.block.blockStorage.data.yBar
         });
     },
@@ -252,11 +254,12 @@ Chart.prototype = {
             this.shape.text('value');
             this.shape.tooltip(false);
         }
-        else {
+        else if(this.display === 'text') {
             this.shape.id('value');
             this.shape.text('name');
             this.shape.tooltip(false);
         }
+
         this.shape.draw();
     },
     destroy: function() {
