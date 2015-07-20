@@ -196,7 +196,7 @@ module.exports = Block.extend({
 
     editorHTML: '<div class="st-required text-block st-text-block" contenteditable="true"></div>',
 
-    icon_name: 'text',
+    icon_name: 'paragraph',
 
     eventBus: eventBus,
 
