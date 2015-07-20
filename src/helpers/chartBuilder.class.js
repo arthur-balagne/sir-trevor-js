@@ -8,15 +8,15 @@ var informationsTemplate = [
     '</div>',
 
     '<div class="size">',
-        '<label for="chart-width">' + i18n.t('blocks:chart:width') + '</label> <input type="number" value="960" name="chart-width">',
-        '<label for="chart-height">' + i18n.t('blocks:chart:height') + '</label> <input type="number" value="320" name="chart-height">',
+        '<label for="chart-width">' + i18n.t('blocks:chart:width') + '</label> <input type="number" value="936" name="chart-width">',
+        '<label for="chart-height">' + i18n.t('blocks:chart:height') + '</label> <input type="number" value="326" name="chart-height">',
     '</div>'
 
 ].join('\n');
 
 var pieFormat = [
     '<div class="numbered">',
-        '<label for="numbered-select">' + i18n.t('blocks:chart:width') + '</label> ', // type d'affichage
+        '<label for="numbered-select">' + i18n.t('blocks:chart:width') + '</label> ',
         '<select class="numbered-select" name="numbered-select">',
             '<option value="text">Texte</option>',
             '<option value="number">Chiffre</option>',
