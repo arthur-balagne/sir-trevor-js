@@ -99,27 +99,22 @@ ChoiceBox.prototype = {
             e.preventDefault();
 
             var selectedId = $(e.currentTarget).data('choice');
-            var unselected = this.getUnselected(selectedId);
 
-            animate(e.currentTarget, 'transition.bounceUpOut');
-            animate(unselected, 'transition.fadeOut')
-                .then(function() {
-                    var choice = getChoice(this.choices, selectedId);
+            var choice = getChoice(this.choices, selectedId);
 
-                    this.chosen[choice.name] = selectedId;
+            this.chosen[choice.name] = selectedId;
 
-                    if (choice && choice.subChoice) {
-                        var choicesMarkup = generateChoices(choice.subChoice.options);
+            if (choice && choice.subChoice) {
+                var choicesMarkup = generateChoices(choice.subChoice.options);
 
-                        this.$elem.html(choicesMarkup);
-                        this.buttons = getButtons(this);
-                    }
-                    else {
-                        this.$elem.remove();
-                        this.callback(this.chosen);
-                        this.destroy();
-                    }
-                }.bind(this));
+                this.$elem.html(choicesMarkup);
+                this.buttons = getButtons(this);
+            }
+            else {
+                this.$elem.remove();
+                this.callback(this.chosen);
+                this.destroy();
+            }
         }.bind(this));
     },
 
