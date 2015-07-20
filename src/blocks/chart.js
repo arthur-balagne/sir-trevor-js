@@ -69,7 +69,6 @@ function tableReady(tableBuilder, block) {
         y: 'value',
         $elem: $chart,
         display: chartBuilderDisplay
-
     });
     var toSave = {
         dataList: tableBuilder.data,
@@ -123,7 +122,6 @@ module.exports = Block.extend({
             $elem: $table,
             columnsHeaderValues: data.columnsHeaderValues,
             rowsHeaderValues: data.rowsHeaderValues
-
         });
         tableBuilder.columnsCount = data.columns;
         tableBuilder.categoriesCount = data.categories;

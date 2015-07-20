@@ -29,7 +29,9 @@ function getChartInformationsFields(chartBuilder) {
     return {
         $title: chartBuilder.$informations.find('[name="chart-name"]'),
         $width: chartBuilder.$informations.find('[name="chart-width"]'),
-        $height: chartBuilder.$informations.find('[name="chart-height"]')
+        $height: chartBuilder.$informations.find('[name="chart-height"]'),
+        $xBar: chartBuilder.$informations.find('[name="chart-xBar"]'),
+        $yBar: chartBuilder.$informations.find('[name="chart-yBar"]')
     };
 }
 
@@ -37,7 +39,9 @@ function getChartInformationsFieldsValues(fields) {
     return {
         title: fields.$title.val(),
         width: parseInt(fields.$width.val()),
-        height: parseInt(fields.$height.val())
+        height: parseInt(fields.$height.val()),
+        xBar: fields.$xBar.val() !== undefined ? fields.$xBar.val() : 'Ligne',
+        yBar: fields.$yBar.val() !== undefined ? fields.$yBar.val() : 'Colonne'
     };
 }
 
@@ -66,27 +70,38 @@ function updateValues(chartBuilder) {
     }
 }
 
-function saveTitle(chartBuilder) {
+function saveValue(chartBuilder, valueName) {
     var fields = getChartInformationsFields(chartBuilder);
     var values = getChartInformationsFieldsValues(fields);
-
-    chartBuilder.block.blockStorage.data.title = values.title;
+    chartBuilder.block.blockStorage.data[valueName] = values[valueName];
 }
 
 function bindListenersToFields(chartBuilder) {
     var fields = getChartInformationsFields(chartBuilder);
     fields.$title.on('change', function(){
-        saveTitle(chartBuilder);
+        saveValue(chartBuilder, 'title');
     });
 
-    fields.$width.on('change', function(){
+    fields.$width.on('change', function() {
         var sizes = getChartValues(chartBuilder);
         chartBuilder.resizeX(sizes);
     });
 
-    fields.$height.on('change', function(){
+    fields.$height.on('change', function() {
         var sizes = getChartValues(chartBuilder);
         chartBuilder.resizeY(sizes);
+    });
+
+    fields.$xBar.on('change', function() {
+        saveValue(chartBuilder, 'xBar');
+        chartBuilder.changeXaxis();
+        chartBuilder.shape.draw();
+    });
+
+    fields.$yBar.on('change', function() {
+        saveValue(chartBuilder, 'yBar');
+        chartBuilder.changeYaxis();
+        chartBuilder.shape.draw();
     });
 }
 
@@ -100,15 +115,12 @@ Chart.prototype = {
         this.$inner = parameters.block.$inner;
         this.blockType = parameters.type;
         this.display = parameters.block.blockStorage.data.display;
+        this.parameters = parameters;
 
         this.shape = d3plus.viz()
         .container('#' + parameters.block.blockID + ' .' + parameters.$elem.attr('class'))
         .data(parameters.data)
         .type(parameters.type)
-        .x({
-            value: parameters.x,
-            label: 'Colonnes'
-        })
         .format({
             'text': function(text, params) {
                 if (text === 'value') {
@@ -117,11 +129,30 @@ Chart.prototype = {
                 return d3plus.string.title(text, params);
             }
         })
-        .y({
-            value: parameters.y,
-            label: 'Valeurs'
-        })
         .dev(false);
+
+        if (this.block.blockStorage.data.yBar === undefined) {
+            this.shape.y({
+                value: parameters.y,
+                label: 'Ordonée'
+            });
+        }
+        else {
+            this.changeYaxis();
+            this.changeXaxis();
+        }
+
+        if (this.block.blockStorage.data.xBar === undefined) {
+            this.shape.x({
+                value: parameters.x,
+                label: 'Abscisse'
+            });
+        }
+        else {
+            this.changeYaxis();
+            this.changeXaxis();
+
+        }
 
         if (parameters.type === 'bar') {
             this.shape.id(parameters.id);
@@ -130,13 +161,16 @@ Chart.prototype = {
         if (parameters.type === 'pie') {
             this.shape.size(parameters.y);
             if (this.display === 'number') {
-                this.shape.id([ 'column', 'value' ]);
+                this.shape.id({
+                    value: [ 'name', 'value' ],
+                    grouping: false
+                });
                 this.shape.text('value');
                 this.shape.tooltip(false);
             }
             else {
                 this.shape.id('value');
-                this.shape.text('column');
+                this.shape.text('name');
                 this.shape.tooltip(false);
             }
         }
@@ -162,9 +196,18 @@ Chart.prototype = {
         this.$informations = this.$inner.find('.st__chart-informations');
 
         if (this.$informations.children().length === 0) {
+            if (this.blockType === 'bar') {
+                var chartParams = [
+                '<div class="title">',
+                    '<input type="texte" placeholder="' + i18n.t('blocks:chart:xTitle') + '" name="chart-xBar">',
+                '</div>',
+                '<div class="title">',
+                    '<input type="texte" placeholder="' + i18n.t('blocks:chart:yTitle') + '" name="chart-yBar">',
+                '</div>' ].join('\n');
+                informationsTemplate = informationsTemplate + chartParams;
+            }
             this.$informations.append(informationsTemplate);
             updateValues(this);
-            bindListenersToFields(this);
 
             if (this.blockType === 'pie') {
                 this.$informations.append(pieFormat);
@@ -174,26 +217,44 @@ Chart.prototype = {
                     this.$informations.find('.numbered-select').val(this.display);
                     this.redraw(this.display);
                 }
-
                 this.$informations.find('.numbered-select').on('change', function() {
                     var display = this.value;
-                    that.redraw(display);
                     that.display = display;
+                    that.redraw(display);
                     that.block.blockStorage.data.display = display;
                 });
             }
         }
+        bindListenersToFields(this);
         this.shape.draw();
     },
-    redraw: function(display){
-        if (display === 'number') {
-            this.shape.id([ 'column', 'value' ]);
+
+    changeXaxis: function() {
+        this.shape.x({
+            value: this.parameters.x,
+            label: this.block.blockStorage.data.xBar
+        });
+    },
+
+    changeYaxis: function() {
+        this.shape.y({
+            value: this.parameters.y,
+            label: this.block.blockStorage.data.yBar
+        });
+    },
+
+    redraw: function() {
+        if (this.display === 'number') {
+            this.shape.id({
+                value: [ 'name', 'value' ],
+                grouping: false
+            });
             this.shape.text('value');
             this.shape.tooltip(false);
         }
         else {
-            this.shape.id('column');
-            this.shape.text('column');
+            this.shape.id('value');
+            this.shape.text('name');
             this.shape.tooltip(false);
         }
         this.shape.draw();

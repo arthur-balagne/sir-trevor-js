@@ -34,7 +34,9 @@ var Locales = {
         'col+': 'Ajouter une colonne',
         'row+': 'Ajouter une ligne',
         'no-deletion-col': 'Impossible de supprimer cette ligne',
-        'no-deletion-line': 'Impossible de supprimer cette colonne'
+        'no-deletion-line': 'Impossible de supprimer cette colonne',
+        'xTitle': 'Abscisse',
+        'yTitle': 'Ordonée'
       },
       text: {
         'title': "Texte"
