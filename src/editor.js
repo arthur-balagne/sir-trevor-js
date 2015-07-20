@@ -238,7 +238,14 @@ Object.assign(Editor.prototype, require('./function-bind'), require('./events'),
     this.block_manager.validateBlockTypesExist(shouldValidate);
 
     this.mediator.trigger('errors:render');
-    this.$el.val(this.store.toString());
+
+    // If there is nothing in the store, the textarea should be submitted empty
+    if (_.isEmpty(this.store.store.data)) {
+        this.$el.val('');
+    }
+    else {
+        this.$el.val(this.store.toString());
+    }
 
     return this.errorHandler.errors.length;
   },
