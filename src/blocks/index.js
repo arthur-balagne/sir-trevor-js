@@ -2,14 +2,13 @@
 
 module.exports = {
   Text: require('./text'),
-  Quote: require('./quote'),
-  Embed: require('./embed'),
-  Media: require('./media'),
   Heading: require('./heading'),
-  List: require('./list'),
-  Table: require('./table'),
+  Subhead: require('./subhead'),
+  Quote: require('./quote'),
   Framed: require('./framed'),
+  Media: require('./media'),
+  Embed: require('./embed'),
   Iframe: require('./iframe'),
   Illustrated: require('./illustrated'),
-  Subhead: require('./subhead')
+  Table: require('./table')
 };

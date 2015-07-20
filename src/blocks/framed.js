@@ -29,6 +29,7 @@ function getTemplate(params) {
  * Helper function to validate internal or external url
  */
 function validateInternalUrl(url) {
+    // @todo: still valid outside of dev ?
     var hostNames = [
         'http://www.letudiant.fr',
         'http://www.editor-poc.lh',
@@ -289,13 +290,21 @@ function getModalMedias(block){
 module.exports = Block.extend({
 
     type: 'framed',
-    title: function() { return i18n.t('blocks:framed:title'); },
-    icon_name: 'quote',
+
+    title: i18n.t('blocks:framed:title'),
+
+    icon_name: 'framed',
+
     controllable: true,
+
     formattable: true,
+
     editorHTML: '<div class="st-text-block" contenteditable="true"></div>',
+
     eventBus: eventBus,
+
     controls_position: 'bottom',
+
     controls_visible: true,
 
     controls: [

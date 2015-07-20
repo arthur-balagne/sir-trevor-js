@@ -22,18 +22,18 @@ var blockTemplate = _.template([
 
 var imgTemplate = '<img src="<%= src %>" alt="<%= copyright %>"></figcaption>';
 
-
 module.exports = Block.extend({
+
     type: 'Illustrated',
-    title: function() {
-        return 'Valeur illustrée';
-    },
+
+    title: i18n.t('blocks:illustrated:title'),
+
     ajaxable: true,
     controllable: true,
+
     controls_position: 'top',
     controls_visible: true,
-    controls:
-    [
+    controls: [
         {
             slug: 'change-color',
             eventTrigger: 'click',
@@ -43,11 +43,13 @@ module.exports = Block.extend({
             html: '<span>' + i18n.t('blocks:illustrated:button:color') + '</span>'
         }
     ],
+
     editorHTML: blockTemplate({
         text: i18n.t('blocks:illustrated:placeholder:text'),
         titleText: i18n.t('blocks:illustrated:placeholder:title')
-      }),
-    icon_name: 'text',
+    }),
+
+    icon_name: 'illustrated',
 
     loadData: function(data) {
 

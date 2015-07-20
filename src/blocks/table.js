@@ -180,7 +180,6 @@ function deleteColumnHandler(ev, scope) {
     });
 }
 
-
 function addRowHandler(ev, scope) {
 
     scope.find('th').each(function() {
@@ -226,15 +225,17 @@ function changeTheme(ev, block) {
 
 module.exports = Block.extend({
     type: 'table',
-    title: function() {
-        return 'Table';
-    },
+
+    title: i18n.t('blocks:table:title'),
+
     icon_name: 'table',
+
     scope: function() {
         this.getBlock().find('table');
     },
 
     controllable: true,
+
     controls_position: 'top',
     controls_visible: true,
     controls: [

@@ -160,13 +160,11 @@ module.exports = Block.extend({
 
     type: 'embed',
 
-    title: function() {
-        return i18n.t('blocks:embed:title');
-    },
+    title: i18n.t('blocks:embed:title'),
 
     editorHTML: '<div class="st-embed-block"></div>',
 
-    icon_name: 'poll',
+    icon_name: 'embed',
 
     loadData: function(data) {
         if (!_.isEmpty(data)) {

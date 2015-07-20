@@ -20,16 +20,19 @@ var getTemplate = function(params) {
 };
 
 module.exports = Block.extend({
-    title: 'iFrame',
+    title: i18n.t('blocks:iframe:title'),
+
     type: 'iframe',
+
     icon_name: 'iframe',
 
     pastable: true,
+    controllable: true,
+
     paste_options: {
         html: '<input type="text" placeholder="' + i18n.t('blocks:iframe:placeholder') + '" class="st-block__paste-input st-paste-block">'
     },
 
-    controllable: true,
     controls_position: 'top',
     controls_visible: false,
     controls: [

@@ -185,14 +185,21 @@ function getModalMedias(block){
 
 
 module.exports = Block.extend({
+
     type: 'text',
+
+    title: i18n.t('blocks:text:title'),
+
     controllable: true,
     formattable: true,
     paragraphable: true,
-    title: function() { return i18n.t('blocks:text:title'); },
+
     editorHTML: '<div class="st-required text-block st-text-block" contenteditable="true"></div>',
+
     icon_name: 'text',
+
     eventBus: eventBus,
+
     controls_position: 'bottom',
     controls_visible: true,
     controls: [

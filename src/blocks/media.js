@@ -180,9 +180,7 @@ function onChoose(choices) {
 module.exports = Block.extend({
     type: 'media',
 
-    title: function() {
-        return i18n.t('blocks:medias:title');
-    },
+    title: i18n.t('blocks:medias:title'),
 
     chooseable: true,
     droppable: true,

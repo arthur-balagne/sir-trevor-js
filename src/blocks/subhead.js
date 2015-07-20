@@ -26,13 +26,14 @@ function changeHeaderLevel(block, level) {
 module.exports = Block.extend({
     type: 'subhead',
 
-    title: function() {
-        return i18n.t('blocks:subhead:title');
-    },
+    title: i18n.t('blocks:subhead:title'),
 
-    icon_name: 'text',
-    editorHTML: '<div class="st-required st__title st-text-block" contenteditable="true"></div>',
+    icon_name: 'subheading',
+
     controllable: true,
+
+    editorHTML: '<div class="st-required st__title st-text-block" contenteditable="true"></div>',
+
     controls_position: 'top',
     controls_visible: true,
     controls: [

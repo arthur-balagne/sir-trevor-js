@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var _ = require('./lodash');
 var config = require('./config');
@@ -7,75 +7,61 @@ var utils = require('./utils');
 var Locales = {
   en: {
     general: {
-      'delete':   'Suppression ?',
-      'drop':     'Glissez __block__ ici',
-      'paste':    'Ou copiez le lien ici',
-      'upload':   '...ou choisissez un fichier',
-      'close':    'fermer',
-      'position': 'Position',
-      'wait':     'Veuillez patienter...',
-      'link':     'Entrez un lien',
-      'save':     'Le bloc a été sauvegardé'
+      delete:   'Suppression ?',
+      drop:     'Glissez __block__ ici',
+      paste:    'Ou copiez le lien ici',
+      upload:   '...ou choisissez un fichier',
+      close:    'fermer',
+      position: 'Position',
+      wait:     'Veuillez patienter...',
+      link:     'Entrez un lien',
+      save:     'Le bloc a été sauvegardé'
     },
     errors: {
-      'title': "Vous avez l'erreur suivante :",
-      'validation_fail': "Bloc __type__ est invalide",
-      'block_empty': "__name__ ne doit pas être vide",
-      'type_missing': "Vous devez avoir un bloc de type __type__",
-      'required_type_empty': "Un bloc requis de type __type__ est vide",
-      'load_fail': "Il y a un problème avec le chargement des données du document"
+      title: 'Vous avez l\'erreur suivante :',
+      validation_fail: 'Bloc __type__ est invalide',
+      block_empty: '__name__ ne doit pas être vide',
+      type_missing: 'Vous devez avoir un bloc de type __type__',
+      required_type_empty: 'Un bloc requis de type __type__ est vide',
+      load_fail: 'Il y a un problème avec le chargement des données du document'
     },
     blocks: {
         text: {
-            'title': "Texte"
-        },
-        list: {
-            'title': "Liste"
+            title: 'Paragraphe'
         },
         quote: {
-            'title': "Citation",
-            'credit_field': "Auteur"
+            title: 'Citation',
+            credit_field: 'Auteur'
+        },
+        chart: {
+            title: 'Graphique'
         },
         medias: {
             title: 'Medias'
         },
-        image: {
-            'title': "Image",
-            'upload_error': "Il y a un problème avec votre téléchargement"
-        },
-        video: {
-            'title': "Vidéo"
-        },
         iframe: {
-            'placeholder': "Copie l'URL du site ici"
+            title: 'Iframe',
+            placeholder: 'Copie l\'URL du site ici'
         },
         embed: {
-            'title': 'Embed'
-        },
-        tweet: {
-            'title': "Tweet",
-            'fetch_error': "Un problème est survenu lors de la récupération de votre tweet"
-        },
-        embedly: {
-            'title': "Embedly",
-            'fetch_error': "Un problème est survenu lors de la récupération de votre embed",
-            'key_missing': "Une clé API pour Embedly doit être présente"
+            title: 'Embed'
         },
         heading: {
-            'title': 'Titre'
+            title: 'Titre'
         },
         subhead: {
-            'title': 'Sous titre'
+            title: 'Inter-titre'
         },
         table: {
-            'title': 'Table',
-            'default': 'Defaut',
-            'blue-theme': 'Theme bleu',
-            'red-theme': 'Theme rouge',
-            'helper-merge' : 'Cliquez sur une cellule grise pour la fusionner avec la cellule de droite',
-            'helper-unmerge' : 'Cliquez sur une cellule grise pour annuler la fusion'
+            title: 'Tableaux',
+            default: 'Defaut',
+            blue_theme: 'Theme bleu',
+            red_theme: 'Theme rouge',
+            helper_merge : 'Cliquez sur une cellule grise pour la fusionner avec la cellule de droite',
+            helper_unmerge : 'Cliquez sur une cellule grise pour annuler la fusion'
         },
         illustrated: {
+            title: 'Valeur illustrée',
             button: {
                 color: 'Couleur'
             },
@@ -94,8 +80,8 @@ var Locales = {
 
         },
         framed: {
-            'title': 'Encadré',
-            'placeholder': "Glissez votre image ici"
+            title: 'Encadré',
+            placeholder: 'Glissez votre image ici'
         }
     },
     slider: {
@@ -139,7 +125,7 @@ var Locales = {
 
 if (window.i18n === undefined) {
   // Minimal i18n stub that only reads the English strings
-  utils.log("Using i18n stub");
+  utils.log('Using i18n stub');
   window.i18n = {
     t: function(key, options) {
       var parts = key.split(':'), str, obj, part, i;
@@ -156,7 +142,7 @@ if (window.i18n === undefined) {
 
       str = obj;
 
-      if (!_.isString(str)) { return ""; }
+      if (!_.isString(str)) { return ''; }
 
       if (str.indexOf('__') >= 0) {
         Object.keys(options).forEach(function(opt) {
@@ -168,7 +154,7 @@ if (window.i18n === undefined) {
     }
   };
 } else {
-  utils.log("Using i18next");
+  utils.log('Using i18next');
   // Only use i18next when the library has been loaded by the user, keeps
   // dependencies slim
   i18n.init({ resStore: Locales, fallbackLng: config.language,
