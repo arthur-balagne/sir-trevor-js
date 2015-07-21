@@ -29,9 +29,10 @@ var chooseableConfig = {
 function tableUpdated(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
     tableBuilder.data = tableBuilder.getDatas();
+
     tableBuilder.on('table:updated', function() {
-        console.log(this.data);
         chartBuilderDisplay = this.display;
+
         chartBuilder = new ChartBuilder({
             data: this.data,
             type: this.chartType,
@@ -56,7 +57,9 @@ function tableUpdated(tableBuilder, block) {
 function tableReady(tableBuilder, block) {
     var $chart = block.$inner.find('.st__chart');
     tableBuilder.data = tableBuilder.getDatas();
+
     chartBuilderDisplay = tableBuilder.display;
+
     chartBuilder = new ChartBuilder({
         data: tableBuilder.data,
         type: tableBuilder.chartType,
@@ -127,7 +130,6 @@ module.exports = Block.extend({
     },
 
     onBlockRender: function() {
-
         if (this.tableBuilder) {
             this.tableBuilder.render();
             tableReady(this.tableBuilder, this);

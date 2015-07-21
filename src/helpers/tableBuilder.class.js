@@ -60,8 +60,7 @@ function createTableXaxisHeader(headersTable) {
 function buildTable(params, tableBuilder) {
     var header = createTableXaxisHeader(tableBuilder.columnsHeaderValues);
     var rows = '';
-    var td = [];
-    tableBuilder.rowsHeaderValues.forEach(function(rowValue, key) {
+    tableBuilder.rowsHeaderValues.forEach(function(rowValue) {
         var row = '';
         row += '<tr>';
         row += '<th><input class="yaxis" data-yaxis="' + rowValue + '" value="' + rowValue + ' " > <span data-yaxis="' + rowValue + '" class="remove-row">-</span></th>';
@@ -86,7 +85,13 @@ function buildTable(params, tableBuilder) {
 
 function addControls(tableBuilder) {
     if (tableBuilder.columnModifiable === true) {
-        var addCol = '<span class="control add-col"> ' + i18n.t('blocks:chart:col+') + ' </span>';
+        var addCol;
+        if (tableBuilder.chartType === 'pie') {
+            addCol = '<span class="control add-col"> ' + i18n.t('blocks:chart:pie:col+') + ' </span>';
+        }
+        else if (tableBuilder.chartType === 'bar') {
+            addCol = '<span class="control add-col"> ' + i18n.t('blocks:chart:bar:col+') + ' </span>';
+        }
     }
     else {
         addCol = ' ';
@@ -119,16 +124,14 @@ function addControlsListenners(tableBuilder) {
         tableBuilder.addRow();
     });
 
-    tableBuilder.$elem.on('click','.remove-col', function(ev) {
+    tableBuilder.$elem.find('.remove-col').on('click', function(ev) {
         ev.stopPropagation();
-        debugger;
         var dataName = $(this).data('xaxis');
         tableBuilder.deleteColumn(dataName);
     });
 
-    tableBuilder.$elem.on('click', '.remove-row' , function(ev) {
+    tableBuilder.$elem.find('.remove-row').on('click', function(ev) {
         ev.stopPropagation();
-        debugger;
         var column = $(this).data('yaxis');
         tableBuilder.deleteRow(column);
     });
@@ -239,11 +242,12 @@ var prototype = {
         $.each($catArray, function() {
             var obj = {
                 value: parseInt($(this).html()),
-                name: $(this).data('xaxis'),
-                column: $(this).data('yaxis')
+                name: $(this).data('xaxis').toString(),
+                column: $(this).data('yaxis').toString()
             };
             params.push(obj);
         });
+
         return params;
     },
 
@@ -301,7 +305,6 @@ var prototype = {
     },
 
     deleteRow: function(rowName) {
-        debugger;
         if (this.categoriesCount - 1 < this.minCategoriesCount) {
             this.block.addMessage(i18n.t('blocks:chart:no-deletion-col'), 'st-block-displaying-message');
             var that = this;
@@ -403,7 +406,6 @@ var prototype = {
         }
 
         addControls(this);
-        addControlsListenners(this)
 
         return tableHtml;
     },
@@ -415,6 +417,8 @@ var prototype = {
         this.$scope = this.$elem.find('.chart-table');
         watchChanges(this);
         addLabelsListenners(this);
+        addControlsListenners(this);
+        this.data = this.getDatas();
     },
 
     destroy: function(){

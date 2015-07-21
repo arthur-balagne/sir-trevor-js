@@ -1,28 +1,31 @@
 var d3     = require('d3');
 var d3plus = require('d3plus');
 
-var maxWidth;
+var sizes = {
+    max: 999,
+    min: 1
+}
+
 var informationsTemplate = [
     '<div class="title">',
         '<input type="texte" placeholder="' + i18n.t('blocks:chart:title') + '" name="chart-name">',
     '</div>',
 
     '<div class="size">',
-        '<label for="chart-width">' + i18n.t('blocks:chart:width') + '</label> <input type="number" value="936" name="chart-width">',
-        '<label for="chart-height">' + i18n.t('blocks:chart:height') + '</label> <input type="number" value="326" name="chart-height">',
+        '<label for="chart-width">' + i18n.t('blocks:chart:width') + '</label> <input type="number" min="' + sizes.min + '" max="' + sizes.max + '" value="936" name="chart-width">',
+        '<label for="chart-height">' + i18n.t('blocks:chart:height') + '</label> <input type="number"  value="326" name="chart-height">',
     '</div>'
 
 ].join('\n');
 
 var pieFormat = [
     '<div class="numbered">',
-        '<label for="numbered-select">' + i18n.t('blocks:chart:width') + '</label> ',
+        '<label for="numbered-select">' + i18n.t('blocks:chart:mode') + '</label> ',
         '<select class="numbered-select" name="numbered-select">',
             '<option value="text">Texte</option>',
             '<option value="number">Chiffre</option>',
         '</select>',
     '</div>'
-
 ].join('\n');
 
 function getChartInformationsFields(chartBuilder) {
@@ -133,9 +136,9 @@ Chart.prototype = {
 
         if (parameters.type === 'bar') {
             this.shape.id({
-                    value: 'name',
+                    value: 'name'
                 });
-            if (this.block.blockStorage.data.xBar === undefined ) {
+            if (this.block.blockStorage.data.xBar === undefined) {
                  this.shape.x({
                 value: 'column',
                 label: 'Abscisse'
@@ -146,7 +149,7 @@ Chart.prototype = {
 
             }
 
-            if(this.block.blockStorage.data.yBar === undefined ) {
+            if (this.block.blockStorage.data.yBar === undefined) {
                 this.shape.y({
                     value: 'value',
                     label: 'ordonée'
@@ -155,8 +158,6 @@ Chart.prototype = {
             else {
                 this.changeYaxis();
             }
-
-
         }
 
         if (parameters.type === 'pie') {
@@ -206,9 +207,12 @@ Chart.prototype = {
                 '<div class="title">',
                     '<input type="texte" placeholder="' + i18n.t('blocks:chart:yTitle') + '" name="chart-yBar">',
                 '</div>' ].join('\n');
-                informationsTemplate = informationsTemplate + chartParams;
+                var barInformationsTemplate = informationsTemplate + chartParams;
+                this.$informations.append(barInformationsTemplate);
             }
-            this.$informations.append(informationsTemplate);
+            else {
+                this.$informations.append(informationsTemplate);
+            }
             updateValues(this);
 
             if (this.blockType === 'pie') {
@@ -254,7 +258,7 @@ Chart.prototype = {
             this.shape.text('value');
             this.shape.tooltip(false);
         }
-        else if(this.display === 'text') {
+        else if (this.display === 'text') {
             this.shape.id('value');
             this.shape.text('name');
             this.shape.tooltip(false);
