@@ -104,8 +104,6 @@ module.exports = {
             return;
         }
 
-
-
         // By default, the trigger is a click event
         var eventTrigger = control.eventTrigger ? control.eventTrigger : 'click';
         var self = this;
