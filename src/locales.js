@@ -34,7 +34,7 @@ var Locales = {
             credit_field: 'Auteur'
         },
         chart: {
-            title: 'Graphique'
+            title: 'Graphique',
             selectedTitle: 'Votre Titre',
             width: 'Largeur',
             height: 'Hauteur',
