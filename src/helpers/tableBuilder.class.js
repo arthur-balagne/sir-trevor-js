@@ -63,7 +63,13 @@ function buildTable(params, tableBuilder) {
     tableBuilder.rowsHeaderValues.forEach(function(rowValue) {
         var row = '';
         row += '<tr>';
-        row += '<th><input class="yaxis" data-yaxis="' + rowValue + '" value="' + rowValue + ' " > <span data-yaxis="' + rowValue + '" class="remove-row">-</span></th>';
+
+        if ( tableBuilder.chartType === 'pie'){
+            row += '<th></th>';
+        }
+        else {
+            row += '<th><input class="yaxis" data-yaxis="' + rowValue + '" value="' + rowValue + ' " > <span data-yaxis="' + rowValue + '" class="remove-row">-</span></th>';
+        }
         tableBuilder.columnsHeaderValues.forEach(function(colValue) {
              params.forEach(function(paramElement) {
                 if (rowValue === paramElement.column && colValue === paramElement.name) {
