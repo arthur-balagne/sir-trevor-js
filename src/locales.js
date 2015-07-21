@@ -26,6 +26,27 @@ var Locales = {
       'load_fail': "Il y a un problème avec le chargement des données du document"
     },
     blocks: {
+
+      chart: {
+        'title': 'Votre Titre',
+        'width': 'Largeur',
+        'height': 'Hauteur',
+        'value': 'Valeur',
+        'mode': 'Mode d\'affichage',
+        'col+': 'Ajouter une colonne',
+        'row+': 'Ajouter une ligne',
+        'no-deletion-col': 'Impossible de supprimer cette ligne',
+        'no-deletion-line': 'Impossible de supprimer cette colonne',
+        'xTitle': 'Abscisse',
+        'yTitle': 'Ordonée',
+        'bar' : {
+            'col+': 'Ajouter une colonne',
+            'row+': 'Ajouter une ligne'
+        },
+        'pie' : {
+            'col+': 'Ajouter une part'
+        }
+      },
       text: {
         'title': "Texte"
       },

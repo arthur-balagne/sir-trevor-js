@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "array.prototype.find": "^1.0.0",
-    "chart.js": "^1.0.2",
+    "d3": "^3.5.6",
     "es6-shim": "^0.21.0",
     "etudiant-mod-xhr": "^1.1.4",
     "eventablejs": "^1.0.5",
@@ -52,6 +52,14 @@
     "karma-phantomjs-launcher": "~0.1.4",
     "lodash": "^2.4.1",
     "mversion": "^1.9.0"
+  },
+  "browserify": {
+    "transform": [
+      "coffeeify"
+    ],
+    "extension": [
+      "coffee"
+    ]
   },
   "browserify-shim": {
     "jquery": "global:$"
