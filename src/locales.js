@@ -35,6 +35,24 @@ var Locales = {
         },
         chart: {
             title: 'Graphique'
+            selectedTitle: 'Votre Titre',
+            width: 'Largeur',
+            height: 'Hauteur',
+            value: 'Valeur',
+            mode: 'Mode d\'affichage',
+            col: 'Ajouter une colonne',
+            row: 'Ajouter une ligne',
+            no_deletion_col: 'Impossible de supprimer cette ligne',
+            no_deletion_line: 'Impossible de supprimer cette colonne',
+            xTitle: 'Abscisse',
+            yTitle: 'Ordonnée',
+            bar: {
+                addCol: 'Ajouter une colonne',
+                addRow: 'Ajouter une ligne'
+            },
+            pie: {
+                addSection: 'Ajouter une part'
+            }
         },
         medias: {
             title: 'Medias'
